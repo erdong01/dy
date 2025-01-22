@@ -1,0 +1,50 @@
+Mysql:
+  Path: 47.100.85.27
+  Port: "3306"
+  Config: charset=utf8mb4&parseTime=True
+  Dbname: video
+  Username: root
+  Password: Tm@587973
+  MaxIdleConns: 10
+  MaxOpenConns: 1024
+  LogMode: "Info" #日志级别：Silent、Error、Warn、Info
+  Singular: true
+  Prefix: ""
+Dbs:
+  - AliasName: UserDB
+    Sources:
+      - Path: rm-bp1v7o3n8b9g61989.mysql.rds.aliyuncs.com
+        Port: "3306"
+        Config: charset=utf8mb4&parseTime=True
+        Dbname: mloss_pro
+        Username: mloss_pro
+        Password: Song598853@qwer123
+        MaxIdleConns: 10
+        MaxOpenConns: 500
+        LogMode: "Info" #日志级别：Silent、Error、Warn、Info
+        Logx: true
+        Singular: true
+        Prefix: ""
+    # Replicas:
+    #   - Path: 172.24.140.145
+    #     Port: "3306"
+    #     Config: charset=utf8mb4&parseTime=True&loc=Local
+    #     Dbname: mloss
+    #     Username: root
+    #     Password: maile~maile
+    #     MaxIdleConns: 10
+    #     MaxOpenConns: 500
+  - AliasName: AccountDB
+    Sources:
+      - Path: rm-bp1v7o3n8b9g61989.mysql.rds.aliyuncs.com
+        Port: "3306"
+        Config: charset=utf8mb4&parseTime=True
+        Dbname: mloss_pro
+        Username: mloss_pro
+        Password: Song598853@qwer123
+        MaxIdleConns: 10
+        MaxOpenConns: 500
+        LogMode: "Info" #日志级别：Silent、Error、Warn、Info
+        Logx: true
+        Singular: true
+        Prefix: ""
