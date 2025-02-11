@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"video/config"
+	"video/core"
+	"video/pkg/db"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -17,11 +20,20 @@ func main() {
 	if err != nil {               // Handle errors reading the config file
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
+	var config config.ConfigGlobal
+	if err := viper.Unmarshal(&config); err != nil {
+		fmt.Printf("Unable to decode into struct, %v", err)
+		return
+	}
+	core.New().ConfigGlobal = config
+	db.InitGorm(config.Mysql)
+
 	r := gin.Default()
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
 		})
 	})
+
 	r.Run()
 }
