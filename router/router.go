@@ -19,12 +19,10 @@ type ApiRouter struct {
 func (that *ApiRouter) InitApiRouter(Router *gin.RouterGroup) {
 	that.Router = Router
 	apiRouter := Router.Group("/v1").Group("/video")
-
 	{
 		apiRouter.POST("/create", controller.Create) //
 		apiRouter.POST("/update", controller.Update) //
 		apiRouter.GET("/list", controller.List)      //
 		apiRouter.GET("/get", controller.Get)        //
 	}
-
 }

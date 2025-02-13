@@ -6,6 +6,7 @@ import (
 	"video/config"
 	"video/core"
 	"video/pkg/db"
+	"video/router"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -32,6 +33,7 @@ func main() {
 	}
 	core.New().DB = db.DBS
 	r := gin.Default()
+	router.RouterGroupApp.ApiRouter.InitApiRouter(r.Group("/api"))
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",

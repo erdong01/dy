@@ -29,3 +29,19 @@ func (that *Video) Create() (err error) {
 	err = core.New().DB.Create(that).Error
 	return
 }
+
+func (that *Video) List(page int, pageSize int, id int64) (data []Video, total int64, err error) {
+	core.New().DB.Model(&Video{}).Count(&total)
+	err = core.New().DB.Where("id > ?", id).Offset((page - 1) * pageSize).Limit(pageSize).Find(&data).Error
+	return
+}
+
+func (that *Video) Get(id int64) (data Video, err error) {
+	err = core.New().DB.Where("id = ?", id).First(&data).Error
+	return
+}
+
+func (that *Video) Del(id int64) (err error) {
+	err = core.New().DB.Where("id = ?", id).Delete(&Video{}).Error
+	return
+}
