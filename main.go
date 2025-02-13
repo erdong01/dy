@@ -26,8 +26,11 @@ func main() {
 		return
 	}
 	core.New().ConfigGlobal = config
-	db.InitGorm(config.Mysql)
-
+	err = db.NewDBS().InitGorm(config.Mysql)
+	if err != nil {
+		return
+	}
+	core.New().DB = db.DBS
 	r := gin.Default()
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{

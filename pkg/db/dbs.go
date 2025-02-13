@@ -151,6 +151,7 @@ func NewDBS() *Dbs {
 // 	}, &model.Account{})
 // }
 
-func (d *Dbs) InitGorm(config config.Mysql) {
-	d.DB.DB, _ = InitGorm(config)
+func (d *Dbs) InitGorm(config config.Mysql) (err error) {
+	d.DB.DB, err = InitGorm(config)
+	return
 }

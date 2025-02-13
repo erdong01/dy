@@ -2,6 +2,7 @@ package model
 
 import (
 	"time"
+	"video/core"
 
 	"gorm.io/gorm"
 )
@@ -22,4 +23,9 @@ type Video struct {
 // TableName 表名:video，。
 func (*Video) TableName() string {
 	return "video"
+}
+
+func (that *Video) Create() (err error) {
+	err = core.New().DB.Create(that).Error
+	return
 }

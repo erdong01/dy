@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"video/config"
 
 	"gorm.io/driver/mysql"
@@ -15,6 +16,8 @@ func InitGorm(config config.Mysql) (*gorm.DB, error) {
 	}
 
 	db, err := gorm.Open(mysql.New(mysqlConfig))
-
+	if err != nil {
+		fmt.Printf("gorm connect err:%v", err)
+	}
 	return db, err
 }
