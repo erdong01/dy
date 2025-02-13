@@ -69,8 +69,10 @@ func main() {
 	select {
 	case <-ctx.Done():
 		log.Println("terminating: context cancelled")
+		wg.Done()
 	case <-sigterm:
 		log.Println("terminating: via signal")
+		wg.Done()
 	}
 
 	wg.Wait() // 等待消费者goroutine退出
