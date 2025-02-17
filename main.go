@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"video/config"
 	"video/core"
+	"video/middlewares"
 	"video/pkg/db"
 	"video/router"
 
@@ -33,6 +34,7 @@ func main() {
 	}
 	core.New().DB = db.DBS
 	r := gin.Default()
+	r.Use(middlewares.Cors())
 	router.RouterGroupApp.ApiRouter.InitApiRouter(r.Group("/api"))
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
