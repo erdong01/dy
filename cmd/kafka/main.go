@@ -2,67 +2,45 @@ package main
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
+	"time"
+	"video/config"
+	"video/core"
+	"video/pkg/kafka"
 
 	"github.com/IBM/sarama"
+	"github.com/spf13/viper"
 )
 
-var brokers = "kmc01.51haitun.cn:10021,kmc02.51haitun.cn:10022,kmc03.51haitun.cn:10023"
-
-// Kafka topic 名称
-var topic = "EMS-CUS-DIFF-PUSH-3303960E0K-HW117"
-
 func main() {
-	config := sarama.NewConfig()
 
-	config.Consumer.Offsets.Initial = sarama.OffsetOldest
-	config.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRoundRobin
-
-	config.Net.SASL.Enable = true
-	config.Net.SASL.User = "NEMS3303960E0K"
-	config.Net.SASL.Password = "NEMS3303960E0K"
-	config.Net.SASL.Mechanism = sarama.SASLTypePlaintext // 或 sarama.SASLTypeSCRAMSHA256, sarama.SASLTypeSCRAMSHA512
-
-	consumerGroup, err := sarama.NewConsumerGroup(strings.Split(brokers, ","), "EMS-3303960E0K", config)
-	if err != nil {
-		log.Fatalf("Failed to create consumer group: %v", err)
+	viper.SetConfigName("config") // name of config file (without extension)
+	viper.SetConfigType("yaml")   // REQUIRED if the config file does not have the extension in the name
+	viper.AddConfigPath("etc/")   // path to look for the config file in
+	err := viper.ReadInConfig()   // Find and read the config file
+	if err != nil {               // Handle errors reading the config file
+		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
-	defer func() {
-		if err := consumerGroup.Close(); err != nil {
-			log.Println("Failed to close consumer group:", err)
-		}
-	}()
+	var configGlobal config.ConfigGlobal
+	if err := viper.Unmarshal(&configGlobal); err != nil {
+		fmt.Printf("Unable to decode into struct, %v", err)
+		return
+	}
+	core.New().ConfigGlobal = configGlobal
 
 	// 消费消息
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 	consumer := Consumer{} // 实现 ConsumerGroupHandler 接口
+	kafka.ConsumerInit(ctx, consumer)
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for {
-			// `Consume` 应该在一个循环中调用
-			if err := consumerGroup.Consume(ctx, []string{topic}, consumer); err != nil {
-				if errors.Is(err, sarama.ErrClosedConsumerGroup) { // 正常关闭
-					return
-				}
-				log.Printf("Error from consumer: %v", err)
-			}
-			// 如果 context 被取消了，退出循环
-			if ctx.Err() != nil {
-				return
-			}
-		}
-	}()
 
 	log.Println("Sarama consumer up and running...")
-
 	// 等待信号 (例如 Ctrl+C)
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, os.Interrupt)
@@ -71,10 +49,11 @@ func main() {
 		log.Println("terminating: context cancelled")
 		wg.Done()
 	case <-sigterm:
+		cancel()
 		log.Println("terminating: via signal")
+		time.Sleep(10 * time.Second) // 等待消费者goroutine退出
 		wg.Done()
 	}
-
 	wg.Wait() // 等待消费者goroutine退出
 }
 
@@ -111,6 +90,23 @@ func (consumer Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim
 				return nil
 			}
 			log.Printf("Message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic)
+
+			// 将 message.Value 写入 JSON 文件
+			var jsonData map[string]interface{}
+			if err := json.Unmarshal(message.Value, &jsonData); err != nil {
+				log.Printf("Error unmarshalling message value: %v", err)
+			} else {
+				fileName := fmt.Sprintf("message_%v.json", message.Timestamp.Unix())
+				fileData, err := json.MarshalIndent(jsonData, "", "  ")
+				if err != nil {
+					log.Printf("Error marshalling JSON data: %v", err)
+				} else {
+					if err := os.WriteFile(fileName, fileData, 0644); err != nil {
+						log.Printf("Error writing JSON file: %v", err)
+					}
+				}
+			}
+
 			session.MarkMessage(message, "") // 标记消息已处理
 		case <-session.Context().Done(): // 如果 session context 被取消，则退出循环
 			return nil

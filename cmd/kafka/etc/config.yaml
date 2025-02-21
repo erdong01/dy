@@ -1,0 +1,9 @@
+Kafka:
+  User: NEMS3303960E0K
+  Password: NEMS3303960E0K
+  Brokers:
+    - kmc01.51haitun.cn:10021
+    - kmc02.51haitun.cn:10022
+    - kmc03.51haitun.cn:10023
+  GroupId: EMS-3303960E0K
+  Topic: EMS-CUS-DIFF-PUSH-3303960E0K-HW117

@@ -6,6 +6,7 @@ type ConfigGlobal struct {
 	Elastic     Elastic
 	RabbitMq    RabbitMq
 	Gorse       Gorse
+	Kafka       Kafka
 }
 type UserJwt struct {
 	SSO           bool
