@@ -12,12 +12,17 @@ import (
 	"video/config"
 	"video/core"
 	"video/pkg/kafka"
+	"video/pkg/zapService"
 
 	"github.com/IBM/sarama"
 	"github.com/spf13/viper"
 )
 
 func main() {
+	zapService.InitLogger(zapService.Config{
+		LogPath:   "./logs",
+		MaxSizeMB: 50,
+	})
 
 	viper.SetConfigName("config") // name of config file (without extension)
 	viper.SetConfigType("yaml")   // REQUIRED if the config file does not have the extension in the name
@@ -31,6 +36,7 @@ func main() {
 		fmt.Printf("Unable to decode into struct, %v", err)
 		return
 	}
+
 	core.New().ConfigGlobal = configGlobal
 
 	// 消费消息
@@ -46,6 +52,8 @@ func main() {
 	signal.Notify(sigterm, os.Interrupt)
 	select {
 	case <-ctx.Done():
+		cancel()
+		time.Sleep(10 * time.Second)
 		log.Println("terminating: context cancelled")
 		wg.Done()
 	case <-sigterm:
@@ -96,7 +104,7 @@ func (consumer Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim
 			if err := json.Unmarshal(message.Value, &jsonData); err != nil {
 				log.Printf("Error unmarshalling message value: %v", err)
 			} else {
-				fileName := fmt.Sprintf("message_%v.json", message.Timestamp.Unix())
+				fileName := fmt.Sprintf("data/message_%v_%v.json", message.Timestamp.Unix(), string(message.Key))
 				fileData, err := json.MarshalIndent(jsonData, "", "  ")
 				if err != nil {
 					log.Printf("Error marshalling JSON data: %v", err)

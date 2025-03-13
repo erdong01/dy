@@ -11,7 +11,6 @@ import (
 
 func ConsumerInit(ctx context.Context, consumer sarama.ConsumerGroupHandler) (err error) {
 	configGlobal := core.New().ConfigGlobal
-
 	config := sarama.NewConfig()
 
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
@@ -21,7 +20,6 @@ func ConsumerInit(ctx context.Context, consumer sarama.ConsumerGroupHandler) (er
 	config.Net.SASL.User = configGlobal.Kafka.User
 	config.Net.SASL.Password = configGlobal.Kafka.Password
 	config.Net.SASL.Mechanism = sarama.SASLTypePlaintext // 或 sarama.SASLTypeSCRAMSHA256, sarama.SASLTypeSCRAMSHA512
-
 	consumerGroup, err := sarama.NewConsumerGroup(configGlobal.Kafka.Brokers, configGlobal.Kafka.GroupId, config)
 	if err != nil {
 		log.Fatalf("Failed to create consumer group: %v", err)
@@ -36,6 +34,7 @@ func ConsumerInit(ctx context.Context, consumer sarama.ConsumerGroupHandler) (er
 			// `Consume` 应该在一个循环中调用
 			if err := consumerGroup.Consume(ctx, []string{configGlobal.Kafka.Topic}, consumer); err != nil {
 				if errors.Is(err, sarama.ErrClosedConsumerGroup) { // 正常关闭
+					log.Printf("正常关闭")
 					return
 				}
 				log.Printf("Error from consumer: %v", err)

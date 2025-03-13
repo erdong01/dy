@@ -6,4 +6,4 @@ Kafka:
     - kmc02.51haitun.cn:10022
     - kmc03.51haitun.cn:10023
   GroupId: EMS-3303960E0K
-  Topic: EMS-CUS-DIFF-PUSH-3303960E0K-HW117
+  Topic: BILL-DIFF-PUSH-3303960E0K-HW117
