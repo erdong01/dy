@@ -8,12 +8,12 @@ import (
 )
 
 type Video struct {
-	gorm.Model
-	Id           int64           `gorm:"column:primaryKey;id" json:"Id"`            //type:int64        comment:              version:2025-00-22 15:16
+	Id           int64           `gorm:"column:id;primaryKey" json:"Id"`            //type:int64        comment:              version:2025-00-22 15:16
 	CreatedAt    *time.Time      `gorm:"column:created_at" json:"CreatedAt"`        //type:*time.Time   comment:创建时间      version:2025-00-22 15:16
 	UpdatedAt    *time.Time      `gorm:"column:updated_at" json:"UpdatedAt"`        //type:*time.Time   comment:更新时间      version:2025-00-22 15:16
 	DeletedAt    *gorm.DeletedAt `gorm:"column:deleted_at" json:"DeletedAt"`        //type:*time.Time   comment:删除时间      version:2025-00-22 15:16
 	Title        string          `gorm:"column:title" json:"Title"`                 //type:string       comment:标题          version:2025-00-22 15:16
+	Describe     string          `gorm:"column:describe" json:"Describe"`           //type:string            comment:描述          version:2025-01-18 22:36
 	Connection   *int            `gorm:"column:connection" json:"Connection"`       //type:*int         comment:连接方式      version:2025-00-22 15:16
 	Url          string          `gorm:"column:url" json:"Url"`                     //type:string       comment:连接地址      version:2025-00-22 15:16
 	Cover        string          `gorm:"column:cover" json:"Cover"`                 //type:string       comment:封面          version:2025-00-22 15:16
