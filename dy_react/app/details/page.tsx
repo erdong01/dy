@@ -1,221 +1,224 @@
 'use client'
+import styles from '@/app/details/details.module.css';
 import {
-    isHLSProvider,
-    MediaPlayer,
-    MediaProvider,
-    type MediaProviderAdapter,
+  isHLSProvider,
+  MediaPlayer,
+  MediaProvider,
+  type MediaProviderAdapter,
 } from "@vidstack/react";
-import {
-    defaultLayoutIcons,
-    DefaultVideoLayout,
-} from "@vidstack/react/player/layouts/default";
 import { PlyrLayout, plyrLayoutIcons } from '@vidstack/react/player/layouts/plyr';
 import '@vidstack/react/player/styles/base.css';
+import '@vidstack/react/player/styles/default/layouts/audio.css';
+import '@vidstack/react/player/styles/default/layouts/video.css';
+import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/plyr/theme.css';
 import Hls from "hls.js";
 import { Core, CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 type UIEventsProps = PlayerEvents & {
-    engine: HlsJsP2PEngine;
+  engine: HlsJsP2PEngine;
 };
+
 export const subscribeToUiEvents = ({
-    engine,
-    onPeerConnect,
-    onPeerClose,
-    onChunkDownloaded,
-    onChunkUploaded,
+  engine,
+  onPeerConnect,
+  onPeerClose,
+  onChunkDownloaded,
+  onChunkUploaded,
 }: UIEventsProps) => {
-    if (onPeerConnect) engine.addEventListener("onPeerConnect", onPeerConnect);
-    if (onPeerClose) {
-        engine.addEventListener("onPeerClose", onPeerClose);
-    }
-    if (onChunkDownloaded) {
-        engine.addEventListener("onChunkDownloaded", onChunkDownloaded);
-    }
-    if (onChunkUploaded) {
-        engine.addEventListener("onChunkUploaded", onChunkUploaded);
-    }
+  if (onPeerConnect) engine.addEventListener("onPeerConnect", onPeerConnect);
+  if (onPeerClose) {
+    engine.addEventListener("onPeerClose", onPeerClose);
+  }
+  if (onChunkDownloaded) {
+    engine.addEventListener("onChunkDownloaded", onChunkDownloaded);
+  }
+  if (onChunkUploaded) {
+    engine.addEventListener("onChunkUploaded", onChunkUploaded);
+  }
 };
+
 export default function Details() {
-    const streamUrl = "https://vodcnd01.oiods.com/20250328/MwMI5ap7/index.m3u8";
-    const { queryParams } = useQueryParams(streamUrl);
-    const [peers, setPeers] = useState<string[]>([]);
-    const data = useRef<DownloadStats>({
-        httpDownloaded: 0,
-        p2pDownloaded: 0,
-        p2pUploaded: 0,
+  const streamUrl = "https://vodcnd00.otkbl.com/20250414/Ud6rdmU0/index.m3u8";
+  const { queryParams } = useQueryParams(streamUrl);
+  const [peers, setPeers] = useState<string[]>([]);
+  const data = useRef<DownloadStats>({
+    httpDownloaded: 0,
+    p2pDownloaded: 0,
+    p2pUploaded: 0,
+  });
+  const trackers = useMemo(
+    () => queryParams.trackers.split(","),
+    [queryParams.trackers],
+  );
+  const onPeerConnect = useCallback((params: PeerDetails) => {
+    if (params.streamType !== "main") return;
+
+    setPeers((peers) => {
+      return [...peers, params.peerId];
     });
-    const trackers = useMemo(
-        () => queryParams.trackers.split(","),
-        [queryParams.trackers],
-    );
-    const onPeerConnect = useCallback((params: PeerDetails) => {
-        if (params.streamType !== "main") return;
+  }, []);
 
-        setPeers((peers) => {
-            return [...peers, params.peerId];
-        });
-    }, []);
+  const onChunkDownloaded = useCallback(
+    (bytesLength: number, downloadSource: string) => {
+      switch (downloadSource) {
+        case "http":
+          data.current.httpDownloaded += bytesLength;
+          break;
+        case "p2p":
+          data.current.p2pDownloaded += bytesLength;
+          break;
+        default:
+          break;
+      }
+    },
+    [],
+  );
 
-    const onChunkDownloaded = useCallback(
-        (bytesLength: number, downloadSource: string) => {
-            switch (downloadSource) {
-                case "http":
-                    data.current.httpDownloaded += bytesLength;
-                    break;
-                case "p2p":
-                    data.current.p2pDownloaded += bytesLength;
-                    break;
-                default:
-                    break;
-            }
+  const onChunkUploaded = useCallback((bytesLength: number) => {
+    data.current.p2pUploaded += bytesLength;
+  }, []);
+
+  ;
+
+  const onPeerClose = useCallback((params: PeerDetails) => {
+    if (params.streamType !== "main") return;
+
+    setPeers((peers) => {
+      return peers.filter((peer) => peer !== params.peerId);
+    });
+  }, []);
+
+  const onProviderChange = useCallback((provider: MediaProviderAdapter | null) => {
+    if (isHLSProvider(provider)) {
+      const HlsWithP2P = HlsJsP2PEngine.injectMixin(Hls);
+
+      provider.library = HlsWithP2P as unknown as typeof Hls;
+      const config: HlsWithP2PConfig<typeof Hls> = {
+        p2p: {
+          core: {
+            announceTrackers: trackers,
+            swarmId: streamUrl,
+          },
+          onHlsJsCreated: (hls) => {
+            subscribeToUiEvents({
+              engine: hls.p2pEngine,
+              onPeerConnect,
+              onPeerClose,
+              onChunkDownloaded,
+              onChunkUploaded,
+
+            });
+          },
         },
-        [],
-    );
+      };
 
-    const onChunkUploaded = useCallback((bytesLength: number) => {
-        data.current.p2pUploaded += bytesLength;
-    }, []);
+      provider.config = config;
+    }
+  }, []);
 
-    ;
 
-    const onPeerClose = useCallback((params: PeerDetails) => {
-        if (params.streamType !== "main") return;
+  return (
+    <>
+      <div className={styles["video-container"]}>
+        <MediaPlayer
+          autoPlay
+          muted
+          onProviderChange={onProviderChange}
+          src={streamUrl}
+          playsInline
+        >
+          <MediaProvider />
+          <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
 
-        setPeers((peers) => {
-            return peers.filter((peer) => peer !== params.peerId);
-        });
-    }, []);
-
-    const onProviderChange = useCallback((provider: MediaProviderAdapter | null) => {
-        if (isHLSProvider(provider)) {
-            const HlsWithP2P = HlsJsP2PEngine.injectMixin(Hls);
-
-            provider.library = HlsWithP2P as unknown as typeof Hls;
-            const config: HlsWithP2PConfig<typeof Hls> = {
-                p2p: {
-                    core: {
-                        announceTrackers: trackers,
-                        swarmId: streamUrl,
-                    },
-                    onHlsJsCreated: (hls) => {
-                        subscribeToUiEvents({
-                            engine: hls.p2pEngine,
-                            onPeerConnect,
-                            onPeerClose,
-                            onChunkDownloaded,
-                            onChunkUploaded,
-
-                        });
-                    },
-                },
-            };
-
-            provider.config = config;
-        }
-    }, []);
-    console.log("peers:", peers);
-    return (
-        <>
-            <div className="video-container">
-                <MediaPlayer
-                    autoPlay
-                    muted
-                    onProviderChange={onProviderChange}
-                    src={streamUrl}
-                    playsInline
-                >
-                    <MediaProvider />
-                    <DefaultVideoLayout icons={defaultLayoutIcons} />
-
-                    <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
-                </MediaPlayer>
-            </div>
-            <div>
-            <NodeNetwork peers={peers} />
-            </div>
-        </>
-    );
+          {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
+        </MediaPlayer>
+      </div>
+      <div className={styles["node-container"]}>
+        <NodeNetwork peers={peers} />
+      </div>
+    </>
+  );
 };
 
 type HlsWithP2PType = ReturnType<typeof HlsJsP2PEngine.injectMixin>;
 declare global {
-    interface Window {
-        shaka?: unknown;
-        Hls?: HlsWithP2PType;
-        LevelSelector: unknown;
-        DashShakaPlayback: unknown;
-        Clappr: {
-            Player: unknown;
-        };
-    }
+  interface Window {
+    shaka?: unknown;
+    Hls?: HlsWithP2PType;
+    LevelSelector: unknown;
+    DashShakaPlayback: unknown;
+    Clappr: {
+      Player: unknown;
+    };
+  }
 }
 
 export type DownloadStats = {
-    httpDownloaded: number;
-    p2pDownloaded: number;
-    p2pUploaded: number;
+  httpDownloaded: number;
+  p2pDownloaded: number;
+  p2pUploaded: number;
 };
 
 export type SvgDimensionsType = {
-    width: number;
-    height: number;
+  width: number;
+  height: number;
 };
 
 export type ChartsData = {
-    seconds: number;
+  seconds: number;
 } & DownloadStats;
 
 export type PlayerKey = keyof typeof PLAYERS;
 export type PlayerName = (typeof PLAYERS)[PlayerKey];
 
 export type PlayerProps = {
-    streamUrl: string;
-    announceTrackers: string[];
-    swarmId?: string;
+  streamUrl: string;
+  announceTrackers: string[];
+  swarmId?: string;
 } & Partial<
-    Pick<
-        CoreEventMap,
-        "onPeerConnect" | "onChunkDownloaded" | "onChunkUploaded" | "onPeerClose"
-    >
+  Pick<
+    CoreEventMap,
+    "onPeerConnect" | "onChunkDownloaded" | "onChunkUploaded" | "onPeerClose"
+  >
 >;
 
 export type PlayerEvents = Omit<
-    PlayerProps,
-    "streamUrl" | "announceTrackers" | "swarmId"
+  PlayerProps,
+  "streamUrl" | "announceTrackers" | "swarmId"
 >;
 
 
 export const PLAYERS = {
-    vidstack_hls: "Vidstack",
-    hlsjs_hls: "Hls.js",
-    dplayer_hls: "DPlayer",
-    clappr_hls: "Clappr",
-    plyr_hls: "Plyr",
-    openPlayer_hls: "OpenPlayerJS",
-    mediaElement_hls: "MediaElement",
-    vidstack_indexeddb_hls: "Vidstack IndexedDB example",
-    shaka: "Shaka",
-    dplayer_shaka: "DPlayer",
-    clappr_shaka: "Clappr (DASH only)",
-    plyr_shaka: "Plyr",
+  vidstack_hls: "Vidstack",
+  hlsjs_hls: "Hls.js",
+  dplayer_hls: "DPlayer",
+  clappr_hls: "Clappr",
+  plyr_hls: "Plyr",
+  openPlayer_hls: "OpenPlayerJS",
+  mediaElement_hls: "MediaElement",
+  vidstack_indexeddb_hls: "Vidstack IndexedDB example",
+  shaka: "Shaka",
+  dplayer_shaka: "DPlayer",
+  clappr_shaka: "Clappr (DASH only)",
+  plyr_shaka: "Plyr",
 } as const;
 export const DEFAULT_STREAM =
-    "https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8";
+  "https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8";
 export const COLORS = {
-    yellow: "#faf21b",
-    lightOrange: "#ff7f0e",
-    lightBlue: "#ADD8E6",
-    torchRed: "#ff1745",
-    links: "#C8C8C8",
-    nodeHover: "#A9A9A9",
-    node: (d: { isMain?: boolean }) => {
-      return d.isMain ? "hsl(210, 70%, 72.5%)" : "hsl(55, 70%, 72.5%)";
-    },
+  yellow: "#faf21b",
+  lightOrange: "#ff7f0e",
+  lightBlue: "#ADD8E6",
+  torchRed: "#ff1745",
+  links: "#C8C8C8",
+  nodeHover: "#A9A9A9",
+  node: (d: { isMain?: boolean }) => {
+    return d.isMain ? "hsl(210, 70%, 72.5%)" : "hsl(55, 70%, 72.5%)";
+  },
 };
 export const DEFAULT_TRACKERS =
-    Core.DEFAULT_STREAM_CONFIG.announceTrackers.join(",");
+  Core.DEFAULT_STREAM_CONFIG.announceTrackers.join(",");
 export const DEBUG_COMPONENT_ENABLED = "true";
 
 
@@ -223,99 +226,99 @@ export const DEBUG_COMPONENT_ENABLED = "true";
 type QueryParamsType = Record<string, string>;
 
 function getInitialParams(
-    searchParams: URLSearchParams,
-    defaultParams: QueryParamsType,
+  searchParams: URLSearchParams,
+  defaultParams: QueryParamsType,
 ): QueryParamsType {
-    return Object.keys(defaultParams).reduce<QueryParamsType>((params, key) => {
-        params[key] = searchParams.get(key) ?? defaultParams[key];
-        return params;
-    }, {});
+  return Object.keys(defaultParams).reduce<QueryParamsType>((params, key) => {
+    params[key] = searchParams.get(key) ?? defaultParams[key];
+    return params;
+  }, {});
 }
 
 export function useQueryParams(streamUri?: string) {
-    const defaultParams = useMemo(() => {
-        return {
-            player: Object.keys(PLAYERS)[0],
-            streamUrl: streamUri ?? DEFAULT_STREAM,
-            trackers: DEFAULT_TRACKERS,
-            debug: "",
-            swarmId: "",
-        } as QueryParamsType;
-    }, [streamUri]);
+  const defaultParams = useMemo(() => {
+    return {
+      player: Object.keys(PLAYERS)[0],
+      streamUrl: streamUri ?? DEFAULT_STREAM,
+      trackers: DEFAULT_TRACKERS,
+      debug: "",
+      swarmId: "",
+    } as QueryParamsType;
+  }, [streamUri]);
 
-    const searchParamsRef = useRef<URLSearchParams | null>(null);
-    const [queryParams, setQueryParams] = useState<QueryParamsType>(() =>
-        typeof window !== 'undefined'
-            ? getInitialParams(new URLSearchParams(window.location.search), defaultParams)
-            : defaultParams
-    );
-    // 在客户端初始化searchParamsRef和queryParams
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            searchParamsRef.current = new URLSearchParams(window.location.search);
-            setQueryParams(getInitialParams(searchParamsRef.current, defaultParams));
+  const searchParamsRef = useRef<URLSearchParams | null>(null);
+  const [queryParams, setQueryParams] = useState<QueryParamsType>(() =>
+    typeof window !== 'undefined'
+      ? getInitialParams(new URLSearchParams(window.location.search), defaultParams)
+      : defaultParams
+  );
+  // 在客户端初始化searchParamsRef和queryParams
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      searchParamsRef.current = new URLSearchParams(window.location.search);
+      setQueryParams(getInitialParams(searchParamsRef.current, defaultParams));
+    }
+  }, [defaultParams]);
+  const updateQueryParamsFromURL = useCallback(() => {
+    if (typeof window === 'undefined' || !searchParamsRef.current) return;
+    const searchParams = searchParamsRef.current;
+    const newParams = getInitialParams(searchParams, defaultParams);
+
+    setQueryParams((prevParams) => {
+      const hasChanges = Object.keys(newParams).some(
+        (key) => prevParams[key] !== newParams[key],
+      );
+      return hasChanges ? newParams : prevParams;
+    });
+  }, [defaultParams]);
+
+  const setURLQueryParams = useCallback(
+    (newParams: Partial<QueryParamsType>) => {
+      if (typeof window === 'undefined') return;
+      if (!searchParamsRef.current) {
+        searchParamsRef.current = new URLSearchParams(window.location.search);
+      }
+
+      const searchParams = searchParamsRef.current;
+
+      Object.entries(newParams).forEach(([key, value]) => {
+        if (value == undefined || value === defaultParams[key]) {
+          searchParams.delete(key);
+        } else {
+          searchParams.set(key, value);
         }
-    }, [defaultParams]);
-    const updateQueryParamsFromURL = useCallback(() => {
-        if (typeof window === 'undefined' || !searchParamsRef.current) return;
-        const searchParams = searchParamsRef.current;
-        const newParams = getInitialParams(searchParams, defaultParams);
+      });
 
-        setQueryParams((prevParams) => {
-            const hasChanges = Object.keys(newParams).some(
-                (key) => prevParams[key] !== newParams[key],
-            );
-            return hasChanges ? newParams : prevParams;
-        });
-    }, [defaultParams]);
+      const newUrl =
+        searchParams.toString() === ""
+          ? window.location.pathname
+          : `${window.location.pathname}?${searchParams.toString()}`;
+      window.history.pushState({}, "", newUrl);
 
-    const setURLQueryParams = useCallback(
-        (newParams: Partial<QueryParamsType>) => {
-            if (typeof window === 'undefined') return;
-            if (!searchParamsRef.current) {
-                searchParamsRef.current = new URLSearchParams(window.location.search);
-            }
+      updateQueryParamsFromURL();
+    },
+    [defaultParams, updateQueryParamsFromURL],
+  );
 
-            const searchParams = searchParamsRef.current;
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePopState = () => {
+      searchParamsRef.current = new URLSearchParams(window.location.search);
+      updateQueryParamsFromURL();
+    };
 
-            Object.entries(newParams).forEach(([key, value]) => {
-                if (value == undefined || value === defaultParams[key]) {
-                    searchParams.delete(key);
-                } else {
-                    searchParams.set(key, value);
-                }
-            });
+    window.addEventListener("popstate", handlePopState);
 
-            const newUrl =
-                searchParams.toString() === ""
-                    ? window.location.pathname
-                    : `${window.location.pathname}?${searchParams.toString()}`;
-            window.history.pushState({}, "", newUrl);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [updateQueryParamsFromURL]);
 
-            updateQueryParamsFromURL();
-        },
-        [defaultParams, updateQueryParamsFromURL],
-    );
-
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-        const handlePopState = () => {
-            searchParamsRef.current = new URLSearchParams(window.location.search);
-            updateQueryParamsFromURL();
-        };
-
-        window.addEventListener("popstate", handlePopState);
-
-        return () => {
-            window.removeEventListener("popstate", handlePopState);
-        };
-    }, [updateQueryParamsFromURL]);
-
-    return { queryParams, setURLQueryParams };
+  return { queryParams, setURLQueryParams };
 }
 
 import * as d3 from "d3";
- 
+
 
 type GraphNetworkProps = {
   peers: string[];
@@ -449,195 +452,199 @@ export const NodeNetwork = ({ peers }: GraphNetworkProps) => {
 
 
 export interface Node extends d3.SimulationNodeDatum {
-    id: string;
-    isMain?: boolean;
-    group?: number;
-  }
-  
-  export interface Link extends d3.SimulationLinkDatum<Node> {
-    source: Node;
-    target: Node;
-    linkId: string;
-  }
-  
- 
-  
-  function handleNodeMouseOver(this: SVGCircleElement) {
-    d3.select(this).style("fill", COLORS.nodeHover);
-  }
-  
-  function handleNodeMouseOut(this: SVGCircleElement, _event: unknown, d: Node) {
-    d3.select(this).style("fill", COLORS.node(d));
-  }
-  
-  function getLinkText(d: Link) {
-    return `${d.source.id}-${d.target.id}`;
-  }
-  
-  function getNodeId(d: Node) {
-    return d.id;
-  }
-  
-  function removeD3Item(this: d3.BaseType) {
-    d3.select(this).remove();
-  }
-  
-  export const updateGraph = (
-    newNodes: Node[],
-    newLinks: Link[],
-    simulation: d3.Simulation<Node, Link> | null,
-    svgElement: SVGSVGElement | null,
-  ) => {
-    if (!simulation || !svgElement) return;
-  
-    simulation.nodes(newNodes);
-    simulation.force<d3.ForceLink<Node, Link>>("link")?.links(newLinks);
-    simulation.alpha(0.5).restart();
-  
-    const link = d3
-      .select(svgElement)
+  id: string;
+  isMain?: boolean;
+  group?: number;
+  x?: number;
+  y?: number;
+  fx?: number | null;
+  fy?: number | null;
+}
+
+export interface Link extends d3.SimulationLinkDatum<Node> {
+  source: Node;
+  target: Node;
+  linkId: string;
+}
+
+
+
+function handleNodeMouseOver(this: SVGCircleElement) {
+  d3.select(this).style("fill", COLORS.nodeHover);
+}
+
+function handleNodeMouseOut(this: SVGCircleElement, _event: unknown, d: Node) {
+  d3.select(this).style("fill", COLORS.node(d));
+}
+
+function getLinkText(d: Link) {
+  return `${d.source.id}-${d.target.id}`;
+}
+
+function getNodeId(d: Node) {
+  return d.id;
+}
+
+function removeD3Item(this: d3.BaseType) {
+  d3.select(this).remove();
+}
+
+export const updateGraph = (
+  newNodes: Node[],
+  newLinks: Link[],
+  simulation: d3.Simulation<Node, Link> | null,
+  svgElement: SVGSVGElement | null,
+) => {
+  if (!simulation || !svgElement) return;
+
+  simulation.nodes(newNodes);
+  simulation.force<d3.ForceLink<Node, Link>>("link")?.links(newLinks);
+  simulation.alpha(0.5).restart();
+
+  const link = d3
+    .select(svgElement)
+    .select(".links")
+    .selectAll<SVGLineElement, Link>("line")
+    .data(newLinks, getLinkText);
+
+  link
+    .enter()
+    .append("line")
+    .merge(link)
+    .attr("stroke", COLORS.links)
+    .transition()
+    .duration(500)
+    .attr("stroke-width", 0.5);
+
+  link
+    .exit()
+    .transition()
+    .duration(200)
+    .style("opacity", 0)
+    .on("end", removeD3Item);
+
+  const node = d3
+    .select(svgElement)
+    .select(".nodes")
+    .selectAll<SVGCircleElement, Node>("circle")
+    .data(newNodes, getNodeId);
+
+  node
+    .enter()
+    .append("circle")
+    .merge(node)
+    .attr("r", (d) => (d.isMain ? 15 : 13))
+    .attr("fill", (d) => COLORS.node(d))
+    .on("mouseover", handleNodeMouseOver)
+    .on("mouseout", handleNodeMouseOut)
+    .call(drag(simulation));
+
+  node.exit().transition().duration(200).attr("r", 0).remove();
+
+  const text = d3
+    .select(svgElement)
+    .select(".nodes")
+    .selectAll<SVGTextElement, Node>("text")
+    .data(newNodes, getNodeId);
+
+  text
+    .enter()
+    .append("text")
+    .style("fill-opacity", 0)
+    .merge(text)
+    .text(getNodeId)
+    .style("text-anchor", "middle")
+    .style("font-size", "12px")
+    .style("font-family", "sans-serif")
+    .transition()
+    .duration(500)
+    .style("fill-opacity", 1);
+
+  text
+    .exit()
+    .transition()
+    .duration(200)
+    .style("fill-opacity", 0)
+    .on("end", removeD3Item);
+
+  simulation.on("tick", () => {
+    d3.select(svgElement)
       .select(".links")
       .selectAll<SVGLineElement, Link>("line")
-      .data(newLinks, getLinkText);
-  
-    link
-      .enter()
-      .append("line")
-      .merge(link)
-      .attr("stroke", COLORS.links)
-      .transition()
-      .duration(500)
-      .attr("stroke-width", 0.5);
-  
-    link
-      .exit()
-      .transition()
-      .duration(200)
-      .style("opacity", 0)
-      .on("end", removeD3Item);
-  
-    const node = d3
-      .select(svgElement)
+      .attr("x1", (d) => d.source.x ?? 0)
+      .attr("y1", (d) => d.source.y ?? 0)
+      .attr("x2", (d) => d.target.x ?? 0)
+      .attr("y2", (d) => d.target.y ?? 0);
+
+    d3.select(svgElement)
       .select(".nodes")
       .selectAll<SVGCircleElement, Node>("circle")
-      .data(newNodes, getNodeId);
-  
-    node
-      .enter()
-      .append("circle")
-      .merge(node)
-      .attr("r", (d) => (d.isMain ? 15 : 13))
-      .attr("fill", (d) => COLORS.node(d))
-      .on("mouseover", handleNodeMouseOver)
-      .on("mouseout", handleNodeMouseOut)
-      .call(drag(simulation));
-  
-    node.exit().transition().duration(200).attr("r", 0).remove();
-  
-    const text = d3
-      .select(svgElement)
+      .attr("cx", (d) => d.x ?? 0)
+      .attr("cy", (d) => d.y ?? 0);
+
+    d3.select(svgElement)
       .select(".nodes")
       .selectAll<SVGTextElement, Node>("text")
-      .data(newNodes, getNodeId);
-  
-    text
-      .enter()
-      .append("text")
-      .style("fill-opacity", 0)
-      .merge(text)
-      .text(getNodeId)
-      .style("text-anchor", "middle")
-      .style("font-size", "12px")
-      .style("font-family", "sans-serif")
-      .transition()
-      .duration(500)
-      .style("fill-opacity", 1);
-  
-    text
-      .exit()
-      .transition()
-      .duration(200)
-      .style("fill-opacity", 0)
-      .on("end", removeD3Item);
-  
-    simulation.on("tick", () => {
-      d3.select(svgElement)
-        .select(".links")
-        .selectAll<SVGLineElement, Link>("line")
-        .attr("x1", (d) => d.source.x ?? 0)
-        .attr("y1", (d) => d.source.y ?? 0)
-        .attr("x2", (d) => d.target.x ?? 0)
-        .attr("y2", (d) => d.target.y ?? 0);
-  
-      d3.select(svgElement)
-        .select(".nodes")
-        .selectAll<SVGCircleElement, Node>("circle")
-        .attr("cx", (d) => d.x ?? 0)
-        .attr("cy", (d) => d.y ?? 0);
-  
-      d3.select(svgElement)
-        .select(".nodes")
-        .selectAll<SVGTextElement, Node>("text")
-        .attr("x", (d) => d.x ?? 0)
-        .attr("y", (d) => (d.y === undefined ? 0 : d.y - 20));
-    });
+      .attr("x", (d) => d.x ?? 0)
+      .attr("y", (d) => (d.y === undefined ? 0 : d.y - 20));
+  });
+};
+
+const drag = (simulation: d3.Simulation<Node, Link>) => {
+  const dragStarted = (
+    event: d3.D3DragEvent<SVGCircleElement, Node, Node>,
+    d: Node,
+  ) => {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
   };
-  
-  const drag = (simulation: d3.Simulation<Node, Link>) => {
-    const dragStarted = (
-      event: d3.D3DragEvent<SVGCircleElement, Node, Node>,
-      d: Node,
-    ) => {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    };
-  
-    const dragged = (
-      event: d3.D3DragEvent<SVGCircleElement, Node, Node>,
-      d: Node,
-    ) => {
-      d.fx = event.x;
-      d.fy = event.y;
-    };
-  
-    const dragEnded = (
-      event: d3.D3DragEvent<SVGCircleElement, Node, Node>,
-      d: Node,
-    ) => {
-      if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    };
-  
-    return d3
-      .drag<SVGCircleElement, Node>()
-      .on("start", dragStarted)
-      .on("drag", dragged)
-      .on("end", dragEnded);
+
+  const dragged = (
+    event: d3.D3DragEvent<SVGCircleElement, Node, Node>,
+    d: Node,
+  ) => {
+    d.fx = event.x;
+    d.fy = event.y;
   };
-  
-  export const prepareGroups = (svg: SVGElement) => {
-    if (d3.select(svg).select("g.links").empty()) {
-      d3.select(svg).append("g").attr("class", "links");
-    }
-  
-    if (d3.select(svg).select("g.nodes").empty()) {
-      d3.select(svg).append("g").attr("class", "nodes");
-    }
+
+  const dragEnded = (
+    event: d3.D3DragEvent<SVGCircleElement, Node, Node>,
+    d: Node,
+  ) => {
+    if (!event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
   };
-  
-  export const createSimulation = (width: number, height: number) => {
-    return d3
-      .forceSimulation<Node, Link>()
-      .force("link", d3.forceLink<Node, Link>().id(getNodeId).distance(110))
-      .force("charge", d3.forceManyBody())
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force(
-        "collide",
-        d3
-          .forceCollide<Node>()
-          .radius((d) => (d.isMain ? 20 : 15))
-          .iterations(2),
-      );
-  };
+
+  return d3
+    .drag<SVGCircleElement, Node>()
+    .on("start", dragStarted)
+    .on("drag", dragged)
+    .on("end", dragEnded);
+};
+
+export const prepareGroups = (svg: SVGElement) => {
+  if (d3.select(svg).select("g.links").empty()) {
+    d3.select(svg).append("g").attr("class", "links");
+  }
+
+  if (d3.select(svg).select("g.nodes").empty()) {
+    d3.select(svg).append("g").attr("class", "nodes");
+  }
+};
+
+export const createSimulation = (width: number, height: number) => {
+  return d3
+    .forceSimulation<Node, Link>()
+    .force("link", d3.forceLink<Node, Link>().id(getNodeId).distance(110))
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force(
+      "collide",
+      d3
+        .forceCollide<Node>()
+        .radius((d) => (d.isMain ? 20 : 15))
+        .iterations(2),
+    );
+};
