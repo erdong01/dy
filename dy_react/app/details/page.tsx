@@ -1,5 +1,9 @@
 'use client'
 import styles from '@/app/details/details.module.css';
+import '@vidstack/react/player/styles/base.css';
+import '@vidstack/react/player/styles/default/layouts/audio.css';
+import '@vidstack/react/player/styles/default/layouts/video.css';
+
 import {
   isHLSProvider,
   MediaPlayer,
@@ -7,9 +11,7 @@ import {
   type MediaProviderAdapter,
 } from "@vidstack/react";
 import { PlyrLayout, plyrLayoutIcons } from '@vidstack/react/player/layouts/plyr';
-import '@vidstack/react/player/styles/base.css';
-import '@vidstack/react/player/styles/default/layouts/audio.css';
-import '@vidstack/react/player/styles/default/layouts/video.css';
+
 import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/plyr/theme.css';
 import Hls from "hls.js";
@@ -123,15 +125,18 @@ export default function Details() {
     <>
       <div className={styles["video-container"]}>
         <MediaPlayer
-          autoPlay
+          src={streamUrl}
+          viewType='video'
+          streamType='on-demand'
+          logLevel='warn'
+          // autoPlay
           muted
           onProviderChange={onProviderChange}
-          src={streamUrl}
+
           playsInline
         >
           <MediaProvider />
           <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
-
           {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
         </MediaPlayer>
       </div>

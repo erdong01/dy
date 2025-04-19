@@ -39,7 +39,7 @@ func (*DB) DbResolverRegister(db *gorm.DB, configs config.Dbs) {
 		}
 		mysqlConfig := mysql.Config{
 			DSN:                       config.Dsn(), // DSN data source name
-			DefaultStringSize:         191,          // string 类型字段的默认长度
+			DefaultStringSize:         255,          // string 类型字段的默认长度
 			SkipInitializeWithVersion: false,        // 根据版本自动配置
 		}
 		sources = append(sources, mysql.New(mysqlConfig))
