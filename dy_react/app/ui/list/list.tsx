@@ -1,8 +1,16 @@
 
 'use client'
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-
 interface Video {
     Id: number;
     CreatedAt: string;
@@ -20,7 +28,7 @@ export default function List() {
     const [list, setList] = useState<Video[]>([]);
     useEffect(() => {
         const fetchMovies = async () => {
-            const data = await fetch('http://127.0.0.1:9090/api/v1/video/list?Page=1&PageSize=10&Id=0');
+            const data = await fetch('http://127.0.0.1:9090/api/v1/video/list?Page=2&PageSize=10&Id=0');
             if (!data.ok) {
                 console.log(data.status)
                 return
@@ -41,8 +49,18 @@ export default function List() {
                 <div className="card bg-base-100 w-96 shadow-xl" key={index}>
                     <Link href={`/details?id=${item.Id}`}>
                         <div className="card-body">
-                            <h2 className="card-title">{item.Title}</h2>
-                            <p>{item.Describe}</p>
+                            <h1 className="card-title">{item.Title}</h1>
+                            <p
+                                style={{
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 3,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                }}
+                            >
+                                {item.Describe}
+                            </p>
                         </div>
                         {
                             item.Cover ? (
@@ -58,6 +76,32 @@ export default function List() {
 
             ))}
         </div>
-
+        <br />
+        <div>
+            <Pagination>
+                <PaginationContent>
+                    <PaginationItem>
+                        <PaginationPrevious href="#" />
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationLink href="#">1</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationLink href="#" isActive>
+                            2
+                        </PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationLink href="#">3</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationEllipsis />
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationNext href="#" />
+                    </PaginationItem>
+                </PaginationContent>
+            </Pagination>
+        </div>
     </>)
 }

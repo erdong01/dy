@@ -1,9 +1,6 @@
 'use client'
 import styles from '@/app/details/details.module.css';
-import '@vidstack/react/player/styles/base.css';
-import '@vidstack/react/player/styles/default/layouts/audio.css';
-import '@vidstack/react/player/styles/default/layouts/video.css';
-
+import '@/app/globals.css';
 import {
   isHLSProvider,
   MediaPlayer,
@@ -11,13 +8,17 @@ import {
   type MediaProviderAdapter,
 } from "@vidstack/react";
 import { PlyrLayout, plyrLayoutIcons } from '@vidstack/react/player/layouts/plyr';
-
+import '@vidstack/react/player/styles/base.css';
+import '@vidstack/react/player/styles/default/layouts/audio.css';
+import '@vidstack/react/player/styles/default/layouts/video.css';
 import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/plyr/theme.css';
 import Hls from "hls.js";
+import { useSearchParams } from 'next/navigation';
 import { Core, CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import 'tailwindcss/tailwind.css';
 type UIEventsProps = PlayerEvents & {
   engine: HlsJsP2PEngine;
 };
@@ -40,20 +41,39 @@ export const subscribeToUiEvents = ({
     engine.addEventListener("onChunkUploaded", onChunkUploaded);
   }
 };
-
+interface Video {
+  Id: number;
+  CreatedAt: string;
+  UpdatedAt: string;
+  DeletedAt: string | null;
+  Title: string;
+  Describe: string;
+  Connection: number;
+  Url: string;
+  Cover: string;
+  VideoGroupId: number;
+}
 export default function Details() {
-  const streamUrl = "https://vodcnd00.otkbl.com/20250414/Ud6rdmU0/index.m3u8";
-  const { queryParams } = useQueryParams(streamUrl);
+  const [streamUrl, setStreamUrl] = useState<string>("");
   const [peers, setPeers] = useState<string[]>([]);
+  const [video, setVideo] = useState<Video>({
+    Id: 0,
+    CreatedAt: "",
+    UpdatedAt: "",
+    DeletedAt: null,
+    Title: "",
+    Describe: "",
+    Connection: 0,
+    Url: "",
+    Cover: "",
+    VideoGroupId: 0,
+  });
   const data = useRef<DownloadStats>({
     httpDownloaded: 0,
     p2pDownloaded: 0,
     p2pUploaded: 0,
   });
-  const trackers = useMemo(
-    () => queryParams.trackers.split(","),
-    [queryParams.trackers],
-  );
+
   const onPeerConnect = useCallback((params: PeerDetails) => {
     if (params.streamType !== "main") return;
 
@@ -100,7 +120,6 @@ export default function Details() {
       const config: HlsWithP2PConfig<typeof Hls> = {
         p2p: {
           core: {
-            announceTrackers: trackers,
             swarmId: streamUrl,
           },
           onHlsJsCreated: (hls) => {
@@ -119,7 +138,22 @@ export default function Details() {
       provider.config = config;
     }
   }, []);
-
+  const searchParams = useSearchParams();
+  const videoId = searchParams.get('id');
+  useEffect(() => {
+    const fetchMovies = async () => {
+      const data = await fetch('http://127.0.0.1:9090/api/v1/video/get?Id=' + videoId);
+      if (!data.ok) {
+        console.log(data.status)
+        return
+      }
+      const videoData: { Data: Video } = await data.json();
+      console.log("data:", videoData);
+      setStreamUrl(videoData.Data.Url)
+      setVideo(videoData.Data)
+    }
+    fetchMovies()
+  }, [])
 
   return (
     <>
@@ -132,17 +166,26 @@ export default function Details() {
           // autoPlay
           muted
           onProviderChange={onProviderChange}
-
           playsInline
         >
           <MediaProvider />
           <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
           {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
         </MediaPlayer>
+        <div className='relative inset-y-3'>
+          <h1 className="text-3xl font-semibold text-gray-900">{video.Title}</h1>
+        </div>
+        <br />
+        <div>
+          {video.Describe}
+        </div>
+        <div className={styles["node-container"]}>
+          <NodeNetwork peers={peers} />
+        </div>
       </div>
-      <div className={styles["node-container"]}>
-        <NodeNetwork peers={peers} />
-      </div>
+
+
+
     </>
   );
 };
@@ -210,7 +253,7 @@ export const PLAYERS = {
   plyr_shaka: "Plyr",
 } as const;
 export const DEFAULT_STREAM =
-  "https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8";
+  "";
 export const COLORS = {
   yellow: "#faf21b",
   lightOrange: "#ff7f0e",
