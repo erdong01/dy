@@ -1,9 +1,9 @@
-
 'use client'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
     Pagination,
     PaginationContent,
-    PaginationEllipsis,
     PaginationItem,
     PaginationLink,
     PaginationNext,
@@ -26,23 +26,34 @@ interface Video {
 
 export default function List() {
     const [list, setList] = useState<Video[]>([]);
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(30);
+    const [KeyWord, setKeyWord] = useState("");
+    const [total, setTotal] = useState(0);
     useEffect(() => {
         const fetchMovies = async () => {
-            const data = await fetch('http://127.0.0.1:9090/api/v1/video/list?Page=2&PageSize=10&Id=0');
+            const data = await fetch(`http://127.0.0.1:9090/api/v1/video/list?Page=${page}&PageSize=${pageSize}&Id=0&KeyWord=${KeyWord}`);
             if (!data.ok) {
-                console.log(data.status)
-                return
+                console.log(data.status);
+                return;
             }
-            const videoList: { Data: Video[] } = await data.json();
-            setList(videoList.Data)
+            const videoList: { Data: Video[]; Total: number } = await data.json();
+            setList(videoList.Data);
+            setTotal(videoList.Total);
             console.log("list:", videoList.Data);
-        }
-        fetchMovies()
-    }, [])
+        };
+        fetchMovies();
+    }, [page, pageSize, KeyWord]);
 
     // const posts = await data.json();
     // console.log(posts);
     return (<>
+        <br />
+        <div className="flex w-full max-w-sm items-center space-x-2">
+            <Input type="text" placeholder="Search" value={KeyWord} onChange={(e) => setKeyWord(e.target.value)} />
+            <Button type="submit" onClick={() => setPage(1)}>Search</Button>
+        </div>
+        <br />
         <div className="grid grid-cols-4 gap-4 mx-auto">
             {list.map((item, index) => (
 
@@ -81,24 +92,21 @@ export default function List() {
             <Pagination>
                 <PaginationContent>
                     <PaginationItem>
-                        <PaginationPrevious href="#" />
+                        <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); if(page > 1) setPage(page - 1); }} />
                     </PaginationItem>
+                    {[...Array(Math.ceil(total / pageSize))].map((_, i) => (
+                        <PaginationItem key={i}>
+                            <PaginationLink 
+                                href="#" 
+                                isActive={page === i + 1} 
+                                onClick={(e) => { e.preventDefault(); setPage(i + 1); }}
+                            >
+                                {i + 1}
+                            </PaginationLink>
+                        </PaginationItem>
+                    ))}
                     <PaginationItem>
-                        <PaginationLink href="#">1</PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationLink href="#" isActive>
-                            2
-                        </PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationLink href="#">3</PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationEllipsis />
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationNext href="#" />
+                        <PaginationNext href="#" onClick={(e) => { e.preventDefault(); if(page < Math.ceil(total / pageSize)) setPage(page + 1); }} />
                     </PaginationItem>
                 </PaginationContent>
             </Pagination>
