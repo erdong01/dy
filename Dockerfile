@@ -2,7 +2,7 @@ FROM ubuntu:24.04
 
 WORKDIR /app
 
-VOLUME ["./etc","/app/etc"]
-VOLUME ["./release","/app"]
+VOLUME ["/app/etc"]
+VOLUME ["/app"]
 
 ENTRYPOINT ["/app/main"]
