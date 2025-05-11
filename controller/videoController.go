@@ -22,8 +22,10 @@ func List(c *gin.Context) {
 	if err != nil {
 		return
 	}
+	keyWord := c.Query("KeyWord")
+
 	var video model.Video
-	data, total, err := video.List(page, pageSize, id)
+	data, total, err := video.List(page, pageSize, id, keyWord)
 	if err != nil {
 		return
 	}
