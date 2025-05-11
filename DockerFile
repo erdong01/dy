@@ -3,6 +3,6 @@ FROM ubuntu:24.04
 WORKDIR /app
 
 VOLUME ["./etc","/app/etc"]
-VOLUME ["./release","/app/release"]
+VOLUME ["./release","/app"]
 
-ENTRYPOINT ["/app/release/main"]
+ENTRYPOINT ["/app/main"]
