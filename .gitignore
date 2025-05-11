@@ -1,2 +1,3 @@
 cmd/kafka
 release/
+etc/config.yaml
