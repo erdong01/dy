@@ -2,7 +2,7 @@
 
 docker build  -t app .
 
-docker run -it -v ./etc:/app/etc -v ./release:/app app 
+docker run -it -dp 9090:9090 -v ./etc:/app/etc -v ./release:/app app 
 
 源证书
 以下证书已由 Cloudflare 颁发，可以在源服务器上与您在上一步中提供的主机名一起使用。如果您需要原始请求中未包含的其他主机名，应重新生成证书。
