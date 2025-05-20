@@ -1,6 +1,9 @@
 'use client'
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
+
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import {
     Pagination,
     PaginationContent,
@@ -32,7 +35,7 @@ export default function List() {
     const [total, setTotal] = useState(0);
     useEffect(() => {
         const fetchMovies = async () => {
-            const data = await fetch(`http://127.0.0.1:9090/api/v1/video/list?Page=${page}&PageSize=${pageSize}&Id=0&KeyWord=${KeyWord}`);
+            const data = await fetch(`${API_URL}/api/v1/video/list?Page=${page}&PageSize=${pageSize}&Id=0&KeyWord=${KeyWord}`);
             if (!data.ok) {
                 console.log(data.status);
                 return;
@@ -76,9 +79,13 @@ export default function List() {
                         {
                             item.Cover ? (
                                 <figure>
-                                    <img
+                                    <Image
                                         src={item.Cover}
-                                        alt="Shoes" />
+                                        alt={item.Title}
+                                        width={320}
+                                        height={180}
+                                        className="object-cover"
+                                    />
                                 </figure>
                             ) : null
                         }

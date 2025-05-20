@@ -1,6 +1,7 @@
 'use client'
 import styles from '@/app/details/details.module.css';
 import '@/app/globals.css';
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import {
   isHLSProvider,
   MediaPlayer,
@@ -15,15 +16,24 @@ import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/plyr/theme.css';
 import Hls from "hls.js";
 import { useSearchParams } from 'next/navigation';
-import { Core, CoreEventMap, PeerDetails } from "p2p-media-loader-core";
+import { CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import 'tailwindcss/tailwind.css';
+import { Suspense } from 'react';
+
+export default function DetailsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Details />
+    </Suspense>
+  );
+}
 type UIEventsProps = PlayerEvents & {
   engine: HlsJsP2PEngine;
 };
 
-export const subscribeToUiEvents = ({
+const subscribeToUiEvents = ({
   engine,
   onPeerConnect,
   onPeerClose,
@@ -53,7 +63,9 @@ interface Video {
   Cover: string;
   VideoGroupId: number;
 }
-export default function Details() {
+function Details() {
+  const searchParams = useSearchParams();
+  const videoId = searchParams.get('id');
   const [streamUrl, setStreamUrl] = useState<string>("");
   const [peers, setPeers] = useState<string[]>([]);
   const [video, setVideo] = useState<Video>({
@@ -138,11 +150,10 @@ export default function Details() {
       provider.config = config;
     }
   }, []);
-  const searchParams = useSearchParams();
-  const videoId = searchParams.get('id');
+
   useEffect(() => {
     const fetchMovies = async () => {
-      const data = await fetch('http://127.0.0.1:9090/api/v1/video/get?Id=' + videoId);
+      const data = await fetch(`${API_URL}/api/v1/video/get?Id=` + videoId);
       if (!data.ok) {
         console.log(data.status)
         return
@@ -218,8 +229,6 @@ export type ChartsData = {
   seconds: number;
 } & DownloadStats;
 
-export type PlayerKey = keyof typeof PLAYERS;
-export type PlayerName = (typeof PLAYERS)[PlayerKey];
 
 export type PlayerProps = {
   streamUrl: string;
@@ -237,24 +246,7 @@ export type PlayerEvents = Omit<
   "streamUrl" | "announceTrackers" | "swarmId"
 >;
 
-
-export const PLAYERS = {
-  vidstack_hls: "Vidstack",
-  hlsjs_hls: "Hls.js",
-  dplayer_hls: "DPlayer",
-  clappr_hls: "Clappr",
-  plyr_hls: "Plyr",
-  openPlayer_hls: "OpenPlayerJS",
-  mediaElement_hls: "MediaElement",
-  vidstack_indexeddb_hls: "Vidstack IndexedDB example",
-  shaka: "Shaka",
-  dplayer_shaka: "DPlayer",
-  clappr_shaka: "Clappr (DASH only)",
-  plyr_shaka: "Plyr",
-} as const;
-export const DEFAULT_STREAM =
-  "";
-export const COLORS = {
+const COLORS = {
   yellow: "#faf21b",
   lightOrange: "#ff7f0e",
   lightBlue: "#ADD8E6",
@@ -265,105 +257,10 @@ export const COLORS = {
     return d.isMain ? "hsl(210, 70%, 72.5%)" : "hsl(55, 70%, 72.5%)";
   },
 };
-export const DEFAULT_TRACKERS =
-  Core.DEFAULT_STREAM_CONFIG.announceTrackers.join(",");
-export const DEBUG_COMPONENT_ENABLED = "true";
 
+// type QueryParamsType = Record<string, string>;
 
-
-type QueryParamsType = Record<string, string>;
-
-function getInitialParams(
-  searchParams: URLSearchParams,
-  defaultParams: QueryParamsType,
-): QueryParamsType {
-  return Object.keys(defaultParams).reduce<QueryParamsType>((params, key) => {
-    params[key] = searchParams.get(key) ?? defaultParams[key];
-    return params;
-  }, {});
-}
-
-export function useQueryParams(streamUri?: string) {
-  const defaultParams = useMemo(() => {
-    return {
-      player: Object.keys(PLAYERS)[0],
-      streamUrl: streamUri ?? DEFAULT_STREAM,
-      trackers: DEFAULT_TRACKERS,
-      debug: "",
-      swarmId: "",
-    } as QueryParamsType;
-  }, [streamUri]);
-
-  const searchParamsRef = useRef<URLSearchParams | null>(null);
-  const [queryParams, setQueryParams] = useState<QueryParamsType>(() =>
-    typeof window !== 'undefined'
-      ? getInitialParams(new URLSearchParams(window.location.search), defaultParams)
-      : defaultParams
-  );
-  // 在客户端初始化searchParamsRef和queryParams
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      searchParamsRef.current = new URLSearchParams(window.location.search);
-      setQueryParams(getInitialParams(searchParamsRef.current, defaultParams));
-    }
-  }, [defaultParams]);
-  const updateQueryParamsFromURL = useCallback(() => {
-    if (typeof window === 'undefined' || !searchParamsRef.current) return;
-    const searchParams = searchParamsRef.current;
-    const newParams = getInitialParams(searchParams, defaultParams);
-
-    setQueryParams((prevParams) => {
-      const hasChanges = Object.keys(newParams).some(
-        (key) => prevParams[key] !== newParams[key],
-      );
-      return hasChanges ? newParams : prevParams;
-    });
-  }, [defaultParams]);
-
-  const setURLQueryParams = useCallback(
-    (newParams: Partial<QueryParamsType>) => {
-      if (typeof window === 'undefined') return;
-      if (!searchParamsRef.current) {
-        searchParamsRef.current = new URLSearchParams(window.location.search);
-      }
-
-      const searchParams = searchParamsRef.current;
-
-      Object.entries(newParams).forEach(([key, value]) => {
-        if (value == undefined || value === defaultParams[key]) {
-          searchParams.delete(key);
-        } else {
-          searchParams.set(key, value);
-        }
-      });
-
-      const newUrl =
-        searchParams.toString() === ""
-          ? window.location.pathname
-          : `${window.location.pathname}?${searchParams.toString()}`;
-      window.history.pushState({}, "", newUrl);
-
-      updateQueryParamsFromURL();
-    },
-    [defaultParams, updateQueryParamsFromURL],
-  );
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const handlePopState = () => {
-      searchParamsRef.current = new URLSearchParams(window.location.search);
-      updateQueryParamsFromURL();
-    };
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [updateQueryParamsFromURL]);
-
-  return { queryParams, setURLQueryParams };
-}
+// Removed unused getInitialParams and useQueryParams definitions
 
 import * as d3 from "d3";
 
@@ -379,7 +276,7 @@ const DEFAULT_GRAPH_DATA = {
   links: [] as Link[],
 };
 
-export const NodeNetwork = ({ peers }: GraphNetworkProps) => {
+const NodeNetwork = ({ peers }: GraphNetworkProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const networkDataRef = useRef(DEFAULT_GRAPH_DATA);
@@ -537,7 +434,7 @@ function removeD3Item(this: d3.BaseType) {
   d3.select(this).remove();
 }
 
-export const updateGraph = (
+const updateGraph = (
   newNodes: Node[],
   newLinks: Link[],
   simulation: d3.Simulation<Node, Link> | null,
@@ -672,7 +569,7 @@ const drag = (simulation: d3.Simulation<Node, Link>) => {
     .on("end", dragEnded);
 };
 
-export const prepareGroups = (svg: SVGElement) => {
+const prepareGroups = (svg: SVGElement) => {
   if (d3.select(svg).select("g.links").empty()) {
     d3.select(svg).append("g").attr("class", "links");
   }
@@ -682,7 +579,7 @@ export const prepareGroups = (svg: SVGElement) => {
   }
 };
 
-export const createSimulation = (width: number, height: number) => {
+const createSimulation = (width: number, height: number) => {
   return d3
     .forceSimulation<Node, Link>()
     .force("link", d3.forceLink<Node, Link>().id(getNodeId).distance(110))
