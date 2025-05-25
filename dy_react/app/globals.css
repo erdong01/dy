@@ -1,6 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, cupcake;
+}
+
+body {
+  @apply bg-base-100;
+}
+
 
 @layer base {
   :root {

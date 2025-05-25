@@ -1,7 +1,6 @@
 'use client'
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Image from "next/image";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import {
@@ -48,8 +47,7 @@ export default function List() {
         fetchMovies();
     }, [page, pageSize, KeyWord]);
 
-    // const posts = await data.json();
-    // console.log(posts);
+ 
     return (<>
         <br />
         <div className="flex w-full max-w-sm items-center space-x-2">
@@ -59,12 +57,11 @@ export default function List() {
         <br />
         <div className="grid grid-cols-4 gap-4 mx-auto">
             {list.map((item, index) => (
-
-                <div className="card bg-base-100 w-96 shadow-xl" key={index}>
+                <div className="card bg-base-200 w-96 shadow-xl" key={index}>
                     <Link href={`/details?id=${item.Id}`}>
                         <div className="card-body">
-                            <h1 className="card-title">{item.Title}</h1>
-                            <p
+                            <h1 className="card-title   text-base-content">{item.Title}</h1>
+                            <p className="bg-base-180 text-base-content"
                                 style={{
                                     display: '-webkit-box',
                                     WebkitLineClamp: 3,
@@ -79,7 +76,7 @@ export default function List() {
                         {
                             item.Cover ? (
                                 <figure>
-                                    <Image
+                                    <img
                                         src={item.Cover}
                                         alt={item.Title}
                                         width={320}
@@ -99,13 +96,13 @@ export default function List() {
             <Pagination>
                 <PaginationContent>
                     <PaginationItem>
-                        <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); if(page > 1) setPage(page - 1); }} />
+                        <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }} />
                     </PaginationItem>
                     {[...Array(Math.ceil(total / pageSize))].map((_, i) => (
                         <PaginationItem key={i}>
-                            <PaginationLink 
-                                href="#" 
-                                isActive={page === i + 1} 
+                            <PaginationLink
+                                href="#"
+                                isActive={page === i + 1}
                                 onClick={(e) => { e.preventDefault(); setPage(i + 1); }}
                             >
                                 {i + 1}
@@ -113,7 +110,7 @@ export default function List() {
                         </PaginationItem>
                     ))}
                     <PaginationItem>
-                        <PaginationNext href="#" onClick={(e) => { e.preventDefault(); if(page < Math.ceil(total / pageSize)) setPage(page + 1); }} />
+                        <PaginationNext href="#" onClick={(e) => { e.preventDefault(); if (page < Math.ceil(total / pageSize)) setPage(page + 1); }} />
                     </PaginationItem>
                 </PaginationContent>
             </Pagination>

@@ -1,7 +1,7 @@
 'use client'
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import styles from '@/app/details/details.module.css';
 import '@/app/globals.css';
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import {
   isHLSProvider,
   MediaPlayer,
@@ -21,6 +21,8 @@ import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import 'tailwindcss/tailwind.css';
 import { Suspense } from 'react';
+import * as d3 from "d3";
+import Head from 'next/head'
 
 export default function DetailsPage() {
   return (
@@ -51,6 +53,7 @@ const subscribeToUiEvents = ({
     engine.addEventListener("onChunkUploaded", onChunkUploaded);
   }
 };
+
 interface Video {
   Id: number;
   CreatedAt: string;
@@ -63,6 +66,7 @@ interface Video {
   Cover: string;
   VideoGroupId: number;
 }
+
 function Details() {
   const searchParams = useSearchParams();
   const videoId = searchParams.get('id');
@@ -168,40 +172,44 @@ function Details() {
 
   return (
     <>
-      <div className={styles["video-container"]}>
-        <MediaPlayer
-          src={streamUrl}
-          viewType='video'
-          streamType='on-demand'
-          logLevel='warn'
-          // autoPlay
-          muted
-          onProviderChange={onProviderChange}
-          playsInline
-        >
-          <MediaProvider />
-          <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
-          {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
-        </MediaPlayer>
-        <div className='relative inset-y-3'>
-          <h1 className="text-3xl font-semibold text-gray-900">{video.Title}</h1>
-        </div>
-        <br />
-        <div>
-          {video.Describe}
-        </div>
-        <div className={styles["node-container"]}>
-          <NodeNetwork peers={peers} />
+      <Head>
+        <title>{video.Title || '视频详情'}</title>
+        <meta name="description" content={video.Describe || '观看精彩视频内容'} />
+      </Head>
+      <div className='bg-base-300'>
+        <div className={styles["video-container"]}>
+          <MediaPlayer
+            src={streamUrl}
+            viewType='video'
+            streamType='on-demand'
+            logLevel='warn'
+            // autoPlay
+            muted
+            onProviderChange={onProviderChange}
+            playsInline
+          >
+            <MediaProvider />
+            <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
+            {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
+          </MediaPlayer>
+          <div className='relative inset-y-3'>
+            <h1 className="text-3xl font-semibold  text-base-content">{video.Title}</h1>
+          </div>
+          <br />
+          <div className="text-base-content">
+            {video.Describe}
+          </div>
+          <div className={styles["node-container"]}>
+            <NodeNetwork peers={peers} />
+          </div>
         </div>
       </div>
-
-
-
     </>
   );
 };
 
 type HlsWithP2PType = ReturnType<typeof HlsJsP2PEngine.injectMixin>;
+
 declare global {
   interface Window {
     shaka?: unknown;
@@ -257,13 +265,6 @@ const COLORS = {
     return d.isMain ? "hsl(210, 70%, 72.5%)" : "hsl(55, 70%, 72.5%)";
   },
 };
-
-// type QueryParamsType = Record<string, string>;
-
-// Removed unused getInitialParams and useQueryParams definitions
-
-import * as d3 from "d3";
-
 
 type GraphNetworkProps = {
   peers: string[];

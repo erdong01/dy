@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 	"strconv"
+	"video/core"
 	"video/model"
 
 	"github.com/gin-gonic/gin"
@@ -61,8 +62,17 @@ func Create(c *gin.Context) {
 
 		return
 	}
+	cc := model.Category{}
+	categoryIds := cc.Create(*video.Category[0].Type, video.Category)
 	video.Create()
-
+	var videoCategoryArr []model.VideoCategory
+	for _, categoryId := range categoryIds {
+		videoCategoryArr = append(videoCategoryArr, model.VideoCategory{
+			CategoryId: categoryId,
+			VideoId:    video.Id,
+		})
+	}
+	core.New().DB.Create(&videoCategoryArr)
 	c.JSON(http.StatusOK, gin.H{})
 
 }
