@@ -55,7 +55,7 @@ export default function List() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mx-auto">
             {list.map((item, index) => (
                 <div className="card bg-base-200 w-full shadow-xl" key={index}>
-                    <Link href={`/details?id=${item.Id}`} target="_blank" rel="noopener noreferrer">
+                    <Link href={`/details.html?id=${item.Id}`} target="_blank" rel="noopener noreferrer">
                         <div className="card-body">
                             <h1 className="card-title   text-base-content">{item.Title}</h1>
                             <p className="bg-base-180 text-base-content"
