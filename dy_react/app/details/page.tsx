@@ -1,5 +1,6 @@
 'use client'
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import React from 'react';
 import styles from '@/app/details/details.module.css';
 import '@/app/globals.css';
 import {
@@ -22,15 +23,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import 'tailwindcss/tailwind.css';
 import { Suspense } from 'react';
 import * as d3 from "d3";
-import Head from 'next/head'
 
-export default function DetailsPage() {
+export default function Page() {
+  console.log("111");
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Details />
-    </Suspense>
+    <>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Details />
+      </Suspense>
+    </>
   );
 }
+
 type UIEventsProps = PlayerEvents & {
   engine: HlsJsP2PEngine;
 };
@@ -171,40 +175,35 @@ function Details() {
   }, [])
 
   return (
-    <>
-      <Head>
-        <title>{video.Title || '视频详情'}</title>
-        <meta name="description" content={video.Describe || '观看精彩视频内容'} />
-      </Head>
-      <div className='bg-base-300'>
-        <div className={styles["video-container"]}>
-          <MediaPlayer
-            src={streamUrl}
-            viewType='video'
-            streamType='on-demand'
-            logLevel='warn'
-            // autoPlay
-            muted
-            onProviderChange={onProviderChange}
-            playsInline
-          >
-            <MediaProvider />
-            <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
-            {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
-          </MediaPlayer>
-          <div className='relative inset-y-3'>
-            <h1 className="text-3xl font-semibold  text-base-content">{video.Title}</h1>
-          </div>
-          <br />
-          <div className="text-base-content">
-            {video.Describe}
-          </div>
-          <div className={styles["node-container"]}>
-            <NodeNetwork peers={peers} />
-          </div>
+    <div className='bg-base-300'>
+      <div className={styles["video-container"]}>
+
+        <MediaPlayer
+          src={streamUrl}
+          viewType='video'
+          streamType='on-demand'
+          logLevel='warn'
+          autoPlay
+          muted
+          onProviderChange={onProviderChange}
+          playsInline
+        >
+          <MediaProvider />
+          <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
+          {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
+        </MediaPlayer>
+        <div className='relative inset-y-3'>
+          <h1 className="text-3xl font-semibold  text-base-content">{video.Title}</h1>
+        </div>
+        <br />
+        <div className="text-base-content">
+          {video.Describe}
+        </div>
+        <div className={styles["node-container"]}>
+          <NodeNetwork peers={peers} />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -1,7 +1,7 @@
 .video-container {
   width: 80vw;
   /* 设置容器宽度为屏幕宽度的80% */
-  height: 100vh;
+  /* height: 100vh; */
   /* 设置容器高度为屏幕高度的80% */
   margin: 0 auto;
   /* 居中显示 */
@@ -10,8 +10,19 @@
 .node-container {
   width: 80vw;
   /* 设置网络图容器宽度为屏幕宽度的80% */
-  height: 80vh;
+  /* height: 80vh; */
   /* 设置网络图容器高度为屏幕高度的80% */
   margin: 0 auto;
   /* 居中显示 */
+}
+
+/* 当屏幕宽度小于或等于 768px 时 (移动端) */
+@media (max-width: 768px) {
+  .video-container {
+    width: 100vw;
+  }
+
+  .node-container {
+    width: 100vw;
+  }
 }

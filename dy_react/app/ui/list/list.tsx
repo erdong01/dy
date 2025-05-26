@@ -1,8 +1,7 @@
 'use client'
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import {
     Pagination,
     PaginationContent,
@@ -46,8 +45,6 @@ export default function List() {
         };
         fetchMovies();
     }, [page, pageSize, KeyWord]);
-
- 
     return (<>
         <br />
         <div className="flex w-full max-w-sm items-center space-x-2">
@@ -55,10 +52,10 @@ export default function List() {
             <Button type="submit" onClick={() => setPage(1)}>Search</Button>
         </div>
         <br />
-        <div className="grid grid-cols-4 gap-4 mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mx-auto">
             {list.map((item, index) => (
-                <div className="card bg-base-200 w-96 shadow-xl" key={index}>
-                    <Link href={`/details?id=${item.Id}`}>
+                <div className="card bg-base-200 w-full shadow-xl" key={index}>
+                    <Link href={`/details?id=${item.Id}`} target="_blank" rel="noopener noreferrer">
                         <div className="card-body">
                             <h1 className="card-title   text-base-content">{item.Title}</h1>
                             <p className="bg-base-180 text-base-content"
@@ -75,20 +72,18 @@ export default function List() {
                         </div>
                         {
                             item.Cover ? (
-                                <figure>
+                                <figure className="overflow-hidden">
                                     <img
                                         src={item.Cover}
                                         alt={item.Title}
-                                        width={320}
-                                        height={180}
-                                        className="object-cover"
+                                        className="object-cover w-full h-auto"
                                     />
                                 </figure>
                             ) : null
                         }
+                        <br/>
                     </Link>
                 </div>
-
             ))}
         </div>
         <br />
