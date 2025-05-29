@@ -23,13 +23,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import 'tailwindcss/tailwind.css';
 import { Suspense } from 'react';
 import * as d3 from "d3";
-import { Helmet } from 'react-helmet';
 
-export default function Page() {
+export default function DetailsClient() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Details />
-    </Suspense>
+    <>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Details />
+      </Suspense>
+    </>
   );
 }
 
@@ -173,39 +174,32 @@ function Details() {
   }, [])
 
   return (
-    <div>
-      <Helmet>
-        <title>{video.Title}</title>
-        <meta property="og:title" content={video.Title} key="title" />
-        <meta name="description" content={video.Describe} />
-      </Helmet>
-      <div className='bg-base-300'>
-        <div className={styles["video-container"]}>
+    <div className='bg-base-300'>
+      <div className={styles["video-container"]}>
 
-          <MediaPlayer
-            src={streamUrl}
-            viewType='video'
-            streamType='on-demand'
-            logLevel='warn'
-            autoPlay
-            muted
-            onProviderChange={onProviderChange}
-            playsInline
-          >
-            <MediaProvider />
-            <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
-            {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
-          </MediaPlayer>
-          <div className='relative inset-y-3'>
-            <h1 className="text-3xl font-semibold  text-base-content">{video.Title}</h1>
-          </div>
-          <br />
-          <div className="text-base-content">
-            {video.Describe}
-          </div>
-          <div className={styles["node-container"]} >
-            <NodeNetwork peers={peers} />
-          </div>
+        <MediaPlayer
+          src={streamUrl}
+          viewType='video'
+          streamType='on-demand'
+          logLevel='warn'
+          autoPlay
+          muted
+          onProviderChange={onProviderChange}
+          playsInline
+        >
+          <MediaProvider />
+          <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
+          {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
+        </MediaPlayer>
+        <div className='relative inset-y-3'>
+          <h1 className="text-3xl font-semibold  text-base-content">{video.Title}</h1>
+        </div>
+        <br />
+        <div className="text-base-content">
+          {video.Describe}
+        </div>
+        <div className={styles["node-container"]}>
+          <NodeNetwork peers={peers} />
         </div>
       </div>
     </div>

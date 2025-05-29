@@ -13,6 +13,7 @@
   /* height: 80vh; */
   /* 设置网络图容器高度为屏幕高度的80% */
   margin: 0 auto;
+  visibility: hidden;
   /* 居中显示 */
 }
 
