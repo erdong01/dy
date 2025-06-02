@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"time"
 	"video/core"
 
@@ -41,20 +42,39 @@ func (that *Category) Create(cType int, categoryArr []*Category) (categoryIds []
 		}
 
 		if len(category.Category) > 0 {
-			for index := range category.Category {
-				var sonCategory Category
-				core.New().DB.Where("name = ?", category.Category[index].Name).
-					Where("type = ?", cType).First(&sonCategory)
+			names := strings.Split(category.Category[0].Name, ",")
+			if len(names) > 1 {
+				for index := range names {
+					var sonCategory Category
+					core.New().DB.Where("name = ?", names[index]).
+						Where("type = ?", cType).First(&sonCategory)
 
-				if sonCategory.Id <= 0 {
-					sonCategory.ParentId = parentCategory.Id
-					sonCategory.Name = category.Category[index].Name
-					sonCategory.Type = &cType
-					core.New().DB.Create(&sonCategory)
+					if sonCategory.Id <= 0 {
+						sonCategory.ParentId = parentCategory.Id
+						sonCategory.Name = names[index]
+						sonCategory.Type = &cType
+						core.New().DB.Create(&sonCategory)
+					}
+
+					categoryIds = append(categoryIds, sonCategory.Id)
 				}
+			} else {
+				for index := range category.Category {
+					var sonCategory Category
+					core.New().DB.Where("name = ?", category.Category[index].Name).
+						Where("type = ?", cType).First(&sonCategory)
 
-				categoryIds = append(categoryIds, sonCategory.Id)
+					if sonCategory.Id <= 0 {
+						sonCategory.ParentId = parentCategory.Id
+						sonCategory.Name = category.Category[index].Name
+						sonCategory.Type = &cType
+						core.New().DB.Create(&sonCategory)
+					}
+
+					categoryIds = append(categoryIds, sonCategory.Id)
+				}
 			}
+
 		} else {
 			categoryIds = append(categoryIds, parentCategory.Id)
 		}

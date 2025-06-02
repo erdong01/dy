@@ -175,7 +175,7 @@ function Details() {
   return (
     <div>
       <Helmet>
-        <title>{video.Title}</title>
+        <title>{video.Title}在线播放观看下载</title>
         <meta property="og:title" content={video.Title} key="title" />
         <meta name="description" content={video.Describe} />
       </Helmet>
