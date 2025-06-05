@@ -110,5 +110,6 @@ export default function List() {
                 </PaginationContent>
             </Pagination>
         </div>
+        <br/>
     </>)
 }
