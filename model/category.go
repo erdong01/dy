@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"strings"
 	"time"
 	"video/core"
@@ -8,16 +9,23 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	CategoryTypeMovie    = 1 //电影
+	CategoryTypeTVSeries = 2 //电视剧
+)
+
 // Category  分类表。
 type Category struct {
-	Id        int64           `gorm:"column:id;primaryKey" json:"Id"`     //
-	CreatedAt *time.Time      `gorm:"column:created_at" json:"CreatedAt"` //        创建时间
-	UpdatedAt *time.Time      `gorm:"column:updated_at" json:"UpdatedAt"` //        更新时间
-	DeletedAt *gorm.DeletedAt `gorm:"column:deleted_at" json:"DeletedAt"` //   删除时间
-	Name      string          `gorm:"column:name" json:"Name"`            //
-	ParentId  int64           `gorm:"column:parent_id" json:"ParentId"`   //
-	Type      *int            `gorm:"column:type" json:"Type"`            //
-	Category  []Category      `gorm:"foreignKey:ParentId;references:Id" json:"Category"`
+	Id          int64           `gorm:"column:id;primaryKey" json:"Id"`     //
+	CreatedAt   *time.Time      `gorm:"column:created_at" json:"CreatedAt"` //        创建时间
+	UpdatedAt   *time.Time      `gorm:"column:updated_at" json:"UpdatedAt"` //        更新时间
+	DeletedAt   *gorm.DeletedAt `gorm:"column:deleted_at" json:"DeletedAt"` //   删除时间
+	Name        string          `gorm:"column:name" json:"Name"`            //
+	ParentId    int64           `gorm:"column:parent_id" json:"ParentId"`   //
+	Type        *int            `gorm:"column:type" json:"Type"`            //
+	IsHide      *int            `gorm:"column:is_hide" json:"IsHide"`       //type:*int              comment:            version:2025-05-06 06:48
+	SonCategory []Category      `gorm:"foreignKey:ParentId;references:Id" json:"SonCategory"`
+	Category    []Category      `gorm:"foreignKey:ParentId;references:Id" json:"Category,omitempty"`
 }
 
 // TableName 表名:category，分类表。
@@ -25,10 +33,18 @@ func (*Category) TableName() string {
 	return "category"
 }
 
-const (
-	CategoryTypeMovie    = 1
-	CategoryTypeTVSeries = 2
-)
+func (that *Category) HomeList() (categorySonArr []Category) {
+	var categoryData Category
+	err := core.New().DB.Model(that.Category).
+		Preload("SonCategory").
+		Where("parent_id = 0 AND type = 1 AND name = ?", "类型").Find(&categoryData).Error
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	categoryData.Name = "电影"
+	categorySonArr = append(categorySonArr, categoryData)
+	return
+}
 
 func (that *Category) Create(cType int, categoryArr []*Category) (categoryIds []int64) {
 	for index := range categoryArr {

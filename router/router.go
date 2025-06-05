@@ -2,6 +2,7 @@ package router
 
 import (
 	"video/controller"
+	"video/controller/category"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,5 +25,10 @@ func (that *ApiRouter) InitApiRouter(Router *gin.RouterGroup) {
 		apiRouter.POST("/update", controller.Update) //
 		apiRouter.GET("/list", controller.List)      //
 		apiRouter.GET("/get", controller.Get)        //
+	}
+
+	categoryRouter := that.Router.Group("/v1").Group("/category")
+	{
+		categoryRouter.GET("/list", category.List) //
 	}
 }
