@@ -133,7 +133,6 @@ function Details() {
   const onProviderChange = useCallback((provider: MediaProviderAdapter | null) => {
     if (isHLSProvider(provider)) {
       const HlsWithP2P = HlsJsP2PEngine.injectMixin(Hls);
-
       provider.library = HlsWithP2P as unknown as typeof Hls;
       const config: HlsWithP2PConfig<typeof Hls> = {
         p2p: {
@@ -152,11 +151,9 @@ function Details() {
           },
         },
       };
-
       provider.config = config;
     }
   }, []);
-
   useEffect(() => {
     const fetchMovies = async () => {
       const data = await fetch(`${API_URL}/api/v1/video/get?Id=` + videoId);
@@ -175,7 +172,7 @@ function Details() {
   return (
     <div>
       <Helmet>
-        <title>{video.Title}在线播放观看下载</title>
+        <title>{video.Title}-在线观看-下载</title>
         <meta property="og:title" content={video.Title} key="title" />
         <meta name="description" content={video.Describe} />
       </Helmet>
@@ -188,7 +185,6 @@ function Details() {
             streamType='on-demand'
             logLevel='warn'
             autoPlay
-            muted
             onProviderChange={onProviderChange}
             playsInline
           >

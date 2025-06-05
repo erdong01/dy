@@ -52,7 +52,7 @@ export default function List() {
             <Button type="submit" onClick={() => setPage(1)}>Search</Button>
         </div>
         <br />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mx-auto">
             {list.map((item, index) => (
                 <div className="card bg-base-200 w-full shadow-xl" key={index}>
                     <Link href={`/details?id=${item.Id}`} target="_blank" rel="noopener noreferrer">
@@ -81,7 +81,7 @@ export default function List() {
                                 </figure>
                             ) : null
                         }
-                        <br/>
+                        <br />
                     </Link>
                 </div>
             ))}
@@ -110,6 +110,6 @@ export default function List() {
                 </PaginationContent>
             </Pagination>
         </div>
-        <br/>
+        <br />
     </>)
 }
