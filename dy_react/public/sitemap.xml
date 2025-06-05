@@ -13,42 +13,71 @@
 
   <!-- 详情页面 -->
   <url>
-    <loc>https://7x.chat/details.html?id=1</loc>
+    <loc>https://7x.chat/details?id=1</loc>
     <lastmod>2025-05-21T12:40:24+00:00</lastmod>
   </url>
 
   <url>
-    <loc>https://7x.chat/details.html?id=2</loc>
+    <loc>https://7x.chat/details?id=2</loc>
     <lastmod>2025-05-21T12:40:24+00:00</lastmod>
   </url>
 
   <url>
-    <loc>https://7x.chat/details.html?id=3</loc>
+    <loc>https://7x.chat/details?id=3</loc>
     <lastmod>2025-05-21T12:40:24+00:00</lastmod>
   </url>
 
   <url>
-    <loc>https://7x.chat/details.html?id=4</loc>
+    <loc>https://7x.chat/details?id=4</loc>
     <lastmod>2025-05-26T12:40:24+00:00</lastmod>
   </url>
 
   <url>
-    <loc>https://7x.chat/details.html?id=5</loc>
+    <loc>https://7x.chat/details?id=5</loc>
     <lastmod>2025-05-27T12:40:24+00:00</lastmod>
   </url>
 
   <url>
-    <loc>https://7x.chat/details.html?id=6</loc>
+    <loc>https://7x.chat/details?id=6</loc>
     <lastmod>2025-05-27T12:40:24+00:00</lastmod>
   </url>
 
   <url>
-    <loc>https://7x.chat/details.html?id=7</loc>
+    <loc>https://7x.chat/details?id=7</loc>
     <lastmod>2025-05-27T12:40:24+00:00</lastmod>
   </url>
-  
+
   <url>
-    <loc>https://7x.chat/details.html?id=8</loc>
+    <loc>https://7x.chat/details?id=8</loc>
+    <lastmod>2025-05-27T12:40:24+00:00</lastmod>
+  </url>
+
+  <url>
+    <loc>https://7x.chat/details?id=9</loc>
+    <lastmod>2025-05-27T12:40:24+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://7x.chat/details?id=10</loc>
+    <lastmod>2025-05-27T12:40:24+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://7x.chat/details?id=11</loc>
+    <lastmod>2025-05-27T12:40:24+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://7x.chat/details?id=12</loc>
+    <lastmod>2025-05-27T12:40:24+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://7x.chat/details?id=13</loc>
+    <lastmod>2025-05-27T12:40:24+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://7x.chat/details?id=14</loc>
+    <lastmod>2025-05-27T12:40:24+00:00</lastmod>
+  </url>
+  <url>
+  <loc>https://7x.chat/details?id=15</loc>
     <lastmod>2025-05-27T12:40:24+00:00</lastmod>
   </url>
   <!-- 继续添加更多ID... -->
