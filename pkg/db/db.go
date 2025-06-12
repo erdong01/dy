@@ -2,10 +2,12 @@ package db
 
 import (
 	"fmt"
+	"time"
 	"video/config"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/plugin/dbresolver"
 )
 
 func InitGorm(config config.Mysql) (*gorm.DB, error) {
@@ -19,5 +21,11 @@ func InitGorm(config config.Mysql) (*gorm.DB, error) {
 	if err != nil {
 		fmt.Printf("gorm connect err:%v", err)
 	}
+	err = db.Use(
+		dbresolver.Register(dbresolver.Config{}).
+			SetConnMaxIdleTime(time.Hour).
+			SetConnMaxLifetime(24 * time.Hour).
+			SetMaxIdleConns(config.MaxIdleConns).
+			SetMaxOpenConns(config.MaxOpenConns))
 	return db, err
 }
