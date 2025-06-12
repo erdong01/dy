@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from 'next/script';
 import "./globals.css";
 import type { Metadata } from "next";
-// import { Helmet } from 'react-helmet';
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 export const metadata: Metadata = {
-  title: "7x影视在线播放在线观看",
+  title: "7x影视",
   description: "分享好看的影视",
 };
 export default function RootLayout({
@@ -23,12 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html >
-      {/* <Helmet>
-        <title>7x影视在线播放在线观看</title>
-        <meta property="og:title" content="影视世界 在线播放 在线观看" key="title" />
-        <meta name="description" content="分享好看的影视" />
-      </Helmet> */}
+    <html suppressHydrationWarning>
       <head>
         <Script id="theme" strategy="beforeInteractive">
           {`

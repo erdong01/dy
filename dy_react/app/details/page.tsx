@@ -24,12 +24,15 @@ import 'tailwindcss/tailwind.css';
 import { Suspense } from 'react';
 import * as d3 from "d3";
 import { Helmet } from 'react-helmet';
-
+import Menu from "@/app/ui/menu/menu";
 export default function Page() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Details />
-    </Suspense>
+    <>
+
+      <Suspense fallback={<div>Loading...</div>}>
+        <Details />
+      </Suspense>
+    </>
   );
 }
 
@@ -162,7 +165,6 @@ function Details() {
         return
       }
       const videoData: { Data: Video } = await data.json();
-      console.log("data:", videoData);
       setStreamUrl(videoData.Data.Url)
       setVideo(videoData.Data)
     }
@@ -172,13 +174,13 @@ function Details() {
   return (
     <div>
       <Helmet>
-        <title>{video.Title}-在线观看-下载</title>
+        <title>{video.Title} 在线观看 下载</title>
         <meta property="og:title" content={video.Title} key="title" />
         <meta name="description" content={video.Describe} />
       </Helmet>
       <div className='bg-base-300'>
         <div className={styles["video-container"]}>
-
+          <Menu />  
           <MediaPlayer
             src={streamUrl}
             viewType='video'
