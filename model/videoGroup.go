@@ -9,7 +9,7 @@ import (
 
 // VideoGroup  视频分组。
 type VideoGroup struct {
-	Id        int64           `gorm:"column:primaryKey;id" json:"Id"`     //type:int64             comment:            version:2025-05-22 09:55
+	Id        int64           `gorm:"column:id;primaryKey" json:"Id"`     //type:int64             comment:            version:2025-05-22 09:55
 	CreatedAt *time.Time      `gorm:"column:created_at" json:"CreatedAt"` //type:*time.Time        comment:创建时间    version:2025-05-22 09:55
 	UpdatedAt *time.Time      `gorm:"column:updated_at" json:"UpdatedAt"` //type:*time.Time        comment:更新时间    version:2025-05-22 09:55
 	DeletedAt *gorm.DeletedAt `gorm:"column:deleted_at" json:"DeletedAt"` //type:*gorm.DeletedAt   comment:删除时间    version:2025-05-22 09:55
@@ -27,7 +27,7 @@ func (that *VideoGroup) Edit() {
 	core.New().DB.Model(that).Where("title = ?", that.Title).First(&videoGroupData)
 
 	if videoGroupData.Id > 0 {
-		that = &videoGroupData
+		that.Id = videoGroupData.Id
 	} else {
 		if that.IsHide <= 0 {
 			that.IsHide = 2

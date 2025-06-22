@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"video/core"
@@ -50,8 +51,9 @@ func Get(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	if video.VideoGroupId > 0 {
-		video.VideoList = video.ListByVideoGroupId(video.VideoGroupId)
+	if data.VideoGroupId > 0 {
+		data.VideoList = video.ListByVideoGroupId(data.VideoGroupId)
+		fmt.Println("data.VideoList", data.VideoList)
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"Data": data,

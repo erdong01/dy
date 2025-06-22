@@ -16,7 +16,7 @@ import '@vidstack/react/player/styles/default/layouts/video.css';
 import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/plyr/theme.css';
 import Hls from "hls.js";
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -68,10 +68,12 @@ interface Video {
   VideoGroupId: number;
   Duration?: string;
   ViewCount?: number;
+  VideoList :Video[];
 }
 
 function Details() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const videoId = searchParams.get('id');
   const [streamUrl, setStreamUrl] = useState<string>("");
   const [peers, setPeers] = useState<string[]>([]);
@@ -86,6 +88,7 @@ function Details() {
     Url: "",
     Cover: "",
     VideoGroupId: 0,
+    VideoList:[]
   });
   const data = useRef<DownloadStats>({
     httpDownloaded: 0,
@@ -218,6 +221,22 @@ function Details() {
             <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
             {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
           </MediaPlayer>
+
+          {/* Video list buttons */}
+          {video.VideoList && video.VideoList.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {video.VideoList.map((item) => (
+                <button
+                  key={item.Id}
+                  onClick={() => router.push(`/details?id=${item.Id}`)}
+                  className={`btn btn-sm ${videoId === String(item.Id) ? 'btn-primary' : 'btn-outline'}`}
+                >
+                  {item.Title || `Video ${item.Id}`}
+                </button>
+              ))}
+            </div>
+          )}
+        
           <div className='relative inset-y-3'>
             <h1 className="text-3xl font-semibold  text-base-content">{video.Title}</h1>
           </div>
