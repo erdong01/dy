@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/pagination";
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 interface Video {
     Id: number;
     CreatedAt: string;
@@ -47,7 +48,7 @@ export default function List() {
     }, [page, pageSize, KeyWord]);
     return (<>
         <br />
-        <div className="flex w-full max-w-sm items-center space-x-2">
+        <div className="flex w-full max-w-sm items-center space-x-2 min-h-12">
             <Input type="text" placeholder="Search" value={KeyWord} onChange={(e) => setKeyWord(e.target.value)} />
             <Button type="submit" onClick={() => setPage(1)}>Search</Button>
         </div>
@@ -70,17 +71,18 @@ export default function List() {
                                 {item.Describe}
                             </p>
                         </div>
-                        {
-                            item.Cover ? (
-                                <figure className="overflow-hidden">
-                                    <img
-                                        src={item.Cover}
-                                        alt={item.Title}
-                                        className="object-cover w-full h-auto"
-                                    />
-                                </figure>
-                            ) : null
-                        }
+                        {item.Cover ? (
+                            <figure className="relative w-full pt-[125%]">
+                                <Image
+                                    src={item.Cover}
+                                    alt={item.Title}
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, 20vw"
+                                    className="object-contain"
+                                    priority={index === 0}
+                                />
+                            </figure>
+                        ) : null}
                         <br />
                     </Link>
                 </div>
