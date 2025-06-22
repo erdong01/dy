@@ -23,6 +23,9 @@ func (*VideoGroup) TableName() string {
 }
 
 func (that *VideoGroup) Edit() {
+	if that.Title == "" {
+		return
+	}
 	var videoGroupData VideoGroup
 	core.New().DB.Model(that).Where("title = ?", that.Title).First(&videoGroupData)
 
