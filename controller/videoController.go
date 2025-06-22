@@ -50,21 +50,31 @@ func Get(c *gin.Context) {
 	if err != nil {
 		return
 	}
+	if video.VideoGroupId > 0 {
+		video.VideoList = video.ListByVideoGroupId(video.VideoGroupId)
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"Data": data,
 	})
 }
 
+// 创建
 func Create(c *gin.Context) {
 	var video model.Video
 	err := c.BindJSON(&video)
 	if err != nil {
-
 		return
 	}
 	cc := model.Category{}
 	categoryIds := cc.Create(*video.Category[0].Type, video.Category)
-	video.Create()
+	video.VideoGroup.Edit()
+	if video.VideoGroup.Id > 0 {
+		video.VideoGroupId = video.VideoGroup.Id
+	}
+	err = video.Create()
+	if err != nil {
+		return
+	}
 	var videoCategoryArr []model.VideoCategory
 	for _, categoryId := range categoryIds {
 		videoCategoryArr = append(videoCategoryArr, model.VideoCategory{

@@ -1,6 +1,6 @@
 'use client'
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-import React from 'react';
+import React, { Suspense } from 'react';
 import styles from '@/app/details/details.module.css';
 import '@/app/globals.css';
 import {
@@ -21,18 +21,14 @@ import { CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import 'tailwindcss/tailwind.css';
-import { Suspense } from 'react';
 import * as d3 from "d3";
 import { Helmet } from 'react-helmet';
 import Menu from "@/app/ui/menu/menu";
 export default function Page() {
   return (
-    <>
-
-      <Suspense fallback={<div>Loading...</div>}>
-        <Details />
-      </Suspense>
-    </>
+    <Suspense fallback={<div>Loading...</div>}>
+      <Details />
+    </Suspense>
   );
 }
 
@@ -70,6 +66,8 @@ interface Video {
   Url: string;
   Cover: string;
   VideoGroupId: number;
+  Duration?: string;
+  ViewCount?: number;
 }
 
 function Details() {
@@ -174,13 +172,39 @@ function Details() {
   return (
     <div>
       <Helmet>
-        <title>{video.Title} 在线观看 下载</title>
+        <title>{video.Title}-在线观看 下载</title>
         <meta property="og:title" content={video.Title} key="title" />
         <meta name="description" content={video.Describe} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "VideoObject",
+            "name": video.Title,
+            "description": video.Describe,
+            "thumbnailUrl": video.Cover,
+            "uploadDate": video.CreatedAt,
+            "contentUrl": video.Url,
+            "embedUrl": `https://7x.chat/details?id=${video.Id}`,
+            "duration": video.Duration || undefined,
+            "interactionStatistic": {
+              "@type": "InteractionCounter",
+              "interactionType": { "@type": "WatchAction" },
+              "userInteractionCount": video.ViewCount || 0
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "YourSiteName",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://7x.chat/logo.png"
+              }
+            }
+          })}
+        </script>
       </Helmet>
       <div className='bg-base-300'>
         <div className={styles["video-container"]}>
-          <Menu />  
+          <Menu />
           <MediaPlayer
             src={streamUrl}
             viewType='video'

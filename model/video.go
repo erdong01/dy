@@ -20,7 +20,10 @@ type Video struct {
 	Cover        string          `gorm:"column:cover" json:"Cover"`                 //type:string       comment:封面          version:2025-00-22 15:16
 	VideoGroupId int64           `gorm:"column:video_group_id" json:"VideoGroupId"` //type:int64        comment:视频分组id    version:2025-00-22 15:16
 	Category     []*Category     `gorm:"-" json:"Category"`
+	VideoGroup   VideoGroup      `gorm:"-" json:"VideoGroup"`
+	VideoList    []Video         `gorm:"-" json:"VideoList"`
 	Type         *int            `gorm:"column:type" json:"Type"` //type:*int              comment:类型 1 电影 2 电视剧    version:2025-05-06 06:51
+
 }
 
 // TableName 表名:video，。
@@ -39,7 +42,7 @@ func (that *Video) List(page int, pageSize int, id int64, keyWord string) (data 
 	if keyWord != "" {
 		db.Where("MATCH(title) AGAINST(?)", keyWord)
 	}
-	err = db.Where("id > ?", id).Offset((page - 1) * pageSize).Limit(pageSize).Find(&data).Error
+	err = db.Where("id > ?", id).Offset((page - 1) * pageSize).Order("id DESC").Limit(pageSize).Find(&data).Error
 	return
 }
 
@@ -50,5 +53,12 @@ func (that *Video) Get(id int64) (data Video, err error) {
 
 func (that *Video) Del(id int64) (err error) {
 	err = core.New().DB.Where("id = ?", id).Delete(&Video{}).Error
+	return
+}
+
+func (that *Video) ListByVideoGroupId(videoGroupId int64) (data []Video) {
+
+	core.New().DB.Model(that).Where("video_group_id = ?", &videoGroupId).Find(&data)
+
 	return
 }

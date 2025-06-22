@@ -1,4 +1,3 @@
-
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from 'next/script';
 import "./globals.css";
@@ -27,17 +26,8 @@ export default function RootLayout({
       <head>
         <Script id="theme" strategy="beforeInteractive">
           {`
-            if (
-              localStorage.theme === 'dark' ||
-              (!('theme' in localStorage) &&
-                window.matchMedia('(prefers-color-scheme: dark)').matches)
-            ) {
-              document.documentElement.classList.add('dark');
-              document.documentElement.dataset.theme = 'dark';
-            } else {
-              document.documentElement.classList.remove('dark');
-              document.documentElement.dataset.theme = 'cupcake';
-            }
+            document.documentElement.classList.add('dark');
+            document.documentElement.dataset.theme = 'pureblack';
           `}
         </Script>
         <script src="https://cdn.jsdelivr.net/npm/@webtor/embed-sdk-js/dist/index.min.js" async></script>

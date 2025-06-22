@@ -1,5 +1,6 @@
 import daisyui from "daisyui";
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
 export default {
     darkMode: ["class"],
@@ -59,8 +60,27 @@ export default {
   		}
   	}
   },
+  daisyui: {
+    themes: [
+      {
+        // 定义一个纯黑主题
+        pureblack: {
+          "primary": "#1e40af",
+          "secondary": "#9333ea",
+          "accent": "#f59e0b",
+          "neutral": "#111111",
+          "base-100": "#141517",
+          "info": "#2094f3",
+          "success": "#009485",
+          "warning": "#ff9900",
+          "error": "#ff5724"
+        }
+      },
+      "black"  // 保留 DaisyUI 内置的黑色主题
+    ]
+  },
   plugins: [
     daisyui,
-      require("tailwindcss-animate")
+      animate
 ],
 } satisfies Config;

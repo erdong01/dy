@@ -1,9 +1,6 @@
 User-agent: *
-Allow: /
-Disallow: /favicon.ico
-Disallow: /_next/static/media/569ce4b8f30dc480-s.p.woff2
-Disallow: /_next/static/media/93f479601ee12b01-s.p.woff2
-Disallow: /_next/static/media/93f479601ee12b01-s.p.woff2
-Disallow: /_next/static/media/569ce4b8f30dc480-s.p.woff2
 
-Sitemap: https://www.7x.chat/sitemap.xml
+Allow: /
+Allow: /details
+
+Sitemap: https://7x.chat/sitemap.xml
