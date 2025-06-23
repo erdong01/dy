@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 export const metadata: Metadata = {
-  title: "7x影视",
-  description: "分享好看的影视",
+  title: "7x影视-在线观看",
+  description: "分享好看的影视,在线观看",
 };
 export default function RootLayout({
   children,

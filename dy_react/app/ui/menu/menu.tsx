@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import {
     NavigationMenu,
-    NavigationMenuContent,
+    // NavigationMenuContent,
     NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
@@ -48,7 +48,7 @@ export default function Menu() {
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                     <NavigationMenuTrigger>List</NavigationMenuTrigger>
-                    <NavigationMenuContent>
+                    {/* <NavigationMenuContent>
                         <ul className="grid w-[300px] gap-4">
                             <li>
                                 <NavigationMenuLink asChild>
@@ -77,7 +77,7 @@ export default function Menu() {
                                 </NavigationMenuLink>
                             </li>
                         </ul>
-                    </NavigationMenuContent>
+                    </NavigationMenuContent> */}
                 </NavigationMenuItem>
             </NavigationMenuList>
         </NavigationMenu>
