@@ -68,9 +68,15 @@ interface Video {
   VideoGroupId: number;
   Duration?: string;
   ViewCount?: number;
-  VideoList :Video[];
+  VideoList: Video[];
 }
-
+const isIOS = () => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  // 只需检查 User Agent 字符串中是否包含苹果设备的关键词
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+};
 function Details() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -88,7 +94,7 @@ function Details() {
     Url: "",
     Cover: "",
     VideoGroupId: 0,
-    VideoList:[]
+    VideoList: []
   });
   const data = useRef<DownloadStats>({
     httpDownloaded: 0,
@@ -97,6 +103,9 @@ function Details() {
   });
 
   const onPeerConnect = useCallback((params: PeerDetails) => {
+    if (isIOS()) {
+      return;
+    }
     if (params.streamType !== "main") return;
 
     setPeers((peers) => {
@@ -166,8 +175,8 @@ function Details() {
         return
       }
       const videoData: { Data: Video } = await data.json();
-      setStreamUrl(videoData.Data.Url)
       setVideo(videoData.Data)
+      setStreamUrl(videoData.Data.Url)
     }
     fetchMovies()
   }, [])
@@ -175,6 +184,7 @@ function Details() {
   return (
     <div>
       <Helmet>
+        <meta name="referrer" content="no-referrer" />
         <title>{video.Title}-在线观看 下载</title>
         <meta property="og:title" content={video.Title} key="title" />
         <meta name="description" content={video.Describe} />
@@ -213,7 +223,7 @@ function Details() {
             viewType='video'
             streamType='on-demand'
             logLevel='warn'
-            autoPlay
+            // autoPlay
             onProviderChange={onProviderChange}
             playsInline
           >
@@ -236,7 +246,7 @@ function Details() {
               ))}
             </div>
           )}
-        
+
           <div className='relative inset-y-3'>
             <h1 className="text-3xl font-semibold  text-base-content">{video.Title}</h1>
           </div>
