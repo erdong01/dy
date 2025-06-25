@@ -24,6 +24,7 @@ import 'tailwindcss/tailwind.css';
 import * as d3 from "d3";
 import { Helmet } from 'react-helmet';
 import Menu from "@/app/ui/menu/menu";
+
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -70,6 +71,7 @@ interface Video {
   ViewCount?: number;
   VideoList: Video[];
 }
+
 const isIOS = () => {
   if (typeof window === 'undefined') {
     return false;
@@ -77,6 +79,7 @@ const isIOS = () => {
   // 只需检查 User Agent 字符串中是否包含苹果设备的关键词
   return /iPad|iPhone|iPod/.test(navigator.userAgent);
 };
+
 function Details() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -167,6 +170,7 @@ function Details() {
       provider.config = config;
     }
   }, []);
+  
   useEffect(() => {
     const fetchMovies = async () => {
       const data = await fetch(`${API_URL}/api/v1/video/get?Id=` + videoId);

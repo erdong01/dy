@@ -1,8 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from 'next/script';
 import "./globals.css";
-import type { Metadata } from "next";
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -12,10 +10,7 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-export const metadata: Metadata = {
-  title: "7x影视-在线观看",
-  description: "分享好看的影视,在线观看",
-};
+
 export default function RootLayout({
   children,
 }: Readonly<{

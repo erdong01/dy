@@ -8,7 +8,7 @@ import {
     NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
-    NavigationMenuTrigger,
+    // NavigationMenuTrigger,
     navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { useEffect } from 'react';
@@ -46,9 +46,9 @@ export default function Menu() {
                         <Link href="/">Home</Link>
                     </NavigationMenuLink>
                 </NavigationMenuItem>
-                <NavigationMenuItem>
+                {/* <NavigationMenuItem>
                     <NavigationMenuTrigger>List</NavigationMenuTrigger>
-                    {/* <NavigationMenuContent>
+                    <NavigationMenuContent>
                         <ul className="grid w-[300px] gap-4">
                             <li>
                                 <NavigationMenuLink asChild>
@@ -77,8 +77,8 @@ export default function Menu() {
                                 </NavigationMenuLink>
                             </li>
                         </ul>
-                    </NavigationMenuContent> */}
-                </NavigationMenuItem>
+                    </NavigationMenuContent>
+                </NavigationMenuItem> */}
             </NavigationMenuList>
         </NavigationMenu>
     </>);
