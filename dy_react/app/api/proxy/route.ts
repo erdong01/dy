@@ -23,14 +23,11 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: NextRequest) {
-  // 添加调试日志
-  console.log('代理请求接收到:', request.url);
-  
+ 
   // 1. 从客户端请求中获取目标视频 URL
   const { searchParams } = new URL(request.url);
   const originalUrl = searchParams.get('url');
-
-  console.log('解析出的目标URL:', originalUrl);
+ 
 
   if (!originalUrl) {
     console.log('错误：缺少URL参数');

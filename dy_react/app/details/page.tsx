@@ -1,8 +1,17 @@
 'use client'
+
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-import React, { Suspense } from 'react';
-import styles from '@/app/details/details.module.css';
+
+import 'tailwindcss/tailwind.css';
 import '@/app/globals.css';
+import '@vidstack/react/player/styles/base.css';
+import '@vidstack/react/player/styles/default/layouts/audio.css';
+import '@vidstack/react/player/styles/default/layouts/video.css';
+import '@vidstack/react/player/styles/default/theme.css';
+import '@vidstack/react/player/styles/plyr/theme.css';
+import styles from '@/app/details/details.module.css';
+
+import React, { Suspense ,useCallback, useEffect, useRef, useState} from 'react';
 import {
   isHLSProvider,
   MediaPlayer,
@@ -10,76 +19,20 @@ import {
   type MediaProviderAdapter,
 } from "@vidstack/react";
 import { PlyrLayout, plyrLayoutIcons } from '@vidstack/react/player/layouts/plyr';
-import '@vidstack/react/player/styles/base.css';
-import '@vidstack/react/player/styles/default/layouts/audio.css';
-import '@vidstack/react/player/styles/default/layouts/video.css';
-import '@vidstack/react/player/styles/default/theme.css';
-import '@vidstack/react/player/styles/plyr/theme.css';
 import Hls from "hls.js";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
-import { useCallback, useEffect, useRef, useState } from "react";
-import 'tailwindcss/tailwind.css';
-import * as d3 from "d3";
 import Menu from "@/app/ui/menu/menu";
+import * as d3 from "d3";
 
 export default function Page() {
-
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
       <Details />
     </Suspense>
   );
 }
-
-type UIEventsProps = PlayerEvents & {
-  engine: HlsJsP2PEngine;
-};
-
-const subscribeToUiEvents = ({
-  engine,
-  onPeerConnect,
-  onPeerClose,
-  onChunkDownloaded,
-  onChunkUploaded,
-}: UIEventsProps) => {
-  if (onPeerConnect) engine.addEventListener("onPeerConnect", onPeerConnect);
-  if (onPeerClose) {
-    engine.addEventListener("onPeerClose", onPeerClose);
-  }
-  if (onChunkDownloaded) {
-    engine.addEventListener("onChunkDownloaded", onChunkDownloaded);
-  }
-  if (onChunkUploaded) {
-    engine.addEventListener("onChunkUploaded", onChunkUploaded);
-  }
-};
-
-interface Video {
-  Id: number;
-  CreatedAt: string;
-  UpdatedAt: string;
-  DeletedAt: string | null;
-  Title: string;
-  Describe: string;
-  Connection: number;
-  Url: string;
-  Cover: string;
-  VideoGroupId: number;
-  Duration?: string;
-  ViewCount?: number;
-  VideoList: Video[];
-}
-
-const isIOS = () => {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-  // 只需检查 User Agent 字符串中是否包含苹果设备的关键词
-  return /iPad|iPhone|iPod/.test(navigator.userAgent);
-};
-
 function Details() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -106,9 +59,7 @@ function Details() {
   });
 
   const onPeerConnect = useCallback((params: PeerDetails) => {
-    if (isIOS()) {
-      return;
-    }
+
     if (params.streamType !== "main") return;
 
     setPeers((peers) => {
@@ -149,8 +100,8 @@ function Details() {
 
   const isSmallDeviceByUA = () => {
     const userAgent = navigator.userAgent.toLowerCase();
-    console.log("userAgent:",userAgent);
-    const mobileKeywords = ['android', 'iphone', 'windows phone',"Android","webOS","iPhone","iPad","iPod","BlackBerry","IEMobile"];
+    console.log("userAgent:", userAgent);
+    const mobileKeywords = ['android', 'iphone', 'windows phone', "Android", "webOS", "iPhone", "iPad", "iPod", "BlackBerry", "IEMobile"];
     for (const keyword of mobileKeywords) {
       if (userAgent.indexOf(keyword) !== -1) {
         return true;
@@ -246,6 +197,8 @@ function Details() {
           <Menu />
           <MediaPlayer
             src={streamUrl}
+            load="visible" 
+            posterLoad="visible"
             viewType='video'
             streamType='on-demand'
             logLevel='warn'
@@ -254,7 +207,7 @@ function Details() {
             playsInline
           >
             <MediaProvider />
-            <PlyrLayout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt" icons={plyrLayoutIcons} />
+            <PlyrLayout icons={plyrLayoutIcons} />
             {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
           </MediaPlayer>
 
@@ -287,6 +240,45 @@ function Details() {
       </div>
     </div>
   );
+};
+
+interface Video {
+  Id: number;
+  CreatedAt: string;
+  UpdatedAt: string;
+  DeletedAt: string | null;
+  Title: string;
+  Describe: string;
+  Connection: number;
+  Url: string;
+  Cover: string;
+  VideoGroupId: number;
+  Duration?: string;
+  ViewCount?: number;
+  VideoList: Video[];
+}
+
+type UIEventsProps = PlayerEvents & {
+  engine: HlsJsP2PEngine;
+};
+
+const subscribeToUiEvents = ({
+  engine,
+  onPeerConnect,
+  onPeerClose,
+  onChunkDownloaded,
+  onChunkUploaded,
+}: UIEventsProps) => {
+  if (onPeerConnect) engine.addEventListener("onPeerConnect", onPeerConnect);
+  if (onPeerClose) {
+    engine.addEventListener("onPeerClose", onPeerClose);
+  }
+  if (onChunkDownloaded) {
+    engine.addEventListener("onChunkDownloaded", onChunkDownloaded);
+  }
+  if (onChunkUploaded) {
+    engine.addEventListener("onChunkUploaded", onChunkUploaded);
+  }
 };
 
 type HlsWithP2PType = ReturnType<typeof HlsJsP2PEngine.injectMixin>;

@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
+      <Menu />
       <div className="grid justify-items-center">
-        <Menu />
         <List />
       </div>
     </>
