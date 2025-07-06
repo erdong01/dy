@@ -11,6 +11,11 @@ import (
 )
 
 func List(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+		}
+	}()
 	var err error
 	page, err := strconv.Atoi(c.Query("Page"))
 	if err != nil {
@@ -42,6 +47,11 @@ func List(c *gin.Context) {
 	})
 }
 func Get(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+		}
+	}()
 	id, err := strconv.ParseInt(c.Query("Id"), 10, 64)
 	if err != nil {
 		return
@@ -53,7 +63,6 @@ func Get(c *gin.Context) {
 	}
 	if data.VideoGroupId > 0 {
 		data.VideoList = video.ListByVideoGroupId(data.VideoGroupId)
-		fmt.Println("data.VideoList", data.VideoList)
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"Data": data,
@@ -62,6 +71,11 @@ func Get(c *gin.Context) {
 
 // 创建
 func Create(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+		}
+	}()
 	var video model.Video
 	err := c.BindJSON(&video)
 	if err != nil {

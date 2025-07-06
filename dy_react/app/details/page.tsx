@@ -22,10 +22,10 @@ import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import 'tailwindcss/tailwind.css';
 import * as d3 from "d3";
-import { Helmet } from 'react-helmet';
 import Menu from "@/app/ui/menu/menu";
 
 export default function Page() {
+
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <Details />
@@ -146,14 +146,29 @@ function Details() {
     });
   }, []);
 
+
+  const isSmallDeviceByUA = () => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    console.log("userAgent:",userAgent);
+    const mobileKeywords = ['android', 'iphone', 'windows phone',"Android","webOS","iPhone","iPad","iPod","BlackBerry","IEMobile"];
+    for (const keyword of mobileKeywords) {
+      if (userAgent.indexOf(keyword) !== -1) {
+        return true;
+      }
+    }
+    return false;
+  }
   const onProviderChange = useCallback((provider: MediaProviderAdapter | null) => {
+    if (isSmallDeviceByUA() == true) {
+      return
+    }
     if (isHLSProvider(provider)) {
       const HlsWithP2P = HlsJsP2PEngine.injectMixin(Hls);
       provider.library = HlsWithP2P as unknown as typeof Hls;
       const config: HlsWithP2PConfig<typeof Hls> = {
         p2p: {
           core: {
-            swarmId: streamUrl,
+            swarmId: videoId ? `video-${videoId}` : undefined,
           },
           onHlsJsCreated: (hls) => {
             subscribeToUiEvents({
@@ -169,8 +184,8 @@ function Details() {
       };
       provider.config = config;
     }
-  }, []);
-  
+  }, [videoId, onPeerConnect, onPeerClose, onChunkDownloaded, onChunkUploaded]);
+
   useEffect(() => {
     const fetchMovies = async () => {
       const data = await fetch(`${API_URL}/api/v1/video/get?Id=` + videoId);
@@ -180,45 +195,52 @@ function Details() {
       }
       const videoData: { Data: Video } = await data.json();
       setVideo(videoData.Data)
-      setStreamUrl(videoData.Data.Url)
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(videoData.Data.Url)}`;
+      setStreamUrl(proxyUrl)
+      document.title = videoData.Data.Title + "-在线观看 下载";
+      const metaDesc = document.querySelector("meta[name='description']");
+      if (metaDesc) {
+        metaDesc.setAttribute("content", videoData.Data.Describe || "");
+      }
     }
     fetchMovies()
-  }, [])
+
+  }, [videoId])
 
   return (
     <div>
-      <Helmet>
+      <header>
         <meta name="referrer" content="no-referrer" />
-        <title>{video.Title}-在线观看 下载</title>
         <meta property="og:title" content={video.Title} key="title" />
-        <meta name="description" content={video.Describe} />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "VideoObject",
-            "name": video.Title,
-            "description": video.Describe,
-            "thumbnailUrl": video.Cover,
-            "uploadDate": video.CreatedAt,
-            "contentUrl": video.Url,
-            "embedUrl": `https://7x.chat/details?id=${video.Id}`,
-            "duration": video.Duration || undefined,
-            "interactionStatistic": {
-              "@type": "InteractionCounter",
-              "interactionType": { "@type": "WatchAction" },
-              "userInteractionCount": video.ViewCount || 0
-            },
-            "publisher": {
-              "@type": "Organization",
-              "name": "YourSiteName",
-              "logo": {
-                "@type": "ImageObject",
-                "url": "https://7x.chat/logo.png"
+        <script type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "VideoObject",
+              "name": video.Title,
+              "description": video.Describe,
+              "thumbnailUrl": video.Cover,
+              "uploadDate": video.CreatedAt,
+              "contentUrl": video.Url,
+              "embedUrl": `https://7x.chat/details?id=${video.Id}`,
+              "duration": video.Duration || undefined,
+              "interactionStatistic": {
+                "@type": "InteractionCounter",
+                "interactionType": { "@type": "WatchAction" },
+                "userInteractionCount": video.ViewCount || 0
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "YourSiteName",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://7x.chat/logo.png"
+                }
               }
-            }
-          })}
-        </script>
-      </Helmet>
+            })
+          }}
+        />
+      </header>
       <div className='bg-base-300'>
         <div className={styles["video-container"]}>
           <Menu />

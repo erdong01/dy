@@ -24,7 +24,7 @@ func InitGorm(config config.Mysql) (*gorm.DB, error) {
 	err = db.Use(
 		dbresolver.Register(dbresolver.Config{}).
 			SetConnMaxIdleTime(time.Hour).
-			SetConnMaxLifetime(24 * time.Hour).
+			SetConnMaxLifetime(8 * time.Hour).
 			SetMaxIdleConns(config.MaxIdleConns).
 			SetMaxOpenConns(config.MaxOpenConns))
 	return db, err

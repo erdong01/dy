@@ -19,6 +19,7 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning>
       <head>
+        <meta name="description" content="" />
         <Script id="theme" strategy="beforeInteractive">
           {`
             document.documentElement.classList.add('dark');
@@ -26,6 +27,8 @@ export default function RootLayout({
           `}
         </Script>
         <script src="https://cdn.jsdelivr.net/npm/@webtor/embed-sdk-js/dist/index.min.js" async></script>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3171747573136206"
+          crossOrigin="anonymous"></script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
