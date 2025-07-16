@@ -11,7 +11,7 @@ import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/plyr/theme.css';
 import styles from '@/app/details/details.module.css';
 
-import React, { Suspense ,useCallback, useEffect, useRef, useState} from 'react';
+import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   isHLSProvider,
   MediaPlayer,
@@ -98,28 +98,15 @@ function Details() {
   }, []);
 
 
-  const isSmallDeviceByUA = () => {
-    const userAgent = navigator.userAgent.toLowerCase();
-    console.log("userAgent:", userAgent);
-    const mobileKeywords = ['android', 'iphone', 'windows phone', "Android", "webOS", "iPhone", "iPad", "iPod", "BlackBerry", "IEMobile"];
-    for (const keyword of mobileKeywords) {
-      if (userAgent.indexOf(keyword) !== -1) {
-        return true;
-      }
-    }
-    return false;
-  }
+
   const onProviderChange = useCallback((provider: MediaProviderAdapter | null) => {
-    if (isSmallDeviceByUA() == true) {
-      return
-    }
     if (isHLSProvider(provider)) {
       const HlsWithP2P = HlsJsP2PEngine.injectMixin(Hls);
       provider.library = HlsWithP2P as unknown as typeof Hls;
       const config: HlsWithP2PConfig<typeof Hls> = {
         p2p: {
           core: {
-            swarmId: videoId ? `video-${videoId}` : undefined,
+            swarmId: streamUrl ? streamUrl : undefined,
           },
           onHlsJsCreated: (hls) => {
             subscribeToUiEvents({
@@ -135,7 +122,7 @@ function Details() {
       };
       provider.config = config;
     }
-  }, [videoId, onPeerConnect, onPeerClose, onChunkDownloaded, onChunkUploaded]);
+  }, [streamUrl, onPeerConnect, onPeerClose, onChunkDownloaded, onChunkUploaded]);
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -146,8 +133,7 @@ function Details() {
       }
       const videoData: { Data: Video } = await data.json();
       setVideo(videoData.Data)
-      const proxyUrl = `/api/proxy?url=${encodeURIComponent(videoData.Data.Url)}`;
-      setStreamUrl(proxyUrl)
+      setStreamUrl(videoData.Data.Url)
       document.title = videoData.Data.Title + "-在线观看 下载";
       const metaDesc = document.querySelector("meta[name='description']");
       if (metaDesc) {
@@ -197,7 +183,7 @@ function Details() {
           <Menu />
           <MediaPlayer
             src={streamUrl}
-            load="visible" 
+            load="visible"
             posterLoad="visible"
             viewType='video'
             streamType='on-demand'
