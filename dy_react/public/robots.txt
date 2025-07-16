@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 Allow: /details
 
-Sitemap: https://7x.chat/sitemap.xml
+Sitemap: https://www.7x.chat/sitemap.xml

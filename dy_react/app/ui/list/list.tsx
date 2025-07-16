@@ -46,6 +46,16 @@ export default function List() {
         };
         fetchMovies();
     }, [page, pageSize, KeyWord]);
+      const myHtmlString = `
+<amp-ad width="100vw" height="320"
+     type="adsense"
+     data-ad-client="ca-pub-3171747573136206"
+     data-ad-slot="6270870589"
+     data-auto-format="rspv"
+     data-full-width="">
+  <div overflow=""></div>
+</amp-ad>
+  `;
     return (<>
         <br />
         <div className="flex w-full max-w-sm items-center space-x-2 min-h-12">
@@ -112,6 +122,9 @@ export default function List() {
                 </PaginationContent>
             </Pagination>
         </div>
+         <div
+        dangerouslySetInnerHTML={{ __html: myHtmlString }}
+      />
         <br />
     </>)
 }

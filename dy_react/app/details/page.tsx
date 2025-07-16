@@ -173,7 +173,7 @@ function Details() {
               "thumbnailUrl": video.Cover,
               "uploadDate": video.CreatedAt,
               "contentUrl": video.Url,
-              "embedUrl": `https://7x.chat/details?id=${video.Id}`,
+              "embedUrl": `https://www.7x.chat/details?id=${video.Id}`,
               "duration": video.Duration || undefined,
               "interactionStatistic": {
                 "@type": "InteractionCounter",
@@ -185,7 +185,7 @@ function Details() {
                 "name": "YourSiteName",
                 "logo": {
                   "@type": "ImageObject",
-                  "url": "https://7x.chat/logo.png"
+                  "url": "https://www.7x.chat/logo.png"
                 }
               }
             })
