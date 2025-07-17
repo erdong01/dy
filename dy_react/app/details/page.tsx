@@ -25,7 +25,7 @@ import { CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
 import Menu from "@/app/ui/menu/menu";
 import * as d3 from "d3";
-
+import Head from 'next/head'
 export default function Page() {
   return (
     <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
@@ -146,7 +146,7 @@ function Details() {
 
   return (
     <div>
-      <header>
+      <Head>
         <meta name="referrer" content="no-referrer" />
         <meta property="og:title" content={video.Title} key="title" />
         <script type="application/ld+json"
@@ -177,7 +177,7 @@ function Details() {
             })
           }}
         />
-      </header>
+      </Head>
       <div className='bg-base-300'>
         <div className={styles["video-container"]}>
           <Menu />
