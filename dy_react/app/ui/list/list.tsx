@@ -42,7 +42,6 @@ export default function List() {
             const videoList: { Data: Video[]; Total: number } = await data.json();
             setList(videoList.Data);
             setTotal(videoList.Total);
-            console.log("list:", videoList.Data);
         };
         fetchMovies();
     }, [page, pageSize, KeyWord]);

@@ -37,11 +37,12 @@ func (that *Video) Create() (err error) {
 }
 
 func (that *Video) List(page int, pageSize int, id int64, keyWord string) (data []Video, total int64, err error) {
-	core.New().DB.Model(&Video{}).Count(&total)
 	db := core.New().DB.Model(&Video{})
 	if keyWord != "" {
 		db.Where("MATCH(title) AGAINST(?)", keyWord)
 	}
+	db.Count(&total)
+
 	err = db.Where("id > ?", id).Offset((page - 1) * pageSize).Order("id DESC").Limit(pageSize).Find(&data).Error
 	return
 }
