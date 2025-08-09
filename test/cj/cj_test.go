@@ -137,12 +137,10 @@ func transformData(source VideoDetail) (*MyVideoCreatePayload, error) {
 }
 
 func TestAA(t *testing.T) {
-	fmt.Println("111")
-	return
+
 	// --- 步骤 1: 从源API获取数据 ---
 	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=54090"
 	log.Printf("正在从源API抓取数据: %s", sourceURL)
-	return
 	resp, err := http.Get(sourceURL)
 	if err != nil {
 		log.Fatalf("请求源API失败: %v", err)
