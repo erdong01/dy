@@ -100,7 +100,6 @@ func Create(c *gin.Context) {
 	}
 	core.New().DB.Create(&videoCategoryArr)
 	c.JSON(http.StatusOK, gin.H{})
-
 }
 
 func Update(c *gin.Context) {
