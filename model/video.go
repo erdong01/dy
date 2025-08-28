@@ -32,14 +32,25 @@ func (*Video) TableName() string {
 }
 
 func (that *Video) Create() (err error) {
-	err = core.New().DB.Create(that).Error
+	var oldVideo Video
+	core.New().DB.
+		Where("MATCH(title) AGAINST(CONCAT('\"', ?, '\"') IN BOOLEAN MODE)", that.Title).
+		Where("title = ?", that.Title).
+		First(&oldVideo)
+	if oldVideo.Id > 0 {
+		core.New().DB.Where("id = ?", oldVideo.Id).Updates(that)
+		that.Id = oldVideo.Id
+	} else {
+		err = core.New().DB.Create(that).Error
+	}
+
 	return
 }
 
 func (that *Video) List(page int, pageSize int, id int64, keyWord string) (data []Video, total int64, err error) {
 	db := core.New().DB.Model(&Video{})
 	if keyWord != "" {
-		db.Where("MATCH(title) AGAINST(?)", keyWord)
+		db = db.Where("MATCH(title) AGAINST(?)", keyWord)
 	}
 	db.Count(&total)
 

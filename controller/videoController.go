@@ -91,14 +91,69 @@ func Create(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	var videoCategoryArr []model.VideoCategory
-	for _, categoryId := range categoryIds {
-		videoCategoryArr = append(videoCategoryArr, model.VideoCategory{
-			CategoryId: categoryId,
-			VideoId:    video.Id,
-		})
+	// 同步 Video-Category 关联：已存在不创建、缺失则新增、多余则删除
+	db := core.New().DB
+	tx := db.Begin()
+	if tx.Error != nil {
+		return
 	}
-	core.New().DB.Create(&videoCategoryArr)
+
+	// 查询当前已存在的关联
+	var existing []model.VideoCategory
+	if err := tx.Where("video_id = ?", video.Id).Find(&existing).Error; err != nil {
+		tx.Rollback()
+		return
+	}
+
+	// 计算需要新增的条目
+	var toCreate []model.VideoCategory
+	for _, categoryId := range categoryIds {
+		found := false
+		for _, vc := range existing {
+			if vc.CategoryId == categoryId { // 已存在
+				found = true
+				break
+			}
+		}
+		if !found { // 缺失，需创建
+			toCreate = append(toCreate, model.VideoCategory{
+				CategoryId: categoryId,
+				VideoId:    video.Id,
+			})
+		}
+	}
+	if len(toCreate) > 0 {
+		if err := tx.Create(&toCreate).Error; err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+
+	// 计算需要删除的条目（数据库多出来的）
+	var toDeleteIds []interface{}
+	for _, vc := range existing {
+		keep := false
+		for _, categoryId := range categoryIds {
+			if vc.CategoryId == categoryId { // 仍在请求集合中，保留
+				keep = true
+				break
+			}
+		}
+		if !keep {
+			toDeleteIds = append(toDeleteIds, vc.CategoryId)
+		}
+	}
+	if len(toDeleteIds) > 0 {
+		if err := tx.Where("video_id = ? AND category_id IN ?", video.Id, toDeleteIds).Delete(&model.VideoCategory{}).Error; err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{})
 }
 
