@@ -36,6 +36,7 @@ type VideoDetail struct {
 	VodYear     string `json:"vod_year"`      // 年代
 	VodPlayFrom string `json:"vod_play_from"` // 播放来源，用$$$分隔
 	VodPlayURL  string `json:"vod_play_url"`  // 播放地址，用$$$分隔
+	VodSub      string `json:"vod_sub"`       // 播放地址，用$$$分隔
 }
 
 // 2. 定义你自己的API的数据结构 (api.7x.chat)
@@ -48,6 +49,7 @@ type MyVideoCreatePayload struct {
 	Cover      string          `json:"Cover"`
 	URL        string          `json:"Url"`
 	Describe   string          `json:"Describe"`
+	Alias      string          `json:"Alias"`
 	Category   []CategoryGroup `json:"Category"`
 }
 
@@ -139,14 +141,28 @@ func transformData(source VideoDetail) (*MyVideoCreatePayload, error) {
 func TestAA(t *testing.T) {
 
 	// --- 步骤 1: 从源API获取数据 ---
-	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=54090"
+	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=61812"
 	log.Printf("正在从源API抓取数据: %s", sourceURL)
-	resp, err := http.Get(sourceURL)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", sourceURL, nil)
 	if err != nil {
 		log.Fatalf("请求源API失败: %v", err)
 	}
-	defer resp.Body.Close()
+	// 设置一个看起来像浏览器的 User-Agent
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36")
 
+	// 如果需要，也可以设置其他头部信息
+	// req.Header.Set("Authorization", "Bearer YOUR_API_KEY") // 示例：添加认证Token
+	// req.Header.Set("Referer", "http://some-trusted-site.com") // 示例：添加Referer
+
+	// 发送请求
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalf("请求源API失败: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+	fmt.Println(resp)
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("源API返回错误状态码: %d", resp.StatusCode)
 	}
@@ -171,14 +187,17 @@ func TestAA(t *testing.T) {
 	// --- 步骤 2: 转换数据 ---
 	log.Println("正在将数据转换为目标格式...")
 	myPayload, err := transformData(sourceVideo)
+
 	if err != nil {
 		log.Fatalf("数据转换失败: %v", err)
 	}
 	log.Println("数据转换成功!")
+	myPayloadJson, _ := json.Marshal(myPayload)
+	fmt.Println(string(myPayloadJson))
 
 	// --- 步骤 3: 提交到你自己的API ---
-	// targetURL := "https://api.7x.chat/api/v1/video/create"
-	targetURL := "http://127.0.0.1:9090/api/v1/video/create"
+	targetURL := "https://api.7x.chat/api/v1/video/create"
+	// targetURL := "http://127.0.0.1:9090/api/v1/video/create"
 	log.Printf("正在提交数据到你的API: %s", targetURL)
 
 	payloadBytes, err := json.MarshalIndent(myPayload, "", "    ") // 使用 MarshalIndent 格式化输出，方便调试
@@ -199,8 +218,8 @@ func TestAA(t *testing.T) {
 	// 如果你的API需要认证，在这里添加认证头
 	// postReq.Header.Set("Authorization", "Bearer YOUR_API_TOKEN")
 
-	client := &http.Client{}
-	postResp, err := client.Do(postReq)
+	client2 := &http.Client{}
+	postResp, err := client2.Do(postReq)
 	if err != nil {
 		log.Fatalf("提交到你的API失败: %v", err)
 	}
