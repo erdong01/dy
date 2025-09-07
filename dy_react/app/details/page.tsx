@@ -23,9 +23,12 @@ import Hls from "hls.js";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
+import { useIsClient } from '@/app/hooks/useIsClient'; 
+
 import Menu from "@/app/ui/menu/menu";
 import * as d3 from "d3";
-import Script from 'next/script';
+
+
 export default function Page() {
   return (
     <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
@@ -34,6 +37,7 @@ export default function Page() {
   );
 }
 function Details() {
+  const isClient = useIsClient();
   const searchParams = useSearchParams();
   const router = useRouter();
   const videoId = searchParams.get('id');
@@ -146,38 +150,6 @@ function Details() {
 
   return (
     <div>
-      <head>
-        <meta name="referrer" content="no-referrer" />
-        <meta property="og:title" content={video.Title} key="title" />
-        <script type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "VideoObject",
-              "name": video.Title,
-              "description": video.Describe,
-              "thumbnailUrl": video.Cover,
-              "uploadDate": video.CreatedAt,
-              "contentUrl": video.Url,
-              "embedUrl": `https://www.7x.chat/details?id=${video.Id}`,
-              "duration": video.Duration || undefined,
-              "interactionStatistic": {
-                "@type": "InteractionCounter",
-                "interactionType": { "@type": "WatchAction" },
-                "userInteractionCount": video.ViewCount || 0
-              },
-              "publisher": {
-                "@type": "Organization",
-                "name": "YourSiteName",
-                "logo": {
-                  "@type": "ImageObject",
-                  "url": "https://www.7x.chat/logo.png"
-                }
-              }
-            })
-          }}
-        />
-      </head>
       <div className='bg-base-300'>
         <div className={styles["video-container"]}>
           <Menu />
@@ -193,7 +165,7 @@ function Details() {
             playsInline
           >
             <MediaProvider />
-            <PlyrLayout icons={plyrLayoutIcons} />
+            {isClient && <PlyrLayout icons={plyrLayoutIcons} />}
             {/* <DefaultVideoLayout icons={defaultLayoutIcons} /> */}
           </MediaPlayer>
 
