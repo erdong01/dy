@@ -9,6 +9,9 @@ RUN apt-get update && \
 
 WORKDIR /app
 
+ENV GOMEMLIMIT="1000MiB"
+ENV GOGC=300
+
 VOLUME ["/app/etc"]
 VOLUME ["/app"]
 
