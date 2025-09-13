@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/erdong01/kit"
 )
 
 // 1. 定义源API的数据结构 (caiji.dyttzyapi.com)
@@ -139,9 +141,8 @@ func transformData(source VideoDetail) (*MyVideoCreatePayload, error) {
 }
 
 func TestAA(t *testing.T) {
-
 	// --- 步骤 1: 从源API获取数据 ---
-	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=61812"
+	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=63252"
 	log.Printf("正在从源API抓取数据: %s", sourceURL)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", sourceURL, nil)
@@ -187,10 +188,11 @@ func TestAA(t *testing.T) {
 	// --- 步骤 2: 转换数据 ---
 	log.Println("正在将数据转换为目标格式...")
 	myPayload, err := transformData(sourceVideo)
-
 	if err != nil {
 		log.Fatalf("数据转换失败: %v", err)
 	}
+	kit.DumpJson(myPayload)
+	return
 	log.Println("数据转换成功!")
 	myPayloadJson, _ := json.Marshal(myPayload)
 	fmt.Println(string(myPayloadJson))

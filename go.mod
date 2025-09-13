@@ -4,13 +4,14 @@ go 1.25
 
 require (
 	github.com/IBM/sarama v1.45.2
+	github.com/erdong01/kit v1.20.2
 	github.com/gin-gonic/gin v1.10.1
 	github.com/redis/go-redis/v9 v9.11.0
 	github.com/spf13/viper v1.20.1
 	go.uber.org/zap v1.27.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/mysql v1.6.0
-	gorm.io/gorm v1.30.2
+	gorm.io/gorm v1.31.0
 	gorm.io/plugin/dbresolver v1.6.2
 	gorm.io/sharding v0.6.0
 )
@@ -75,7 +76,7 @@ require (
 	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/text v0.29.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
