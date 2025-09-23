@@ -142,7 +142,7 @@ func transformData(source VideoDetail) (*MyVideoCreatePayload, error) {
 
 func TestAA(t *testing.T) {
 	// --- 步骤 1: 从源API获取数据 ---
-	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=63281"
+	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=63252"
 	log.Printf("正在从源API抓取数据: %s", sourceURL)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", sourceURL, nil)
@@ -192,7 +192,7 @@ func TestAA(t *testing.T) {
 		log.Fatalf("数据转换失败: %v", err)
 	}
 	kit.DumpJson(myPayload)
-
+	return
 	log.Println("数据转换成功!")
 	myPayloadJson, _ := json.Marshal(myPayload)
 	fmt.Println(string(myPayloadJson))
