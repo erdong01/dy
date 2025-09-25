@@ -145,6 +145,9 @@ func TestAA(t *testing.T) {
 	// --- 步骤 1: 从源API获取数据 ---
 	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=63252"
 	log.Printf("正在从源API抓取数据: %s", sourceURL)
+	targetURL := "https://api.7x.chat/api/v1/video/create"
+	// targetURL := "http://127.0.0.1:9090/api/v1/video/create"
+	log.Printf("正在提交数据到你的API: %s", targetURL)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", sourceURL, nil)
 	if err != nil {
@@ -193,15 +196,11 @@ func TestAA(t *testing.T) {
 		log.Fatalf("数据转换失败: %v", err)
 	}
 	kit.DumpJson(myPayload)
-	return
 	log.Println("数据转换成功!")
 	myPayloadJson, _ := json.Marshal(myPayload)
 	fmt.Println(string(myPayloadJson))
 
 	// --- 步骤 3: 提交到你自己的API ---
-	targetURL := "https://api.7x.chat/api/v1/video/create"
-	// targetURL := "http://127.0.0.1:9090/api/v1/video/create"
-	log.Printf("正在提交数据到你的API: %s", targetURL)
 
 	payloadBytes, err := json.MarshalIndent(myPayload, "", "    ") // 使用 MarshalIndent 格式化输出，方便调试
 	if err != nil {
