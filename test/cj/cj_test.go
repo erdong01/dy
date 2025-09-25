@@ -130,7 +130,8 @@ func transformData(source VideoDetail) (*MyVideoCreatePayload, error) {
 	// 组装最终数据
 	payload := &MyVideoCreatePayload{
 		Title:      source.VodName,
-		Connection: 2, // 根据你的示例，固定为2
+		Alias:      source.VodSub, // <<< 3. 添加 Alias 字段映射
+		Connection: 2,             // 根据你的示例，固定为2
 		Cover:      source.VodPic,
 		URL:        playURL,
 		Describe:   source.VodBlurb,
