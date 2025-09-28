@@ -143,6 +143,23 @@ function Details() {
       if (metaDesc) {
         metaDesc.setAttribute("content", videoData.Data.Describe || "");
       }
+
+      if (videoData.Data.Alias) {
+        const keywords = videoData.Data.Alias.split("/")
+          .map((alias) => alias.trim())
+          .filter(Boolean);
+
+        if (keywords.length > 0) {
+          let metaKeywords = document.querySelector("meta[name='keywords']");
+          if (!metaKeywords) {
+            metaKeywords = document.createElement("meta");
+            metaKeywords.setAttribute("name", "keywords");
+            document.head.appendChild(metaKeywords);
+          }
+          metaKeywords.setAttribute("content", keywords.join(", "));
+        }
+      }
+
     }
     fetchMovies()
 
@@ -207,6 +224,7 @@ interface Video {
   DeletedAt: string | null;
   Title: string;
   Describe: string;
+  Alias ?: string;
   Connection: number;
   Url: string;
   Cover: string;
