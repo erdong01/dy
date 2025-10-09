@@ -25,20 +25,21 @@ type MaccmsResponse struct {
 
 // VideoDetail 是源视频数据的详细结构
 type VideoDetail struct {
-	VodID       int    `json:"vod_id"`
-	VodName     string `json:"vod_name"`
-	VodPic      string `json:"vod_pic"`
-	VodBlurb    string `json:"vod_blurb"`     // 简介
-	VodRemarks  string `json:"vod_remarks"`   // 状态备注，如：HD中字
-	VodClass    string `json:"vod_class"`     // 类型，用,分隔
-	VodActor    string `json:"vod_actor"`     // 演员，用,分隔
-	VodDirector string `json:"vod_director"`  // 导演
-	VodArea     string `json:"vod_area"`      // 地区
-	VodLang     string `json:"vod_lang"`      // 语言
-	VodYear     string `json:"vod_year"`      // 年代
-	VodPlayFrom string `json:"vod_play_from"` // 播放来源，用$$$分隔
-	VodPlayURL  string `json:"vod_play_url"`  // 播放地址，用$$$分隔
-	VodSub      string `json:"vod_sub"`       // 播放地址，用$$$分隔
+	VodID       int        `json:"vod_id"`
+	VodName     string     `json:"vod_name"`
+	VodPic      string     `json:"vod_pic"`
+	VodBlurb    string     `json:"vod_blurb"`     // 简介
+	VodRemarks  string     `json:"vod_remarks"`   // 状态备注，如：HD中字
+	VodClass    string     `json:"vod_class"`     // 类型，用,分隔
+	VodActor    string     `json:"vod_actor"`     // 演员，用,分隔
+	VodDirector string     `json:"vod_director"`  // 导演
+	VodArea     string     `json:"vod_area"`      // 地区
+	VodLang     string     `json:"vod_lang"`      // 语言
+	VodYear     string     `json:"vod_year"`      // 年代
+	VodPlayFrom string     `json:"vod_play_from"` // 播放来源，用$$$分隔
+	VodPlayURL  string     `json:"vod_play_url"`  // 播放地址，用$$$分隔
+	VodSub      string     `json:"vod_sub"`       // 播放地址，用$$$分隔
+	VideoGroup  VideoGroup `json:"-"`
 }
 
 // 2. 定义你自己的API的数据结构 (api.7x.chat)
@@ -51,8 +52,12 @@ type MyVideoCreatePayload struct {
 	Cover      string          `json:"Cover"`
 	URL        string          `json:"Url"`
 	Describe   string          `json:"Describe"`
+	VideoGroup VideoGroup      `json:"VideoGroup"`
 	Alias      string          `json:"Alias"`
 	Category   []CategoryGroup `json:"Category"`
+}
+type VideoGroup struct {
+	Title string `json:"Title"`
 }
 
 // CategoryGroup 对应你API中的每个分类大项
@@ -136,6 +141,9 @@ func transformData(source VideoDetail) (*MyVideoCreatePayload, error) {
 		URL:        playURL,
 		Describe:   source.VodBlurb,
 		Category:   categories,
+		VideoGroup: VideoGroup{
+			Title: "",
+		},
 	}
 
 	return payload, nil
@@ -143,7 +151,7 @@ func transformData(source VideoDetail) (*MyVideoCreatePayload, error) {
 
 func TestAA(t *testing.T) {
 	// --- 步骤 1: 从源API获取数据 ---
-	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=64614"
+	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=34325"
 	log.Printf("正在从源API抓取数据: %s", sourceURL)
 	targetURL := "https://api.7x.chat/api/v1/video/create"
 	// targetURL := "http://127.0.0.1:9090/api/v1/video/create"

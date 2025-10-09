@@ -61,7 +61,7 @@ var (
 )
 
 func TestMain(t *testing.T) {
-	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=64897"
+	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=61547"
 	// targetAPIURL := "http://127.0.0.1:9090/api/v1/video/create"
 	targetAPIURL := "https://api.7x.chat/api/v1/video/create"
 
