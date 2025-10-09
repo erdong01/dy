@@ -1,4 +1,7 @@
 # dy
+
+cd /var/go/src/dy
+
 go build -o ./release main.go
 
 docker restart dy
