@@ -23,7 +23,7 @@ import Hls from "hls.js";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
-import { useIsClient } from '@/app/hooks/useIsClient'; 
+import { useIsClient } from '@/app/hooks/useIsClient';
 
 import Menu from "@/app/ui/menu/menu";
 import * as d3 from "d3";
@@ -129,24 +129,99 @@ function Details() {
   }, [streamUrl, onPeerConnect, onPeerClose, onChunkDownloaded, onChunkUploaded]);
 
   useEffect(() => {
-    const fetchMovies = async () => {
-      const data = await fetch(`${API_URL}/api/v1/video/get?Id=` + videoId);
-      if (!data.ok) {
-        console.log(data.status)
-        return
+    // 定义一个函数来创建和更新 JSON-LD 脚本
+    const updateJsonLd = (video: Video) => { // 参数名改为 video 更清晰
+      // 1. 先移除旧的脚本，防止重复
+      const oldScript = document.getElementById('movie-json-ld');
+      if (oldScript) {
+        oldScript.remove();
       }
-      const videoData: { Data: Video } = await data.json();
-      setVideo(videoData.Data)
-      setStreamUrl(videoData.Data.Url)
-      document.title = videoData.Data.Title + "-在线观看 下载";
-      const metaDesc = document.querySelector("meta[name='description']");
-      if (metaDesc) {
-        metaDesc.setAttribute("content", videoData.Data.Describe || "");
-      }
-    }
-    fetchMovies()
 
-  }, [videoId])
+      // 2. 如果没有视频数据，则不创建新脚本
+      if (!video) return;
+
+      // 3. 创建 JSON-LD 数据结构
+      const jsonLdData = {
+        '@context': 'https://schema.org',
+        '@type': 'Movie',
+        name: video.Title,
+        description: video.Describe,
+        // 如果有封面图URL，可以加在这里
+        image: video.Cover || '',
+        // 如果有上映日期，可以加在这里
+        // datePublished: "你的上映日期",
+        // 使用 Alias 字段作为别名 (alternateName)
+        alternateName: video.Alias
+          ? video.Alias.split("/").map(alias => alias.trim()).filter(Boolean)
+          : [],
+        // 这里的 genre 和 keywords 应该是从你的数据中获取的
+        // 如果你的API不提供，可以留空或根据Title/Describe硬编码一些
+        genre: ["电影"], // 示例: ["科幻", "动作"]
+        keywords: "在线观看, 下载, 高清" // 示例: "太空旅行, 人工智能"
+      };
+
+      // 4. 创建 script 标签
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.id = 'movie-json-ld'; // 给它一个ID，方便下次查找和移除
+      script.innerHTML = JSON.stringify(jsonLdData);
+
+      // 5. 将新脚本注入到 document.head 中
+      document.head.appendChild(script);
+    };
+
+    const fetchMovies = async () => {
+      // 增加一个判断，如果没有 videoId 就不执行请求
+      if (!videoId) return;
+
+      const response = await fetch(`${API_URL}/api/v1/video/get?Id=${videoId}`);
+      if (!response.ok) {
+        console.error("Failed to fetch video data:", response.status);
+        return;
+      }
+
+      const result: { Data: Video } = await response.json();
+      const videoDataObject = result.Data; // 【关键修复】从结果中提取出真正的 Video 对象
+
+      if (!videoDataObject) {
+        console.error("Video data is null in API response");
+        return;
+      }
+
+      // --- 使用 videoDataObject 更新所有内容 ---
+
+      // 1. 更新 React 状态
+      setVideo(videoDataObject);
+      setStreamUrl(videoDataObject.Url);
+
+      // 2. 更新页面标题
+      document.title = `${videoDataObject.Title}-在线观看-下载`;
+
+      // 3. 更新 meta description
+      let metaDesc = document.querySelector("meta[name='description']");
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      metaDesc.setAttribute("content", videoDataObject.Describe || "暂无简介");
+
+      // 【关键修复】传入正确的 videoDataObject
+      updateJsonLd(videoDataObject);
+
+      // 【代码清理】完全移除关于 meta keywords 的旧代码块
+    };
+
+    fetchMovies();
+
+    // 返回一个清理函数，在组件卸载或 videoId 改变时执行
+    return () => {
+      const script = document.getElementById('movie-json-ld');
+      if (script) {
+        script.remove();
+      }
+    };
+  }, [videoId]);
 
   return (
     <div>
@@ -207,6 +282,7 @@ interface Video {
   DeletedAt: string | null;
   Title: string;
   Describe: string;
+  Alias?: string;
   Connection: number;
   Url: string;
   Cover: string;
