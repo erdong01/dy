@@ -197,11 +197,5 @@ export default function List() {
         </div>
         <br />
         <br />
-        <br />
-        <br />
-        <br />
-        <br />
-        <br />
-        <br />
     </>);
 }
