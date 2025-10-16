@@ -276,7 +276,7 @@ function Details() {
           </div>
           <br />
           <div className="text-base-content">
-            {video.Describe}
+            <div dangerouslySetInnerHTML={{__html: video.Describe}}></div>
           </div>
           <div className={styles["node-container"]} >
             <NodeNetwork peers={peers} />
