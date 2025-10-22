@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
 	"video/core"
 
 	"gorm.io/gorm"
 )
 
 const (
-	CategoryTypeMovie    = 1 //电影
-	CategoryTypeTVSeries = 2 //电视剧
+	CategoryTypeMovie    = 1 // 电影
+	CategoryTypeTVSeries = 2 // 电视剧
 )
 
 // Category  分类表。
@@ -23,7 +24,7 @@ type Category struct {
 	Name        string          `gorm:"column:name" json:"Name"`            //
 	ParentId    int64           `gorm:"column:parent_id" json:"ParentId"`   //
 	Type        *int            `gorm:"column:type" json:"Type"`            //
-	IsHide      *int            `gorm:"column:is_hide" json:"IsHide"`       //type:*int              comment:            version:2025-05-06 06:48
+	IsHide      *int            `gorm:"column:is_hide" json:"IsHide"`       // type:*int              comment:            version:2025-05-06 06:48
 	SonCategory []Category      `gorm:"foreignKey:ParentId;references:Id" json:"SonCategory"`
 	Category    []Category      `gorm:"foreignKey:ParentId;references:Id" json:"Category,omitempty"`
 }
@@ -41,8 +42,31 @@ func (that *Category) HomeList() (categorySonArr []Category) {
 	if err != nil {
 		fmt.Println("err:", err)
 	}
-	categoryData.Name = "电影"
+	categoryData.Name = "类型"
+
+	var categoryData2 Category
+	err = core.New().DB.Model(that.Category).
+		Preload("SonCategory").
+		Where("parent_id = 0 AND type = 1 AND name = ?", "年代").Find(&categoryData2).Error
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	var categoryData3 Category
+	err = core.New().DB.Model(that.Category).
+		Preload("SonCategory").
+		Where("parent_id = 0 AND type = 1 AND name = ?", "地区").Find(&categoryData3).Error
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+
+	categoryData.Name = "类型"
 	categorySonArr = append(categorySonArr, categoryData)
+
+	categoryData.Name = "年代"
+	categorySonArr = append(categorySonArr, categoryData2)
+
+	categoryData.Name = "地区"
+	categorySonArr = append(categorySonArr, categoryData3)
 	return
 }
 

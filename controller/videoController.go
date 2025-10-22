@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+
 	"video/core"
 	"video/model"
 
@@ -14,26 +15,57 @@ func List(c *gin.Context) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println(r)
+			c.JSON(http.StatusOK, gin.H{
+				"Data":   []model.Video{},
+				"LastId": 0,
+				"Total":  0,
+			})
 		}
 	}()
-	var err error
-	page, err := strconv.Atoi(c.Query("Page"))
-	if err != nil {
-		return
+
+	// 解析查询参数，失败时使用默认值，避免直接 return 导致空响应
+	var (
+		err      error
+		page     int
+		pageSize int
+		id       int64
+	)
+	if p := c.Query("Page"); p != "" {
+		if page, err = strconv.Atoi(p); err != nil {
+			page = 1
+		}
+	} else {
+		page = 1
 	}
-	pageSize, err := strconv.Atoi(c.Query("PageSize"))
-	if err != nil {
-		return
+	if ps := c.Query("PageSize"); ps != "" {
+		if pageSize, err = strconv.Atoi(ps); err != nil {
+			pageSize = 30
+		}
+	} else {
+		pageSize = 30
 	}
-	id, err := strconv.ParseInt(c.Query("Id"), 10, 64)
-	if err != nil {
-		return
+	if idStr := c.Query("Id"); idStr != "" {
+		if id, err = strconv.ParseInt(idStr, 10, 64); err != nil {
+			id = 0
+		}
+	} else {
+		id = 0
 	}
+	var categoryId string
+	if categoryIdStr := c.Query("CategoryId"); categoryIdStr != "" {
+		categoryId = categoryIdStr
+	}
+
 	keyWord := c.Query("KeyWord")
 
 	var video model.Video
-	data, total, err := video.List(page, pageSize, id, keyWord)
+	data, total, err := video.List(page, pageSize, id, keyWord, categoryId)
 	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"Data":   []model.Video{},
+			"LastId": 0,
+			"Total":  0,
+		})
 		return
 	}
 	var lastId int64
@@ -46,6 +78,7 @@ func List(c *gin.Context) {
 		"Total":  total,
 	})
 }
+
 func Get(c *gin.Context) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -159,5 +192,4 @@ func Create(c *gin.Context) {
 
 func Update(c *gin.Context) {
 	// id := c.Query("id")
-
 }

@@ -2,7 +2,6 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import Script from 'next/script';
-import 'tailwindcss/tailwind.css';
 import '@/app/globals.css';
 import '@vidstack/react/player/styles/base.css';
 import '@vidstack/react/player/styles/default/layouts/audio.css';
@@ -27,7 +26,6 @@ import { useIsClient } from '@/app/hooks/useIsClient';
 
 import Menu from "@/app/ui/menu/menu";
 import * as d3 from "d3";
-
 
 export default function Page() {
 
@@ -237,7 +235,7 @@ function Details() {
 
   return (
     <div>
-      <div className='bg-base-300'>
+      <div >
         <div className={styles["video-container"]}>
           <Menu />
           <MediaPlayer
@@ -272,10 +270,10 @@ function Details() {
           )}
 
           <div className='relative inset-y-3'>
-            <h1 className="text-3xl font-semibold  text-base-content">{video.Title}</h1>
+            <h1 className="text-3xl font-semibold   ">{video.Title}</h1>
           </div>
           <br />
-          <div className="text-base-content">
+          <div  >
             <div dangerouslySetInnerHTML={{__html: video.Describe}}></div>
           </div>
           <div className={styles["node-container"]} >

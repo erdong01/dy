@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import CategoryMenu from '@/components/CategoryMenu';
 import {
     Pagination,
     PaginationContent,
@@ -12,7 +13,7 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination";
 import Link from 'next/link';
-import { useEffect, useState, useMemo } from 'react'; // 确保引入 useMemo
+import { useEffect, useState, useMemo, useCallback } from 'react'; // 确保引入 useMemo
 import Image from 'next/image';
 
 // --- 1. 分页逻辑函数 ---
@@ -88,22 +89,59 @@ export default function List() {
     const [pageSize] = useState(30);
     const [KeyWord, setKeyWord] = useState("");
     const [total, setTotal] = useState(0);
+    // 选中的分类（逗号分隔的二级分类ID）
+    const [CategoryId, setCategoryId] = useState("");
 
     useEffect(() => {
+        console.log("list CategoryId:",CategoryId);
         const fetchMovies = async () => {
             if (!API_URL) return;
-            const data = await fetch(`${API_URL}/api/v1/video/list?Page=${page}&PageSize=${pageSize}&Id=0&KeyWord=${KeyWord}`);
-            if (!data.ok) {
-                console.log(data.status);
-                return;
+            try {
+                const params = new URLSearchParams();
+                params.set('Page', String(page));
+                params.set('PageSize', String(pageSize));
+                params.set('Id', '0');
+                if (KeyWord) params.set('KeyWord', KeyWord);
+                if (CategoryId) params.set('CategoryId', CategoryId);
+                const res = await fetch(`${API_URL}/api/v1/video/list?${params.toString()}`);
+                if (!res.ok) {
+                    console.log('video/list HTTP status:', res.status);
+                    setList([]);
+                    setTotal(0);
+                    return;
+                }
+                const text = await res.text();
+                if (!text) {
+                    // 空响应体，容错处理
+                    setList([]);
+                    setTotal(0);
+                    return;
+                }
+                let payload: { Data: Video[]; Total: number } | null = null;
+                try {
+                    payload = JSON.parse(text);
+                } catch (e) {
+                    console.error('解析 video/list JSON 失败:', e, '原始响应:', text.slice(0, 200));
+                    setList([]);
+                    setTotal(0);
+                    return;
+                }
+                if (payload) {
+                    setList(payload.Data || []);
+                    setTotal(payload.Total || 0);
+                } else {
+                    setList([]);
+                    setTotal(0);
+                }
+            } catch (err) {
+                console.error('请求 video/list 异常:', err);
+                setList([]);
+                setTotal(0);
             }
-            const videoList: { Data: Video[]; Total: number } = await data.json();
-            setList(videoList.Data);
-            setTotal(videoList.Total);
         };
         window.scrollTo(0, 0);
         fetchMovies();
-    }, [page, pageSize, KeyWord]);
+    }, [page, pageSize, KeyWord, CategoryId]);
 
     // --- 2. 计算 paginationRange (这是之前缺失的部分) ---
     const paginationRange = useMemo(() => {
@@ -116,12 +154,16 @@ export default function List() {
         });
     }, [page, total, pageSize]);
 
-    // 如果总条目数不足一页，则不显示分页组件
-    if (total <= pageSize) {
-        return null;
-    }
+    // 注意：不要在这里因为 total <= pageSize 提前 return null，否则搜索结果较少时会导致整页空白。
+
+    // 稳定的分类变更回调，避免子组件依赖变化导致重复触发
+    const handleCategoryChange = useCallback((ids: string) => {
+        setPage(1);
+        setCategoryId(ids);
+    }, []);
 
     return (<>
+    <CategoryMenu onChange={handleCategoryChange} />
         <br />
         <div className="flex w-full max-w-sm items-center space-x-2 min-h-12">
             <Input type="text" placeholder="Search" value={KeyWord} onChange={(e) => setKeyWord(e.target.value)} />
@@ -134,7 +176,7 @@ export default function List() {
                     <Link href={`/details?id=${item.Id}`} target="_blank" rel="noopener noreferrer">
                         <div className="card-body">
                             <h1 className="card-title text-base-content">{item.Title}</h1>
-                            <p className="bg-base-180 text-base-content" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <p className="bg-base-200 text-base-content" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {item.Describe}
                             </p>
                         </div>
@@ -150,51 +192,62 @@ export default function List() {
         </div>
         <br />
 
-        {/* --- 3. 响应式的分页 JSX --- */}
-        <div>
-            <Pagination>
-                <PaginationContent>
-                    <PaginationItem>
-                        <PaginationPrevious
-                            href="#"
-                            onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
-                            className={page <= 1 ? "pointer-events-none opacity-50" : ""}
-                        />
-                    </PaginationItem>
+        {/* --- 3. 响应式的分页 JSX（仅在需要分页时渲染） --- */}
+        {total > pageSize && (
+            <div>
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                href="#"
+                                onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
+                                className={page <= 1 ? "pointer-events-none opacity-50" : ""}
+                            />
+                        </PaginationItem>
 
-                    {/* 桌面端 (sm及以上) 显示完整的页码 */}
-                    <div className="hidden sm:flex sm:items-center">
+                        {/* 桌面端 (sm及以上) 显示完整的页码；注意：ul 下只能有 li，避免在 ul 内层再嵌 div */}
                         {paginationRange.map((pageNumber, index) => {
                             if (pageNumber === DOTS) {
-                                return <PaginationItem key={`dots-${index}`}><PaginationEllipsis /></PaginationItem>;
+                                return (
+                                    <PaginationItem key={`dots-${index}`} className="hidden sm:list-item">
+                                        <PaginationEllipsis />
+                                    </PaginationItem>
+                                );
                             }
                             return (
-                                <PaginationItem key={pageNumber}>
-                                    <PaginationLink href="#" isActive={page === pageNumber} onClick={(e) => { e.preventDefault(); setPage(Number(pageNumber)); }}>
+                                <PaginationItem key={pageNumber} className="hidden sm:list-item">
+                                    <PaginationLink
+                                        href="#"
+                                        isActive={page === pageNumber}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setPage(Number(pageNumber));
+                                        }}
+                                    >
                                         {pageNumber}
                                     </PaginationLink>
                                 </PaginationItem>
                             );
                         })}
-                    </div>
 
-                    {/* 移动端 (小于sm) 只显示页数 */}
-                    <PaginationItem className="sm:hidden">
-                        <span className="px-4 text-sm font-medium">
-                            Page {page} of {Math.ceil(total / pageSize)}
-                        </span>
-                    </PaginationItem>
+                        {/* 移动端 (小于sm) 只显示页数 */}
+                        <PaginationItem className="sm:hidden">
+                            <span className="px-4 text-sm font-medium">
+                                Page {page} of {Math.ceil(total / pageSize)}
+                            </span>
+                        </PaginationItem>
 
-                    <PaginationItem>
-                        <PaginationNext
-                            href="#"
-                            onClick={(e) => { e.preventDefault(); if (page < Math.ceil(total / pageSize)) setPage(page + 1); }}
-                            className={page >= Math.ceil(total / pageSize) ? "pointer-events-none opacity-50" : ""}
-                        />
-                    </PaginationItem>
-                </PaginationContent>
-            </Pagination>
-        </div>
+                        <PaginationItem>
+                            <PaginationNext
+                                href="#"
+                                onClick={(e) => { e.preventDefault(); if (page < Math.ceil(total / pageSize)) setPage(page + 1); }}
+                                className={page >= Math.ceil(total / pageSize) ? "pointer-events-none opacity-50" : ""}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </div>
+        )}
         <br />
         <br />
     </>);
