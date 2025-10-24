@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import CategoryMenu from '@/components/CategoryMenu';
+import CategoryFilters from '@/components/CategoryMenu';
 import {
     Pagination,
     PaginationContent,
@@ -163,7 +163,7 @@ export default function List() {
     }, []);
 
     return (<>
-    <CategoryMenu onChange={handleCategoryChange} />
+    <CategoryFilters onChange={handleCategoryChange} />
         <br />
         <div className="flex w-full max-w-sm items-center space-x-2 min-h-12">
             <Input type="text" placeholder="Search" value={KeyWord} onChange={(e) => setKeyWord(e.target.value)} />

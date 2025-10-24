@@ -1,5 +1,4 @@
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 
 // 全局类型声明
 declare global {
@@ -16,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning data-theme="pureblack" className="dark">
+  <html lang="zh-CN" suppressHydrationWarning className="dark" data-theme="pureblack">
       <head>
         <meta name="description" content="" />
         <meta name="google-adsense-account" content="ca-pub-3171747573136206" />
@@ -24,15 +23,7 @@ export default function RootLayout({
         <meta name="color-scheme" content="light dark" />
       </head>
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          forcedTheme="dark"
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        {children}
       </body>
     </html>
   );
