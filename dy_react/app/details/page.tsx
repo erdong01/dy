@@ -238,6 +238,7 @@ function Details() {
         <div className={styles["video-container"]}>
           <Menu />
           <MediaPlayer
+            storage="7x-chat-media-player"
             src={streamUrl}
             load="visible"
             posterLoad="visible"
