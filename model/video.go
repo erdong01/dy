@@ -25,7 +25,10 @@ type Video struct {
 	VideoGroup   VideoGroup      `gorm:"-" json:"VideoGroup"`
 	VideoClass   VideoClass      `gorm:"-" json:"VideoClass"`
 	VideoList    []Video         `gorm:"-" json:"VideoList"`
-	Type         *int            `gorm:"column:type" json:"Type"` // type:*int              comment:类型 1 电影 2 电视剧    version:2025-05-06 06:51
+	Type         *int            `gorm:"column:type" json:"Type"`         // type:*int              comment:类型 1 电影 2 电视剧    version:2025-05-06 06:51
+	Keywords     string          `gorm:"column:keywords" json:"Keywords"` //type:string            comment:关键词 ,逗号隔开        version:2025-9-28 17:40
+	TypePid      int64           `gorm:"column:type_pid" json:"TypePid"`  //type:int64             comment:                        version:2025-9-28 17:45
+	TypeId       int64           `gorm:"column:type_id" json:"TypeId"`    //type:int64             comment:                        version:2025-9-28 17:45
 }
 
 // TableName 表名:video，。

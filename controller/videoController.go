@@ -115,9 +115,10 @@ func Create(c *gin.Context) {
 		return
 	}
 	video.VideoClass.Create()
-
+	video.TypeId = video.VideoClass.TypeId
+	video.TypePid = video.VideoClass.TypePid
 	cc := model.Category{}
-	categoryIds := cc.Create(*video.Category[0].Type, video.Category)
+	categoryIds := cc.Create(*video.Category[0].Type, video.Category, video.VideoClass)
 	video.VideoGroup.Edit()
 	if video.VideoGroup.Id > 0 {
 		video.VideoGroupId = video.VideoGroup.Id
