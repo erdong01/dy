@@ -93,7 +93,6 @@ export default function List() {
     const [CategoryId, setCategoryId] = useState("");
 
     useEffect(() => {
-        console.log("list CategoryId:",CategoryId);
         const fetchMovies = async () => {
             if (!API_URL) return;
             try {
@@ -105,7 +104,6 @@ export default function List() {
                 if (CategoryId) params.set('CategoryId', CategoryId);
                 const res = await fetch(`${API_URL}/api/v1/video/list?${params.toString()}`);
                 if (!res.ok) {
-                    console.log('video/list HTTP status:', res.status);
                     setList([]);
                     setTotal(0);
                     return;

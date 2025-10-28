@@ -114,6 +114,8 @@ func Create(c *gin.Context) {
 	if err != nil {
 		return
 	}
+	video.VideoClass.Create()
+
 	cc := model.Category{}
 	categoryIds := cc.Create(*video.Category[0].Type, video.Category)
 	video.VideoGroup.Edit()

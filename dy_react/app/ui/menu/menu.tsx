@@ -27,13 +27,13 @@ interface Category {
 export default function Menu() {
     useEffect(() => {
         const fetchMovies = async () => {
-            const data = await fetch(`${API_URL}/api/v1/category/list`);
-            if (!data.ok) {
-                console.log(data.status);
-                return;
-            }
-            const videoList: { Data: Category[] } = await data.json();
-            console.log("list:", videoList.Data);
+            // const data = await fetch(`${API_URL}/api/v1/category/list`);
+            // if (!data.ok) {
+            //     console.log(data.status);
+            //     return;
+            // }
+            // const videoList: { Data: Category[] } = await data.json();
+            // console.log("list:", videoList.Data);
         };
         fetchMovies();
     }, []);

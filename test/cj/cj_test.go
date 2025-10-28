@@ -54,6 +54,7 @@ type MyVideoCreatePayload struct {
 	Describe   string          `json:"Describe"`
 	VideoGroup VideoGroup      `json:"VideoGroup"`
 	Alias      string          `json:"Alias"`
+	Type       int             `json:"Type"`
 	Category   []CategoryGroup `json:"Category"`
 }
 type VideoGroup struct {
@@ -141,6 +142,7 @@ func transformData(source VideoDetail) (*MyVideoCreatePayload, error) {
 		URL:        playURL,
 		Describe:   source.VodBlurb,
 		Category:   categories,
+		Type:       1,
 		VideoGroup: VideoGroup{
 			Title: "",
 		},
@@ -151,7 +153,7 @@ func transformData(source VideoDetail) (*MyVideoCreatePayload, error) {
 
 func TestAA(t *testing.T) {
 	// --- 步骤 1: 从源API获取数据 ---
-	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=29831"
+	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=68717"
 	log.Printf("正在从源API抓取数据: %s", sourceURL)
 	targetURL := "https://api.7x.chat/api/v1/video/create"
 	// targetURL := "http://127.0.0.1:9090/api/v1/video/create"

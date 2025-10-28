@@ -1,5 +1,5 @@
 .video-container {
-  width: 80vw;
+  width: 70vw;
   /* 设置容器宽度为屏幕宽度的80% */
   /* height: 100vh; */
   /* 设置容器高度为屏幕高度的80% */
@@ -8,7 +8,7 @@
 }
 
 .node-container {
-  width: 80vw;
+  width: 70vw;
   /* 设置网络图容器宽度为屏幕宽度的80% */
   /* height: 80vh; */
   /* 设置网络图容器高度为屏幕高度的80% */

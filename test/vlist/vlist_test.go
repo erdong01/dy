@@ -40,6 +40,7 @@ type TargetPayload struct {
 	Url        string          `json:"Url"`
 	Describe   string          `json:"Describe"`
 	VideoGroup VideoGroup      `json:"VideoGroup"`
+	Type       int             `json:"Type"`
 	Category   []CategoryGroup `json:"Category"`
 }
 type VideoGroup struct {
@@ -61,7 +62,8 @@ var (
 )
 
 func TestMain(t *testing.T) {
-	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=61547"
+	var videoType int = 2
+	sourceURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/?ac=detail&ids=54"
 	// targetAPIURL := "http://127.0.0.1:9090/api/v1/video/create"
 	targetAPIURL := "https://api.7x.chat/api/v1/video/create"
 
@@ -109,7 +111,7 @@ func TestMain(t *testing.T) {
 			continue
 		}
 
-		payload := buildTargetPayload(sourceVideo, episodeName, episodeURL)
+		payload := buildTargetPayload(sourceVideo, episodeName, episodeURL, videoType)
 
 		log.Printf("正在提交: [%s]", payload.Title)
 		err := postToTargetAPI(targetAPIURL, payload)
@@ -153,7 +155,7 @@ func fetchSourceData(url string) (*SourceVideo, error) {
 }
 
 // buildTargetPayload 函数
-func buildTargetPayload(video *SourceVideo, episodeName, episodeURL string) *TargetPayload {
+func buildTargetPayload(video *SourceVideo, episodeName, episodeURL string, videoType int) *TargetPayload {
 	title := video.VodName
 	if episodeName != "全集" && episodeName != "" && !strings.Contains(video.VodName, episodeName) {
 		title = fmt.Sprintf("%s %s", video.VodName, episodeName)
@@ -169,6 +171,7 @@ func buildTargetPayload(video *SourceVideo, episodeName, episodeURL string) *Tar
 		Cover:      video.VodPic,
 		Url:        episodeURL,
 		Describe:   description,
+		Type:       videoType,
 		VideoGroup: VideoGroup{Title: video.VodName},
 		Category: []CategoryGroup{
 			{Type: 1, Name: "状态", Category: []Category{{Name: video.VodRemarks}}},
