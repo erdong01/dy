@@ -22,6 +22,7 @@ type VideoData struct {
 	Type       int        `json:"Type"`
 	Connection int        `json:"Connection"`
 	VideoClass VideoClass `json:"VideoClass"`
+	VideoUrl   VideoUrl   `json:"VideoUrl"`
 	Cover      string     `json:"Cover"`
 	URL        string     `json:"Url"`
 	Describe   string     `json:"Describe"`
@@ -34,6 +35,11 @@ type VideoClass struct {
 	TypeID   int    `json:"TypeId"`
 	TypeName string `json:"TypeName"`
 	TypePID  int    `json:"TypePid"`
+}
+type VideoUrl struct {
+	Url       string `json:"Url"`       //type:string            comment:地址        version:2025-9-29 09:01
+	Proxy     string `json:"Proxy"`     //type:string            comment:代理地址    version:2025-9-29 09:01
+	ProxyName string `json:"ProxyName"` //type:string            comment:代理名称    version:2025-9-29 09:56
 }
 
 // Category 是 VideoData 的内嵌结构体
@@ -61,24 +67,23 @@ type VideoDetailResponse struct {
 
 // VideoInfo 对应从影视资源站获取的原始视频数据
 type VideoInfo struct {
-	VodID    int    `json:"vod_id"`
-	VodName  string `json:"vod_name"`
-	TypeID   int    `json:"type_id"`
-	TypeName string `json:"type_name"`
-	// ---
-	// 这里是第一个修改点：将 string 修改为 json.Number
-	// ---
-	TypeID1     int    `json:"type_id_1"`
-	VodPic      string `json:"vod_pic"`
-	VodPlayURL  string `json:"vod_play_url"`
-	VodContent  string `json:"vod_content"`
-	VodYear     string `json:"vod_year"`
-	VodArea     string `json:"vod_area"`
-	VodLang     string `json:"vod_lang"`
-	VodActor    string `json:"vod_actor"`
-	VodDirector string `json:"vod_director"`
-	VodTag      string `json:"vod_tag"`
-	VodSub      string `json:"vod_sub"`
+	VodID        int    `json:"vod_id"`
+	VodName      string `json:"vod_name"`
+	TypeID       int    `json:"type_id"`
+	TypeName     string `json:"type_name"`
+	TypeID1      int    `json:"type_id_1"`
+	VodPic       string `json:"vod_pic"`
+	VodPlayURL   string `json:"vod_play_url"`
+	VodContent   string `json:"vod_content"`
+	VodYear      string `json:"vod_year"`
+	VodArea      string `json:"vod_area"`
+	VodLang      string `json:"vod_lang"`
+	VodActor     string `json:"vod_actor"`
+	VodDirector  string `json:"vod_director"`
+	VodTag       string `json:"vod_tag"`
+	VodSub       string `json:"vod_sub"`
+	VodProxyName string `json:"vod_proxy_name,omitempty"`
+	VodProxyUrl  string `json:"vod_proxy_url,omitempty"`
 }
 
 // --- 2. 主程序逻辑 ---
@@ -86,7 +91,8 @@ type VideoInfo struct {
 func main() {
 	baseURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/"
 	submitURL := "http://127.0.0.1:9191/api/v1/video/create"
-
+	VodProxyName := "电影天堂"
+	VodProxyUrl := "https://vip.dyttzyplay.com/?url="
 	fmt.Println("程序启动，开始采集数据...")
 
 	fmt.Println("正在获取总页数...")
@@ -115,7 +121,8 @@ func main() {
 				fmt.Printf("    获取详情失败: %v\n", err)
 				continue
 			}
-
+			videoDetail.VodProxyName = VodProxyName
+			videoDetail.VodProxyUrl = VodProxyUrl
 			postData := transformData(videoDetail)
 
 			err = submitToMyWebsite(submitURL, postData)
@@ -147,13 +154,14 @@ func transformData(videoDetail VideoInfo) VideoData {
 		VideoClass: VideoClass{
 			TypeID:   videoDetail.TypeID,
 			TypeName: videoDetail.TypeName,
-			// ---
-			// 这里是第二个修改点：使用 .String() 方法来确保得到的是字符串
-			// ---
-			TypePID: videoDetail.TypeID1,
+			TypePID:  videoDetail.TypeID1,
+		},
+		VideoUrl: VideoUrl{
+			Url:       videoDetail.VodPlayURL,
+			ProxyName: videoDetail.VodProxyName,
+			Proxy:     videoDetail.VodProxyUrl,
 		},
 		Cover:    videoDetail.VodPic,
-		URL:      videoDetail.VodPlayURL,
 		Describe: videoDetail.VodContent,
 		Category: []Category{
 			{Type: 1, Name: "类型", Category: []SubCategory{{Name: videoDetail.VodTag}}},

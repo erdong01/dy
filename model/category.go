@@ -77,7 +77,7 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 	for index := range categoryArr {
 		category := categoryArr[index]
 		var parentCategory Category
-		core.New().DB.Where("name = ?", category.Name).Where("type_pid = ?", videoClass.TypePid).First(&parentCategory)
+		core.New().DB.Where("name = ?", category.Name).First(&parentCategory)
 		if parentCategory.Id <= 0 {
 			parentCategory.Name = category.Name
 			parentCategory.Type = &cType
@@ -96,8 +96,6 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 						sonCategory.ParentId = parentCategory.Id
 						sonCategory.Name = names[index]
 						sonCategory.Type = &cType
-						sonCategory.TypeId = videoClass.TypeId
-						sonCategory.TypePid = videoClass.TypePid
 						core.New().DB.Create(&sonCategory)
 					}
 
@@ -113,8 +111,6 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 						sonCategory.ParentId = parentCategory.Id
 						sonCategory.Name = category.Category[index].Name
 						sonCategory.Type = &cType
-						sonCategory.TypeId = videoClass.TypeId
-						sonCategory.TypePid = videoClass.TypePid
 						core.New().DB.Create(&sonCategory)
 					}
 

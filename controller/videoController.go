@@ -94,9 +94,9 @@ func Get(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	if data.VideoGroupId > 0 {
-		data.VideoList = video.ListByVideoGroupId(data.VideoGroupId)
-	}
+	// if data.VideoGroupId > 0 {
+	// 	data.VideoList = video.ListByVideoGroupId(data.VideoGroupId)
+	// }
 	c.JSON(http.StatusOK, gin.H{
 		"Data": data,
 	})
@@ -115,6 +115,7 @@ func Create(c *gin.Context) {
 		return
 	}
 	video.VideoClass.Create()
+
 	video.TypeId = video.VideoClass.TypeId
 	video.TypePid = video.VideoClass.TypePid
 	cc := model.Category{}
@@ -127,20 +128,20 @@ func Create(c *gin.Context) {
 	if err != nil {
 		return
 	}
+	video.VideoUrl.VideoId = video.Id
+	video.VideoUrl.Create()
 	// 同步 Video-Category 关联：已存在不创建、缺失则新增、多余则删除
 	db := core.New().DB
 	tx := db.Begin()
 	if tx.Error != nil {
 		return
 	}
-
 	// 查询当前已存在的关联
 	var existing []model.VideoCategory
 	if err := tx.Where("video_id = ?", video.Id).Find(&existing).Error; err != nil {
 		tx.Rollback()
 		return
 	}
-
 	// 计算需要新增的条目
 	var toCreate []model.VideoCategory
 	for _, categoryId := range categoryIds {
@@ -164,7 +165,6 @@ func Create(c *gin.Context) {
 			return
 		}
 	}
-
 	// 计算需要删除的条目（数据库多出来的）
 	var toDeleteIds []interface{}
 	for _, vc := range existing {

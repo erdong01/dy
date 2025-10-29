@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"time"
 	"video/core"
 
@@ -25,7 +24,6 @@ func (*VideoClass) TableName() string {
 }
 
 func (that *VideoClass) Create() (err error) {
-	fmt.Println("that:", that)
 	if that.TypeId == 0 {
 		return
 	}

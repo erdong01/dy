@@ -174,8 +174,7 @@ export default function List() {
                     <Link href={`/details?id=${item.Id}`} target="_blank" rel="noopener noreferrer">
                         <div className="card-body">
                             <h1 className="card-title text-base-content">{item.Title}</h1>
-                            <p className="bg-base-200 text-base-content" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {item.Describe}
+                            <p className="bg-base-200 text-base-content" dangerouslySetInnerHTML={{ __html: item.Describe }} style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             </p>
                         </div>
                         {item.Cover && (
