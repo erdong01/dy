@@ -81,6 +81,7 @@ type VideoInfo struct {
 	VodActor     string `json:"vod_actor"`
 	VodDirector  string `json:"vod_director"`
 	VodTag       string `json:"vod_tag"`
+	VodClass     string `json:"vod_class"`
 	VodSub       string `json:"vod_sub"`
 	VodProxyName string `json:"vod_proxy_name,omitempty"`
 	VodProxyUrl  string `json:"vod_proxy_url,omitempty"`
@@ -90,7 +91,7 @@ type VideoInfo struct {
 
 func main() {
 	baseURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/"
-	submitURL := "http://127.0.0.1:9191/api/v1/video/create"
+	submitURL := "https://api.7x.chat/api/v1/video/create"
 	VodProxyName := "电影天堂"
 	VodProxyUrl := "https://vip.dyttzyplay.com/?url="
 	fmt.Println("程序启动，开始采集数据...")
@@ -164,7 +165,7 @@ func transformData(videoDetail VideoInfo) VideoData {
 		Cover:    videoDetail.VodPic,
 		Describe: videoDetail.VodContent,
 		Category: []Category{
-			{Type: 1, Name: "类型", Category: []SubCategory{{Name: videoDetail.VodTag}}},
+			{Type: 1, Name: "类型", Category: []SubCategory{{Name: videoDetail.VodClass}}},
 			{Type: 1, Name: "导演", Category: []SubCategory{{Name: videoDetail.VodDirector}}},
 			{Type: 1, Name: "演员", Category: []SubCategory{{Name: videoDetail.VodActor}}},
 			{Type: 1, Name: "年代", Category: []SubCategory{{Name: videoDetail.VodYear}}},
@@ -251,9 +252,9 @@ func submitToMyWebsite(url string, data VideoData) error {
 
 	// --- 新增的调试代码 ---
 	// 在发送前，打印将要提交的JSON内容
-	fmt.Println("--- 准备提交的JSON数据 ---")
-	fmt.Println(string(jsonData))
-	fmt.Println("--------------------------")
+	// fmt.Println("--- 准备提交的JSON数据 ---")
+	// fmt.Println(string(jsonData))
+	// fmt.Println("--------------------------")
 	// --- 调试代码结束 ---
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))

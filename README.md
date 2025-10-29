@@ -8,4 +8,4 @@ docker restart dy
 
 docker build  -t app .
 
-docker run -it -dp 9191:9090 --name dy -v ./etc:/app/etc -v ./release:/app --restart unless-stopped app 
+docker run -it -dp 9090:9191 --name dy -v ./etc:/app/etc -v ./release:/app --restart unless-stopped app 
