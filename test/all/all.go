@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/erdong01/kit/goWorker"
 )
 
 // 定义一个全局的、可复用的HTTP客户端, 设置10秒超时
@@ -104,7 +106,7 @@ func main() {
 	}
 	totalPages := firstPageResp.PageCount
 	fmt.Printf("获取成功，总共有 %d 页数据。\n", totalPages)
-
+	worker := goWorker.New(10)
 	for page := 1; page <= totalPages; page++ {
 		fmt.Printf("\n--- 开始处理第 %d 页 / 共 %d 页 ---\n", page, totalPages)
 
@@ -113,28 +115,28 @@ func main() {
 			fmt.Printf("获取第 %d 页列表失败: %v\n", page, err)
 			continue
 		}
+		worker.Go(func() {
+			for i, video := range listResp.List {
+				fmt.Printf("  [%d/%d] 正在处理: %s (ID: %d)\n", i+1, len(listResp.List), video.VodName, video.VodID)
+				videoDetail, err := fetchVideoDetail(fmt.Sprintf("%s?ac=detail&ids=%d", baseURL, video.VodID))
+				if err != nil {
+					fmt.Printf("    获取详情失败: %v\n", err)
+					continue
+				}
+				videoDetail.VodProxyName = VodProxyName
+				videoDetail.VodProxyUrl = VodProxyUrl
 
-		for i, video := range listResp.List {
-			fmt.Printf("  [%d/%d] 正在处理: %s (ID: %d)\n", i+1, len(listResp.List), video.VodName, video.VodID)
+				postData := transformData(videoDetail)
+				err = submitToMyWebsite(submitURL, postData)
+				if err != nil {
+					fmt.Printf("    提交失败: %v\n", err)
+				} else {
+					fmt.Printf("    ✅ 成功提交: %s\n", postData.Title)
+				}
 
-			videoDetail, err := fetchVideoDetail(fmt.Sprintf("%s?ac=detail&ids=%d", baseURL, video.VodID))
-			if err != nil {
-				fmt.Printf("    获取详情失败: %v\n", err)
-				continue
+				time.Sleep(100 * time.Millisecond)
 			}
-			videoDetail.VodProxyName = VodProxyName
-			videoDetail.VodProxyUrl = VodProxyUrl
-			postData := transformData(videoDetail)
-
-			err = submitToMyWebsite(submitURL, postData)
-			if err != nil {
-				fmt.Printf("    提交失败: %v\n", err)
-			} else {
-				fmt.Printf("    ✅ 成功提交: %s\n", postData.Title)
-			}
-
-			time.Sleep(100 * time.Millisecond)
-		}
+		})
 	}
 
 	fmt.Println("\n--- 所有页面处理完毕，程序执行结束 ---")
