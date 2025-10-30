@@ -1,31 +1,32 @@
 .video-container {
-  width: 70vw;
-  /* 设置容器宽度为屏幕宽度的80% */
-  /* height: 100vh; */
-  /* 设置容器高度为屏幕高度的80% */
-  margin: 0 auto;
-  /* 居中显示 */
+  /* 响应式容器：在大屏幕最多为 1280px，窄屏占满可用宽度 */
+  max-width: 1280px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto; /* 水平居中 */
 }
 
 .node-container {
-  width: 70vw;
-  /* 设置网络图容器宽度为屏幕宽度的80% */
-  /* height: 80vh; */
-  /* 设置网络图容器高度为屏幕高度的80% */
+  /* 同上，保留 visibility 由 JS/逻辑控制 */
+  max-width: 1280px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
   visibility: hidden;
-  /* 居中显示 */
+}
+
+@media (max-width: 1024px) {
+  /* 减小侧边内距，保持容器宽度为可用宽度，避免出现水平滚动 */
+  .video-container,
+  .node-container {
+    padding: 0 12px;
+  }
 }
 
 /* 当屏幕宽度小于或等于 768px 时 (移动端) */
 @media (max-width: 768px) {
-  .video-container {
-    width: 100vw;
-  }
-
+  .video-container,
   .node-container {
-    width: 100vw;
+    padding: 0 12px;
   }
-  
 }
-
