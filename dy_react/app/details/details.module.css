@@ -19,7 +19,7 @@
   /* 减小侧边内距，保持容器宽度为可用宽度，避免出现水平滚动 */
   .video-container,
   .node-container {
-    padding: 0 12px;
+    padding: 0 6px;
   }
 }
 
@@ -27,6 +27,6 @@
 @media (max-width: 768px) {
   .video-container,
   .node-container {
-    padding: 0 12px;
+    padding: 0 6px;
   }
 }
