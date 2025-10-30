@@ -45,11 +45,13 @@ func (that *Category) HomeList() (categorySonArr []Category) {
 	if err != nil {
 		fmt.Println("err:", err)
 	}
-	categoryData.Name = "类型"
 
 	var categoryData2 Category
 	err = core.New().DB.Model(that.Category).
-		Preload("SonCategory").
+		Preload("SonCategory", func(db *gorm.DB) *gorm.DB {
+
+			return db.Order("name desc")
+		}).
 		Where("parent_id = 0 AND type = 1 AND name = ?", "年代").Find(&categoryData2).Error
 	if err != nil {
 		fmt.Println("err:", err)
