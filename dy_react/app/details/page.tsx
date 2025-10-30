@@ -325,6 +325,7 @@ function Details() {
             // autoPlay
             onProviderChange={onProviderChange}
             playsInline
+            crossOrigin
           >
             <MediaProvider />
             <AirPlayButton className="media-button">
