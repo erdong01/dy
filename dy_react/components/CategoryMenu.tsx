@@ -2,99 +2,93 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
-// 类型定义（与您提供的一致）
-export interface SonCategory {
-  Id: number;
-  CreatedAt: string;
-  UpdatedAt: string;
-  DeletedAt: null | string;
-  Name: string;
-  ParentId: number;
-  Type: number;
-  IsHide: null | boolean;
-  SonCategory: null;
-}
+// --- (类型定义保持不变) ---
+export interface SonCategory { Id: number; CreatedAt: string; UpdatedAt: string; DeletedAt: null | string; Name: string; ParentId: number; Type: number; IsHide: null | boolean; SonCategory: null; }
+export interface Category { Id: number; CreatedAt: string; UpdatedAt: string; DeletedAt: null | string; Name: string; ParentId: number; Type: number; IsHide: null | boolean; SonCategory: SonCategory[] | null; }
+export interface ApiResponse { Data: Category[]; }
 
-export interface Category {
-  Id: number;
-  CreatedAt: string;
-  UpdatedAt: string;
-  DeletedAt: null | string;
-  Name: string;
-  ParentId: number;
-  Type: number;
-  IsHide: null | boolean;
-  SonCategory: SonCategory[] | null;
-}
 
-export interface ApiResponse {
-  Data: Category[];
-}
-
-// 向父组件回传选中二级分类ID（逗号分隔）的回调
+// --- MODIFICATION 1: Props 中增加 `value` ---
 type CategoryMenuProps = {
+  // `value` 是从父组件传入的当前选中的 category IDs (e.g., "123,456")
+  value?: string; 
   onChange?: (ids: string) => void;
 };
 
-const CategoryFilters = ({ onChange }: CategoryMenuProps) => {
+const CategoryFilters = ({ value = '', onChange }: CategoryMenuProps) => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedFilters, setSelectedFilters] = useState<{ [key: number]: number | 'all' }>({});
-  const onChangeRef = useRef<CategoryMenuProps["onChange"] | null>(null);
 
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
+  // --- MODIFICATION 2: 移除组件自己的状态管理 ---
+  // const [selectedFilters, setSelectedFilters] = useState<{ [key: number]: number | 'all' }>({}); // <-- DELETE THIS
+  // const onChangeRef = useRef<CategoryMenuProps["onChange"] | null>(null); // <-- DELETE THIS
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-        if (!API_URL) {
-          console.error("API base URL is not configured in environment variables.");
-          return;
-        }
+        if (!API_URL) return;
         
         const response = await fetch(`${API_URL}/api/v1/category/list`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const result: ApiResponse = await response.json();
         setCategories(result.Data);
-
-        const initialFilters: { [key: number]: 'all' } = {};
-        result.Data.forEach(category => {
-          initialFilters[category.Id] = 'all';
-        });
-        setSelectedFilters(initialFilters);
-
       } catch (error) {
         console.error("无法获取分类数据:", error);
       }
     };
-
     fetchData();
   }, []);
 
-  // 选中变更后，统一在提交阶段通过 effect 回传
-  useEffect(() => {
-    if (Object.keys(selectedFilters).length === 0) return;
-    
-    const ids = Object.values(selectedFilters)
-      .filter((id): id is number => typeof id === 'number') // 只保留数字ID
+  // --- MODIFICATION 3: 使用 `useMemo` 从 props 派生出用于显示的状态 ---
+  // 这确保了组件的显示状态总是与父组件的 `value` prop 同步
+  const activeFilters = useMemo(() => {
+    // 只有当分类数据加载后才进行计算
+    if (categories.length === 0) return {};
+
+    const selectedIds = new Set(value.split(',').filter(Boolean).map(Number));
+    const filterMap: { [key: number]: number | 'all' } = {};
+
+    categories.forEach(category => {
+      let foundSelectedSon = false;
+      if (category.SonCategory) {
+        for (const son of category.SonCategory) {
+          if (selectedIds.has(son.Id)) {
+            filterMap[category.Id] = son.Id;
+            foundSelectedSon = true;
+            break;
+          }
+        }
+      }
+      if (!foundSelectedSon) {
+        filterMap[category.Id] = 'all';
+      }
+    });
+    return filterMap;
+  }, [value, categories]); // 当 `value` 或 `categories` 改变时，重新计算
+
+
+  // --- MODIFICATION 4: 移除触发 onChange 的 useEffect ---
+  // useEffect(() => { ... }, [selectedFilters]); // <-- DELETE THIS WHOLE BLOCK
+
+
+  // --- MODIFICATION 5: 修改点击处理函数 ---
+  // 它不再更新本地 state，而是计算出新的 ID 字符串并直接调用 `onChange`
+  const handleFilterClick = (parentId: number, sonId: number | 'all') => {
+    // 复制当前激活的过滤器
+    const newFilters = { ...activeFilters };
+    // 更新被点击的那个分类
+    newFilters[parentId] = sonId;
+
+    // 从新的过滤器对象中计算出新的 ID 字符串
+    const newIds = Object.values(newFilters)
+      .filter((id): id is number => typeof id === 'number') // 只保留数字 ID
       .join(',');
       
-    onChangeRef.current?.(ids);
-  }, [selectedFilters]);
-
-  const handleFilterClick = (parentId: number, sonId: number | 'all') => {
-    setSelectedFilters(prev => ({
-      ...prev,
-      [parentId]: sonId,
-    }));
+    // 调用父组件的 onChange，将控制权交还给父组件
+    onChange?.(newIds);
   };
 
   const getFilterClasses = (isActive: boolean) => 
@@ -106,23 +100,15 @@ const CategoryFilters = ({ onChange }: CategoryMenuProps) => {
     <div className="p-4 sm:p-6 bg-black text-white font-sans space-y-5">
       <div className="space-y-5">
         {categories.map(category => (
-          // 【修改点 1】: 这是每一行的外层容器。
-          // 移除了 flex-wrap，确保“一级目录标题”和“二级目录列表”总是在同一行开始。
           <div key={category.Id} className="flex items-baseline gap-x-4 sm:gap-x-6">
-            
-            {/* 【修改点 2】: 一级目录标题。 */}
-            {/* 添加了 flex-shrink-0，防止标题在空间不足时被挤压变形。 */}
             <div className="bg-[#1f2937] text-white px-4 py-1.5 rounded-md whitespace-nowrap text-sm sm:text-base flex-shrink-0">
               {category.Name}
             </div>
-
-            {/* 【修改点 3】: 这是二级目录的容器。 */}
-            {/* 它自己是 flex 和 flex-wrap，所以它内部的按钮会在需要时换行。 */}
-            {/* 换行后会自动从这个容器的左侧开始，从而实现了“缩进”效果。 */}
             <div className="flex flex-wrap items-baseline gap-x-4 sm:gap-x-6 gap-y-3">
               <button
                 onClick={() => handleFilterClick(category.Id, 'all')}
-                className={getFilterClasses(selectedFilters[category.Id] === 'all')}
+                // --- MODIFICATION 6: 使用派生出的 `activeFilters` 来判断状态 ---
+                className={getFilterClasses(activeFilters[category.Id] === 'all' || !activeFilters[category.Id])}
               >
                 全部
               </button>
@@ -131,7 +117,7 @@ const CategoryFilters = ({ onChange }: CategoryMenuProps) => {
                 <button
                   key={son.Id}
                   onClick={() => handleFilterClick(category.Id, son.Id)}
-                  className={getFilterClasses(selectedFilters[category.Id] === son.Id)}
+                  className={getFilterClasses(activeFilters[category.Id] === son.Id)}
                 >
                   {son.Name}
                 </button>

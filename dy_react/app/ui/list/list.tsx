@@ -1,5 +1,6 @@
 'use client'
 
+// ... (所有 import 和接口/函数定义保持不变)
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import CategoryFilters from '@/components/CategoryMenu';
@@ -13,169 +14,150 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination";
 import Link from 'next/link';
-import { useEffect, useState, useMemo, useCallback } from 'react'; // 确保引入 useMemo
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-// --- 1. 分页逻辑函数 ---
 const DOTS = '...';
-
-const generatePagination = ({
-    total,
-    pageSize,
-    siblingCount = 1,
-    currentPage
-}: {
-    total: number;
-    pageSize: number;
-    siblingCount?: number;
-    currentPage: number;
-}): (string | number)[] => {
+const generatePagination = ({ total, pageSize, siblingCount = 1, currentPage }: { total: number; pageSize: number; siblingCount?: number; currentPage: number; }): (string | number)[] => {
+    // ... (此处省略未修改的 generatePagination 函數代碼)
     const totalPageCount = Math.ceil(total / pageSize);
-
     const totalPageNumbers = siblingCount + 5;
     if (totalPageNumbers >= totalPageCount) {
         return Array.from({ length: totalPageCount }, (_, i) => i + 1);
     }
-
     const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
     const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPageCount);
-
     const shouldShowLeftDots = leftSiblingIndex > 2;
     const shouldShowRightDots = rightSiblingIndex < totalPageCount - 2;
-
     const firstPageIndex = 1;
     const lastPageIndex = totalPageCount;
-
     if (!shouldShowLeftDots && shouldShowRightDots) {
         const leftItemCount = 3 + 2 * siblingCount;
         const leftRange = Array.from({ length: leftItemCount }, (_, i) => i + 1);
         return [...leftRange, DOTS, totalPageCount];
     }
-
     if (shouldShowLeftDots && !shouldShowRightDots) {
         const rightItemCount = 3 + 2 * siblingCount;
         const rightRange = Array.from({ length: rightItemCount }, (_, i) => totalPageCount - rightItemCount + 1 + i);
         return [firstPageIndex, DOTS, ...rightRange];
     }
-
     if (shouldShowLeftDots && shouldShowRightDots) {
         const middleRange = Array.from({ length: rightSiblingIndex - leftSiblingIndex + 1 }, (_, i) => leftSiblingIndex + i);
         return [firstPageIndex, DOTS, ...middleRange, DOTS, lastPageIndex];
     }
-
     return [];
 };
 
 
-// --- 组件定义 ---
-interface Video {
-    Id: number;
-    CreatedAt: string;
-    UpdatedAt: string;
-    DeletedAt: string | null;
-    Title: string;
-    Describe: string;
-    Connection: number;
-    Url: string;
-    Cover: string;
-    VideoGroupId: number;
-}
-
+interface Video { Id: number; CreatedAt: string; UpdatedAt: string; DeletedAt: string | null; Title: string; Describe: string; Connection: number; Url: string; Cover: string; VideoGroupId: number; }
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export default function List() {
-    const [list, setList] = useState<Video[]>([]);
-    const [page, setPage] = useState(1);
-    const [pageSize] = useState(30);
-    const [KeyWord, setKeyWord] = useState("");
-    const [total, setTotal] = useState(0);
-    // 选中的分类（逗号分隔的二级分类ID）
-    const [CategoryId, setCategoryId] = useState("");
 
+export default function List() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    const page = Number(searchParams.get('page')) || 1;
+    // --- FINAL FIX STEP 1: 从 URL 中获取 CategoryId，用于传递给子组件 ---
+    const CategoryId = searchParams.get('category') || '';
+
+    const [searchInput, setSearchInput] = useState(searchParams.get('keyword') || '');
+    const [list, setList] = useState<Video[]>([]);
+    const [total, setTotal] = useState(0);
+    const [pageSize] = useState(30);
+
+    // useEffect 逻辑现在是完全正确的，无需改动
     useEffect(() => {
+        setSearchInput(searchParams.get('keyword') || '');
         const fetchMovies = async () => {
             if (!API_URL) return;
+            const apiParams = new URLSearchParams();
+            apiParams.set('Page', searchParams.get('page') || '1');
+            apiParams.set('PageSize', String(pageSize));
+            apiParams.set('Id', '0');
+            if (searchParams.get('keyword')) apiParams.set('KeyWord', searchParams.get('keyword')!);
+            if (searchParams.get('category')) apiParams.set('CategoryId', searchParams.get('category')!);
+            const requestUrl = `${API_URL}/api/v1/video/list?${apiParams.toString()}`;
+            console.log('Fetching data from URL:', requestUrl);
             try {
-                const params = new URLSearchParams();
-                params.set('Page', String(page));
-                params.set('PageSize', String(pageSize));
-                params.set('Id', '0');
-                if (KeyWord) params.set('KeyWord', KeyWord);
-                if (CategoryId) params.set('CategoryId', CategoryId);
-                const res = await fetch(`${API_URL}/api/v1/video/list?${params.toString()}`);
-                if (!res.ok) {
-                    setList([]);
-                    setTotal(0);
-                    return;
-                }
-                const text = await res.text();
-                if (!text) {
-                    // 空响应体，容错处理
-                    setList([]);
-                    setTotal(0);
-                    return;
-                }
-                let payload: { Data: Video[]; Total: number } | null = null;
-                try {
-                    payload = JSON.parse(text);
-                } catch (e) {
-                    console.error('解析 video/list JSON 失败:', e, '原始响应:', text.slice(0, 200));
-                    setList([]);
-                    setTotal(0);
-                    return;
-                }
-                if (payload) {
-                    setList(payload.Data || []);
-                    setTotal(payload.Total || 0);
-                } else {
-                    setList([]);
-                    setTotal(0);
-                }
+                const res = await fetch(requestUrl);
+                if (!res.ok) throw new Error('Network response was not ok');
+                const payload = await res.json();
+                setList(payload.Data || []);
+                setTotal(payload.Total || 0);
             } catch (err) {
                 console.error('请求 video/list 异常:', err);
-                setList([]);
-                setTotal(0);
+                setList([]); setTotal(0);
             }
         };
         window.scrollTo(0, 0);
         fetchMovies();
-    }, [page, pageSize, KeyWord, CategoryId]);
+    }, [searchParams, pageSize]);
 
-    // --- 2. 计算 paginationRange (这是之前缺失的部分) ---
+    // 操作函数的防御性检查逻辑也是正确的，无需改动
+    const handleSearch = () => {
+        const currentKeyword = searchParams.get('keyword') || '';
+        if (searchInput !== currentKeyword) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.set('page', '1');
+            if (searchInput) { params.set('keyword', searchInput); } 
+            else { params.delete('keyword'); }
+            router.push(`/?${params.toString()}`);
+        }
+    };
+
+    const handleCategoryChange = useCallback((ids: string) => {
+        const currentCategory = searchParams.get('category') || '';
+        if (ids !== currentCategory) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.set('page', '1');
+            if (ids) { params.set('category', ids); } 
+            else { params.delete('category'); }
+            router.push(`/?${params.toString()}`);
+        }
+    }, [router, searchParams]);
+
     const paginationRange = useMemo(() => {
         if (total === 0) return [];
-        return generatePagination({
-            currentPage: page,
-            total: total,
-            siblingCount: 1,
-            pageSize: pageSize
-        });
+        return generatePagination({ currentPage: page, total: total, siblingCount: 1, pageSize: pageSize });
     }, [page, total, pageSize]);
 
-    // 注意：不要在这里因为 total <= pageSize 提前 return null，否则搜索结果较少时会导致整页空白。
+     const createPageURL = (pageNumber: number | string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', String(pageNumber));
+        return `/?${params.toString()}`;
+    };
 
-    // 稳定的分类变更回调，避免子组件依赖变化导致重复触发
-    const handleCategoryChange = useCallback((ids: string) => {
-        setPage(1);
-        setCategoryId(ids);
-    }, []);
-
-    return (<>
-    <CategoryFilters onChange={handleCategoryChange} />
+    return (
+    <>
+        {/* --- FINAL FIX STEP 2: 将 CategoryId 作为 prop 传递下去 --- */}
+        {/* 这会告诉子组件应该显示哪个分类为选中状态 */}
+        <CategoryFilters 
+            onChange={handleCategoryChange} 
+            value={CategoryId} 
+        />
         <br />
         <div className="flex w-full max-w-sm items-center space-x-2 min-h-12">
-            <Input type="text" placeholder="Search" value={KeyWord} onChange={(e) => setKeyWord(e.target.value)} />
-            <Button type="submit" onClick={() => setPage(1)}>Search</Button>
+            <Input 
+                type="text" 
+                placeholder="Search" 
+                value={searchInput} 
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <Button type="button" onClick={handleSearch}>Search</Button>
         </div>
         <br />
+        
+        {/* --- (剩余的 JSX 保持不变) --- */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mx-auto">
             {list.map((item, index) => (
                 <div className="card bg-base-200 w-full shadow-xl" key={item.Id}>
                     <Link href={`/details?id=${item.Id}`} target="_blank" rel="noopener noreferrer">
                         <div className="card-body">
                             <h1 className="card-title text-base-content">{item.Title}</h1>
-                            <p className="bg-base-200 text-base-content" dangerouslySetInnerHTML={{ __html: item.Describe }} style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            </p>
+                            <p className="bg-base-200 text-base-content" dangerouslySetInnerHTML={{ __html: item.Describe }} style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}></p>
                         </div>
                         {item.Cover && (
                             <figure className="relative w-full pt-[125%]">
@@ -189,37 +171,26 @@ export default function List() {
         </div>
         <br />
 
-        {/* --- 3. 响应式的分页 JSX（仅在需要分页时渲染） --- */}
         {total > pageSize && (
             <div>
                 <Pagination>
                     <PaginationContent>
                         <PaginationItem>
                             <PaginationPrevious
-                                href="#"
-                                onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
+                                href={createPageURL(page - 1)}
                                 className={page <= 1 ? "pointer-events-none opacity-50" : ""}
                             />
                         </PaginationItem>
 
-                        {/* 桌面端 (sm及以上) 显示完整的页码；注意：ul 下只能有 li，避免在 ul 内层再嵌 div */}
                         {paginationRange.map((pageNumber, index) => {
                             if (pageNumber === DOTS) {
-                                return (
-                                    <PaginationItem key={`dots-${index}`} className="hidden sm:list-item">
-                                        <PaginationEllipsis />
-                                    </PaginationItem>
-                                );
+                                return <PaginationItem key={`dots-${index}`} className="hidden sm:list-item"><PaginationEllipsis /></PaginationItem>;
                             }
                             return (
                                 <PaginationItem key={pageNumber} className="hidden sm:list-item">
                                     <PaginationLink
-                                        href="#"
+                                        href={createPageURL(pageNumber)}
                                         isActive={page === pageNumber}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            setPage(Number(pageNumber));
-                                        }}
                                     >
                                         {pageNumber}
                                     </PaginationLink>
@@ -227,17 +198,13 @@ export default function List() {
                             );
                         })}
 
-                        {/* 移动端 (小于sm) 只显示页数 */}
                         <PaginationItem className="sm:hidden">
-                            <span className="px-4 text-sm font-medium">
-                                Page {page} of {Math.ceil(total / pageSize)}
-                            </span>
+                            <span className="px-4 text-sm font-medium">Page {page} of {Math.ceil(total / pageSize)}</span>
                         </PaginationItem>
 
                         <PaginationItem>
                             <PaginationNext
-                                href="#"
-                                onClick={(e) => { e.preventDefault(); if (page < Math.ceil(total / pageSize)) setPage(page + 1); }}
+                                href={createPageURL(page + 1)}
                                 className={page >= Math.ceil(total / pageSize) ? "pointer-events-none opacity-50" : ""}
                             />
                         </PaginationItem>
@@ -247,5 +214,6 @@ export default function List() {
         )}
         <br />
         <br />
-    </>);
+    </>
+    );
 }
