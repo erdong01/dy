@@ -138,7 +138,7 @@ func main() {
 			}
 		})
 	}
-
+	worker.Wait()
 	fmt.Println("\n--- 所有页面处理完毕，程序执行结束 ---")
 }
 
