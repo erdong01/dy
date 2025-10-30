@@ -1,6 +1,5 @@
 'use client'
 
-// ... (所有 import 和接口/函数定义保持不变)
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import CategoryFilters from '@/components/CategoryMenu';

@@ -24,7 +24,7 @@ interface Category {
     SonCategory:Category[];
 }
 
-export default function Menu() {
+export default function Menus() {
     useEffect(() => {
         const fetchMovies = async () => {
             // const data = await fetch(`${API_URL}/api/v1/category/list`);
