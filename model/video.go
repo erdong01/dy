@@ -41,8 +41,7 @@ func (*Video) TableName() string {
 func (that *Video) Create() (err error) {
 	var oldVideo Video
 	core.New().DB.
-		Where("MATCH(title) AGAINST(CONCAT('\"', ?, '\"') IN BOOLEAN MODE)", that.Title).
-		Where("title = ?", that.Title).
+		Where("BINARY title = ?", that.Title).
 		First(&oldVideo)
 	if oldVideo.Id > 0 {
 		core.New().DB.Where("id = ?", oldVideo.Id).Updates(that)
