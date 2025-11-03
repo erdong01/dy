@@ -1,6 +1,6 @@
 import { Suspense } from 'react'; // 1. 从 'react' 导入 Suspense
 import List from "@/app/ui/list/list";
-import Menu from "@/app/ui/menu/menu";
+import Menu from "@/app/ui/menu/menus";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
