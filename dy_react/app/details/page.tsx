@@ -84,7 +84,7 @@ function DetailsPageInner() {
             "@context": "https://schema.org",
             "@type": "VideoObject",
             "name": video.Title,
-            "description": video.Describe,
+            "description": video.Describe || video.Title,
             "thumbnailUrl": video.Cover,
             "uploadDate": video.CreatedAt,
             "contentUrl": video.Url,
