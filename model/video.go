@@ -7,6 +7,7 @@ import (
 	"video/core"
 
 	"gorm.io/gorm"
+	"gorm.io/hints"
 )
 
 type Video struct {
@@ -44,7 +45,8 @@ func (that *Video) Create() (err error) {
 	}
 	var oldVideo Video
 	core.New().DB.
-		Where("MATCH(title) AGAINST(? IN BOOLEAN MODE)", that.Title).
+		Clauses(hints.ForceIndex("idx_title_btree")).
+		Where("title = ?", that.Title).
 		First(&oldVideo)
 	if oldVideo.Id > 0 && that.Title == oldVideo.Title {
 		core.New().DB.Where("id = ?", oldVideo.Id).Updates(that)
