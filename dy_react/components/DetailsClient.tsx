@@ -10,8 +10,6 @@ import styles from '@/app/details/details.module.css';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { isHLSProvider, MediaPlayer, MediaProvider, type MediaProviderAdapter } from "@vidstack/react";
 import { PlyrLayout, plyrLayoutIcons } from '@vidstack/react/player/layouts/plyr';
-import { AirPlayButton, GoogleCastButton } from '@vidstack/react';
-import { AirPlayIcon, ChromecastIcon } from '@vidstack/react/icons';
 import Hls from "hls.js";
 import { CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
@@ -60,10 +58,27 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
   }, []);
 
   const onProviderChange = useCallback((provider: MediaProviderAdapter | null) => {
+    // 当使用 HLS 播放时，启用 P2P + 自适应码率，并添加卡顿/错误自动恢复，避免因网络抖动而暂停。
     if (isHLSProvider(provider)) {
       const HlsWithP2P = HlsJsP2PEngine.injectMixin(Hls);
       provider.library = HlsWithP2P as unknown as typeof Hls;
       const config: HlsWithP2PConfig<typeof Hls> = {
+        // 为满足“优先最高清晰度”的需求，这里不限制到播放器尺寸
+        startLevel: -1,
+        autoStartLoad: true,
+        lowLatencyMode: false,
+        capLevelToPlayerSize: false,
+        // 缓冲区大小（适度增加容错，减少 rebuffer）：
+        maxBufferLength: 25,
+        backBufferLength: 30,
+        maxBufferHole: 0.5,
+        // ABR 初始估计偏保守，弱网更快稳定：
+        abrEwmaDefaultEstimate: 500_000, // ~500kbps
+        abrBandWidthFactor: 0.8,
+        // 适度放宽超时，避免频繁中断：
+        manifestLoadingTimeOut: 20000,
+        fragLoadingTimeOut: 20000,
+        // P2P 设置
         p2p: {
           core: { swarmId: streamUrl ? streamUrl : undefined },
           onHlsJsCreated: (hls) => {
@@ -76,13 +91,13 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
             });
 
             const h = hls as unknown as Hls;
+
+            // 让 Hls.js 自己做 ABR，不强行锁最高清晰度
             h.on(Hls.Events.MANIFEST_PARSED, () => {
               try {
+                // 选择最高清晰度起播
                 const levels = (h.levels ?? []) as Array<{ height?: number; bitrate?: number }>;
                 if (!levels.length) return;
-                if (h.config && typeof h.config.capLevelToPlayerSize !== 'undefined') {
-                  h.config.capLevelToPlayerSize = false;
-                }
                 let bestIndex = 0;
                 for (let i = 1; i < levels.length; i++) {
                   const prevH = levels[bestIndex]?.height ?? 0;
@@ -96,9 +111,92 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
                     return currBR > prevBR ? idx : bi;
                   }, 0);
                 }
+                // 关闭自动码率，强制最高清晰度起播
+                (h as unknown as { autoLevelEnabled: boolean }).autoLevelEnabled = false;
                 h.currentLevel = bestIndex;
               } catch {}
             });
+
+            // 弱网/错误自动恢复：尽量避免「暂停在那儿」的体验
+            // 降级/恢复逻辑：
+            let lastStallAt = 0;
+            let downshiftCooldownUntil = 0;
+            const DOWNGRADE_COOLDOWN_MS = 8000; // 每次降级后至少等待 8s 再次降级
+            const RECOVER_TO_MAX_AFTER_MS = 30000; // 30s 无卡顿则恢复最高
+
+            const getMaxLevel = () => (h.levels?.length ?? 1) - 1;
+            const tryDowngrade = () => {
+              const now = Date.now();
+              if (now < downshiftCooldownUntil) return;
+              const cur = h.currentLevel;
+              if (typeof cur === 'number' && cur > 0) {
+                h.currentLevel = cur - 1;
+                downshiftCooldownUntil = now + DOWNGRADE_COOLDOWN_MS;
+              }
+            };
+            const tryUpgradeToMax = () => {
+              const maxL = getMaxLevel();
+              if (maxL < 0) return;
+              if (h.currentLevel !== maxL) {
+                h.currentLevel = maxL;
+              }
+            };
+
+            h.on(Hls.Events.ERROR, (_evt, data) => {
+              if (!data?.fatal) return;
+              switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                  // 重启加载，保留当前位置
+                  try { h.startLoad(); } catch {}
+                  lastStallAt = Date.now();
+                  tryDowngrade();
+                  break;
+                case Hls.ErrorTypes.MEDIA_ERROR:
+                  try { h.recoverMediaError(); } catch {}
+                  lastStallAt = Date.now();
+                  tryDowngrade();
+                  break;
+                default:
+                  // 兜底：重启加载
+                  try { h.stopLoad(); h.startLoad(); } catch {}
+                  lastStallAt = Date.now();
+                  tryDowngrade();
+                  break;
+              }
+            });
+
+            // 如果发生长时间等待（缓冲不足），尝试轻度“踢一下”继续播
+            const media = (h.media ?? null) as HTMLVideoElement | null;
+            if (media) {
+              const resume = () => {
+                if (media.paused && !media.ended) {
+                  media.play().catch(() => {});
+                }
+                lastStallAt = Date.now();
+                tryDowngrade();
+              };
+              media.addEventListener('stalled', resume);
+              media.addEventListener('waiting', resume);
+              media.addEventListener('suspend', resume);
+
+              // 周期性检测：无卡顿一段时间后，恢复到最高清晰度
+              const intervalId = window.setInterval(() => {
+                if (!media.ended && !media.paused) {
+                  const elapsed = Date.now() - lastStallAt;
+                  if (elapsed > RECOVER_TO_MAX_AFTER_MS) {
+                    tryUpgradeToMax();
+                  }
+                }
+              }, 5000);
+
+              // 清理
+              h.on(Hls.Events.DESTROYING, () => {
+                window.clearInterval(intervalId);
+                media.removeEventListener('stalled', resume);
+                media.removeEventListener('waiting', resume);
+                media.removeEventListener('suspend', resume);
+              });
+            }
           },
         },
       };
@@ -133,12 +231,6 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
             crossOrigin
           >
             <MediaProvider />
-            <AirPlayButton className="media-button">
-              <AirPlayIcon />
-            </AirPlayButton>
-            <GoogleCastButton className="media-button">
-              <ChromecastIcon />
-            </GoogleCastButton>
             {isClient && <PlyrLayout icons={plyrLayoutIcons} />}
           </MediaPlayer>
 
