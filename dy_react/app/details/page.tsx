@@ -25,7 +25,6 @@ function DetailsPageInner() {
   const [initialStreamUrl, setInitialStreamUrl] = useState<string>('');
   const [initialIdx, setInitialIdx] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
-
   useEffect(() => {
     if (!id) return;
     const fetchVideo = async () => {
@@ -62,7 +61,6 @@ function DetailsPageInner() {
         setLoading(false);
       }
     };
-
     fetchVideo();
   }, [id]);
 

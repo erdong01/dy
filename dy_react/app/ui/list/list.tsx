@@ -130,8 +130,6 @@ export default function List() {
 
     return (
     <>
-        {/* --- FINAL FIX STEP 2: 将 CategoryId 作为 prop 传递下去 --- */}
-        {/* 这会告诉子组件应该显示哪个分类为选中状态 */}
         <CategoryFilters 
             onChange={handleCategoryChange} 
             value={CategoryId} 
@@ -150,7 +148,7 @@ export default function List() {
         <br />
         
         {/* --- (剩余的 JSX 保持不变) --- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mx-auto">
             {list.map((item, index) => (
                 <div className="card bg-base-200 w-full shadow-xl" key={item.Id}>
                     <Link href={`/details?id=${item.Id}`} target="_blank" rel="noopener noreferrer">
