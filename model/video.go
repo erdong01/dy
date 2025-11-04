@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -40,10 +39,12 @@ func (*Video) TableName() string {
 }
 
 func (that *Video) Create() (err error) {
+	if that.Title == "" {
+		return
+	}
 	var oldVideo Video
-	searchTerm := fmt.Sprintf("\"%s\"", that.Title)
 	core.New().DB.
-		Where("MATCH(title) AGAINST(? IN BOOLEAN MODE)", searchTerm).
+		Where("MATCH(title) AGAINST(? IN BOOLEAN MODE)", that.Title).
 		First(&oldVideo)
 	if oldVideo.Id > 0 {
 		core.New().DB.Where("id = ?", oldVideo.Id).Updates(that)
