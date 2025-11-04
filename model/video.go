@@ -45,6 +45,7 @@ func (that *Video) Create() (err error) {
 	var oldVideo Video
 	core.New().DB.
 		Where("title = ?", that.Title).
+		Where("type_id = ?", that.TypeId).
 		First(&oldVideo)
 	if oldVideo.Id > 0 {
 		core.New().DB.Where("id = ?", oldVideo.Id).Updates(that)
