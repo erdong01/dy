@@ -46,11 +46,7 @@ func (that *Video) Create() (err error) {
 	core.New().DB.
 		Where("MATCH(title) AGAINST(? IN BOOLEAN MODE)", that.Title).
 		First(&oldVideo)
-	if oldVideo.Id > 0 {
-		if that.Title != oldVideo.Title {
-			err = core.New().DB.Create(that).Error
-			return
-		}
+	if oldVideo.Id > 0 && that.Title == oldVideo.Title {
 		core.New().DB.Where("id = ?", oldVideo.Id).Updates(that)
 		that.Id = oldVideo.Id
 	} else {
