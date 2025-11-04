@@ -100,10 +100,13 @@ func (that *Video) List(page int, pageSize int, id int64, keyWord string, catego
 	if total == 0 {
 		return // 如果总数为0，没必要执行后续的Find查询
 	}
-
+	if categoryId != "" || keyWord != "" {
+		queryBuilder = queryBuilder.Order("browse DESC")
+	} else {
+		queryBuilder = queryBuilder.Order("id DESC")
+	}
 	// 3. 在同样的查询条件下，添加分页和排序，执行 Find
 	err = queryBuilder.Where("id > ?", id).
-		Order("id DESC").
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		Find(&data).Error
