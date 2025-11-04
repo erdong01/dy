@@ -9,6 +9,7 @@ import (
 	"video/model"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func List(c *gin.Context) {
@@ -97,6 +98,10 @@ func Get(c *gin.Context) {
 	// if data.VideoGroupId > 0 {
 	// 	data.VideoList = video.ListByVideoGroupId(data.VideoGroupId)
 	// }
+	go func(id int64) {
+		core.New().DB.Model(&model.Video{}).Where("id = ?", id).
+			UpdateColumn("browse", gorm.Expr("browse + 1"))
+	}(id)
 	c.JSON(http.StatusOK, gin.H{
 		"Data": data,
 	})
