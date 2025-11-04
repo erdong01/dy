@@ -74,9 +74,10 @@ func (that *Video) List(page int, pageSize int, id int64, keyWord string, catego
 				like := "%" + kw + "%"
 				queryBuilder = queryBuilder.Where("(title LIKE ? OR alias LIKE ? OR keywords LIKE ?)", like, like, like)
 			} else {
-				// 英文/拼音等较规范的检索：使用 BOOLEAN MODE 提升相关性与前缀匹配
+				// 英文/拼音等较规范的检索：使用 BOOLEAN MODE（仅 title 有 FULLTEXT）+ 短语 LIKE 兜底
 				bq := buildBooleanQuery(kw)
-				queryBuilder = queryBuilder.Where("(MATCH(title) AGAINST(? IN BOOLEAN MODE) OR MATCH(alias) AGAINST(? IN BOOLEAN MODE) OR MATCH(keywords) AGAINST(? IN BOOLEAN MODE))", bq, bq, bq)
+				like := "%" + kw + "%"
+				queryBuilder = queryBuilder.Where("(MATCH(title) AGAINST(? IN BOOLEAN MODE) OR title LIKE ? OR alias LIKE ? OR keywords LIKE ?)", bq, like, like, like)
 			}
 		}
 	}
@@ -130,8 +131,9 @@ func (that *Video) List(page int, pageSize int, id int64, keyWord string, catego
 		} else {
 			// BOOLEAN MODE 分支：多字段加权 + 精确匹配强力加权
 			bq := buildBooleanQuery(kw)
-			scoreExpr := "((MATCH(title) AGAINST(? IN BOOLEAN MODE))*3 + (MATCH(alias) AGAINST(? IN BOOLEAN MODE))*2 + (MATCH(keywords) AGAINST(? IN BOOLEAN MODE)) + (CASE WHEN title = ? THEN 200 ELSE 0 END)) AS score"
-			queryBuilder = queryBuilder.Select("video.*, "+scoreExpr, bq, bq, bq, kw).
+			like := "%" + kw + "%"
+			scoreExpr := "((MATCH(title) AGAINST(? IN BOOLEAN MODE))*3 + (CASE WHEN title = ? THEN 200 ELSE 0 END) + (CASE WHEN title LIKE ? THEN 80 WHEN alias LIKE ? THEN 60 WHEN keywords LIKE ? THEN 30 ELSE 0 END)) AS score"
+			queryBuilder = queryBuilder.Select("video.*, "+scoreExpr, bq, kw, like, like, like).
 				Order("score DESC, browse DESC, id DESC")
 		}
 	} else {
@@ -205,6 +207,10 @@ func buildBooleanQuery(s string) string {
 		if p == "" {
 			continue
 		}
+		// 过滤常见英文停用词，避免 +the* +and* 等影响检索
+		if isEnglishStopword(p) {
+			continue
+		}
 		// 对英文等前缀匹配友好的语言，加上 + 前缀和 * 尾缀
 		if regexp.MustCompile(`^[A-Za-z0-9._-]+$`).MatchString(p) {
 			if len(p) >= 3 {
@@ -222,4 +228,19 @@ func buildBooleanQuery(s string) string {
 		return s
 	}
 	return strings.Join(out, " ")
+}
+
+// isEnglishStopword 判断是否为英文停用词
+func isEnglishStopword(s string) bool {
+	w := strings.ToLower(strings.TrimSpace(s))
+	switch w {
+	case "a", "an", "the", "and", "or", "but", "if", "then", "else",
+		"of", "to", "in", "on", "for", "with", "by", "at", "from", "as",
+		"is", "are", "was", "were", "be", "been", "being",
+		"this", "that", "these", "those", "it", "its", "into", "over", "under",
+		"about", "between", "through", "during", "before", "after":
+		return true
+	default:
+		return false
+	}
 }
