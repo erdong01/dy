@@ -1,9 +1,7 @@
 // /components/CategoryFilters.tsx
 
 'use client';
-
-import React, { useState, useEffect, useMemo } from 'react';
-
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 // --- (类型定义保持不变) ---
 export interface SonCategory { Id: number; CreatedAt: string; UpdatedAt: string; DeletedAt: null | string; Name: string; ParentId: number; Type: number; IsHide: null | boolean; SonCategory: null; }
 export interface Category { Id: number; CreatedAt: string; UpdatedAt: string; DeletedAt: null | string; Name: string; ParentId: number; Type: number; IsHide: null | boolean; SonCategory: SonCategory[] | null; }
@@ -100,30 +98,13 @@ const CategoryFilters = ({ value = '', onChange }: CategoryMenuProps) => {
     <div className="p-4 sm:p-6 bg-black text-white font-sans space-y-5">
       <div className="space-y-5">
         {categories.map(category => (
-          <div key={category.Id} className="flex items-baseline gap-x-4 sm:gap-x-6">
-            <div className="bg-[#1f2937] text-white px-4 py-1.5 rounded-md whitespace-nowrap text-sm sm:text-base flex-shrink-0">
-              {category.Name}
-            </div>
-            <div className="flex flex-wrap items-baseline gap-x-4 sm:gap-x-6 gap-y-3">
-              <button
-                onClick={() => handleFilterClick(category.Id, 'all')}
-                // --- MODIFICATION 6: 使用派生出的 `activeFilters` 来判断状态 ---
-                className={getFilterClasses(activeFilters[category.Id] === 'all' || !activeFilters[category.Id])}
-              >
-                全部
-              </button>
-
-              {category.SonCategory?.map(son => (
-                <button
-                  key={son.Id}
-                  onClick={() => handleFilterClick(category.Id, son.Id)}
-                  className={getFilterClasses(activeFilters[category.Id] === son.Id)}
-                >
-                  {son.Name}
-                </button>
-              ))}
-            </div>
-          </div>
+          <CategoryRow
+            key={category.Id}
+            category={category}
+            isActive={(id) => activeFilters[category.Id] === id || (!id && (activeFilters[category.Id] === 'all' || !activeFilters[category.Id]))}
+            onClick={(sonId) => handleFilterClick(category.Id, sonId)}
+            getFilterClasses={getFilterClasses}
+          />
         ))}
       </div>
     </div>
@@ -131,3 +112,137 @@ const CategoryFilters = ({ value = '', onChange }: CategoryMenuProps) => {
 };
 
 export default CategoryFilters;
+
+// --- 移动端三行折叠的分类行组件 ---
+type CategoryRowProps = {
+  category: Category;
+  // isActive: 传入函数判断按钮是否激活；当传入 id 为 undefined/null 时表示 “全部”
+  isActive: (id?: number) => boolean;
+  // onClick: 传入点击回调；sonId 为 'all' 或具体数字 ID
+  onClick: (sonId: number | 'all') => void;
+  getFilterClasses: (isActive: boolean) => string;
+};
+
+const CategoryRow: React.FC<CategoryRowProps> = ({ category, isActive, onClick, getFilterClasses }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [visibleCount, setVisibleCount] = useState<number | null>(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  // 监听窗口宽度，判定是否移动端（与 Tailwind sm 断点对齐：< 640px）
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // 计算可见数量：仅在移动端且未展开时限制三行
+  useEffect(() => {
+    const calc = () => {
+      const el = containerRef.current;
+      if (!el) return;
+
+      const children = Array.from(el.children) as HTMLElement[];
+      if (children.length === 0) {
+        setVisibleCount(null);
+        setHasOverflow(false);
+        return;
+      }
+
+      // 非移动端：显示全部且无折叠按钮
+      if (!isMobile) {
+        setVisibleCount(children.length);
+        setHasOverflow(false);
+        return;
+      }
+
+      // 移动端：统计每个子元素的 offsetTop，按行分组
+      const rowTops: number[] = [];
+      for (const child of children) {
+        const top = child.offsetTop;
+        if (!rowTops.includes(top)) rowTops.push(top);
+      }
+      rowTops.sort((a, b) => a - b);
+
+      const overflow = rowTops.length > 3;
+
+      // 三行以内无需折叠按钮
+      if (!overflow) {
+        setVisibleCount(children.length);
+        setHasOverflow(false);
+        return;
+      }
+
+      // 有溢出时：
+      // - 展开：显示全部，并保留“收起”按钮
+      if (expanded) {
+        setVisibleCount(children.length);
+        setHasOverflow(true);
+        return;
+      }
+
+      // 第三行的 top 值
+      const thirdTop = rowTops[2];
+      let count = 0;
+      for (const child of children) {
+        if (child.offsetTop <= thirdTop) count++;
+      }
+      setVisibleCount(count);
+      // 折叠状态下有溢出：需要显示“显示更多”按钮
+      setHasOverflow(true);
+    };
+
+    // 下一帧计算，确保布局完成
+    const id = requestAnimationFrame(calc);
+    return () => cancelAnimationFrame(id);
+  }, [isMobile, expanded, category]);
+
+  const toggle = () => setExpanded(v => !v);
+
+  return (
+    <div className="flex items-baseline gap-x-4 sm:gap-x-6">
+      <div className="bg-[#1f2937] text-white px-4 py-1.5 rounded-md whitespace-nowrap text-sm sm:text-base shrink-0">
+        {category.Name}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div ref={containerRef} className="flex flex-wrap items-baseline gap-x-4 sm:gap-x-6 gap-y-3">
+          {/* 全部 */}
+          <button
+            onClick={() => onClick('all')}
+            className={getFilterClasses(isActive())}
+          >
+            全部
+          </button>
+          {/* 子分类 */}
+          {category.SonCategory?.map((son, idx) => {
+            // idx 偏移：因为前面有一个 “全部” 按钮，所以需要 +1 来与 children 对齐
+            const childIndex = idx + 1;
+            const hidden = isMobile && !expanded && visibleCount !== null && childIndex >= visibleCount;
+            return (
+              <button
+                key={son.Id}
+                onClick={() => onClick(son.Id)}
+                className={getFilterClasses(isActive(son.Id))}
+                style={hidden ? { display: 'none' } : undefined}
+              >
+                {son.Name}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 切换按钮：仅在移动端且有溢出时显示 */}
+        {isMobile && hasOverflow && (
+          <button
+            onClick={toggle}
+            className="mt-3 text-sm text-gray-400 hover:text-white underline"
+          >
+            {expanded ? '收起' : '显示更多'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
