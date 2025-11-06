@@ -25,16 +25,32 @@ function DetailsPageInner() {
   const [initialStreamUrl, setInitialStreamUrl] = useState<string>('');
   const [initialIdx, setInitialIdx] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+  // Category 数据（按父类分组，每个父类的 SonCategory 只包含与该视频相关的子类）
+  type VideoCategory = {
+    Id: number;
+    Name: string;
+    ParentId?: number;
+    Type?: number | null;
+    SonCategory?: Array<{
+      Id: number;
+      Name: string;
+      ParentId?: number;
+    }>;
+  };
+  const [categories, setCategories] = useState<VideoCategory[]>([]);
   useEffect(() => {
     if (!id) return;
     const fetchVideo = async () => {
       try {
         const res = await fetch(`${API_URL}/api/v1/video/get?Id=${id}`);
         if (!res.ok) return;
-        const result: { Data: Video } = await res.json();
+        const result: { Data: Video; Category: VideoCategory[] } = await res.json();
         const v = result?.Data;
         if (!v) return;
         setVideo(v);
+        if (Array.isArray(result?.Category)) {
+          setCategories(result.Category);
+        }
         if (v.VideoUrlArr?.length) {
           for (const i in v.VideoUrlArr) {
             v.VideoUrlArr[i].PlaybackURL = parseM3u8URLs(v.VideoUrlArr[i].Url);
@@ -106,7 +122,7 @@ function DetailsPageInner() {
         }}
       />
       <Menus />
-      <DetailsClient initialVideo={video} initialStreamUrl={initialStreamUrl} initialVideoIdx={String(initialIdx)} />
+      <DetailsClient initialVideo={video} initialStreamUrl={initialStreamUrl} initialVideoIdx={String(initialIdx)} categories={categories} />
     </>
   );
 }

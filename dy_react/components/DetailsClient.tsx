@@ -16,14 +16,29 @@ import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
 import { useIsClient } from '@/app/hooks/useIsClient';
 import * as d3 from "d3";
 import type { Video } from '@/app/lib/types';
+import Link from 'next/link';
+
+// 与后端 PascalCase 字段对齐的分类类型
+export type VideoCategory = {
+  Id: number;
+  Name: string;
+  ParentId?: number;
+  Type?: number | null;
+  SonCategory?: Array<{
+    Id: number;
+    Name: string;
+    ParentId?: number;
+  }>;
+};
 
 export type DetailsClientProps = {
   initialVideo: Video;
   initialStreamUrl: string;
   initialVideoIdx: string;
+  categories?: VideoCategory[];
 };
 
-export default function DetailsClient({ initialVideo, initialStreamUrl, initialVideoIdx }: DetailsClientProps) {
+export default function DetailsClient({ initialVideo, initialStreamUrl, initialVideoIdx, categories = [] }: DetailsClientProps) {
   const isClient = useIsClient();
   const [streamUrl, setStreamUrl] = useState<string>(initialStreamUrl);
   const [videoIdx, setVideoIdx] = useState<string>(initialVideoIdx);
@@ -114,7 +129,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
                 // 关闭自动码率，强制最高清晰度起播
                 (h as unknown as { autoLevelEnabled: boolean }).autoLevelEnabled = false;
                 h.currentLevel = bestIndex;
-              } catch {}
+              } catch { }
             });
 
             // 弱网/错误自动恢复：尽量避免「暂停在那儿」的体验
@@ -147,18 +162,18 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
               switch (data.type) {
                 case Hls.ErrorTypes.NETWORK_ERROR:
                   // 重启加载，保留当前位置
-                  try { h.startLoad(); } catch {}
+                  try { h.startLoad(); } catch { }
                   lastStallAt = Date.now();
                   tryDowngrade();
                   break;
                 case Hls.ErrorTypes.MEDIA_ERROR:
-                  try { h.recoverMediaError(); } catch {}
+                  try { h.recoverMediaError(); } catch { }
                   lastStallAt = Date.now();
                   tryDowngrade();
                   break;
                 default:
                   // 兜底：重启加载
-                  try { h.stopLoad(); h.startLoad(); } catch {}
+                  try { h.stopLoad(); h.startLoad(); } catch { }
                   lastStallAt = Date.now();
                   tryDowngrade();
                   break;
@@ -170,7 +185,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
             if (media) {
               const resume = () => {
                 if (media.paused && !media.ended) {
-                  media.play().catch(() => {});
+                  media.play().catch(() => { });
                 }
                 lastStallAt = Date.now();
                 tryDowngrade();
@@ -254,6 +269,36 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
           <div>
             <div dangerouslySetInnerHTML={{ __html: initialVideo.Describe }}></div>
           </div>
+
+          {/* 使用 daisyUI 渲染分类信息（移植自 /app/details/page.tsx） */}
+          {categories?.length > 0 && (
+            <section className="container mx-auto py-6">
+              <div className="card bg-base-100 shadow">
+                <div className="space-y-4">
+                  {categories.map((cat) => (
+                    <div key={cat.Id} className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="shrink-0">
+                        <span className="badge badge-neutral badge-lg">{cat.Name}</span>
+                      </div>
+                      <div className="flex-1 flex flex-wrap gap-2">
+                        {cat.SonCategory?.map((son) => (
+                          <Link
+                            key={son.Id}
+                            href={`/?category=${son.Id}`}
+                            className="badge badge-outline badge-primary hover:badge-secondary cursor-pointer"
+                            prefetch={false}
+                          >
+                            {son.Name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
           <div className={styles["node-container"]}>
             <NodeNetwork peers={peers} />
           </div>
