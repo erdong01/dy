@@ -95,15 +95,14 @@ func Get(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	// if data.VideoGroupId > 0 {
-	// 	data.VideoList = video.ListByVideoGroupId(data.VideoGroupId)
-	// }
 	go func(id int64) {
 		core.New().DB.Model(&model.Video{}).Where("id = ?", id).
 			UpdateColumn("browse", gorm.Expr("browse + 1"))
 	}(id)
+	category, _ := model.ListByVideoId(id)
 	c.JSON(http.StatusOK, gin.H{
-		"Data": data,
+		"Data":     data,
+		"Category": category,
 	})
 }
 
