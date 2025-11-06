@@ -285,7 +285,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
                           <Link
                             key={son.Id}
                             href={`/?category=${son.Id}`}
-                            className="badge badge-outline badge-primary hover:badge-secondary cursor-pointer"
+                            className="badge bg-transparent text-white border-0 cursor-pointer"
                             prefetch={false}
                           >
                             {son.Name}
