@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "7x影视-在线观看",
-  description: "分享好看的影视,在线观看,7x影院包含4k、超清视频。",
+  description: "分享好看的4k影视,在线观看,7x影院包含4k、超清视频、高清视频。",
 };
 
 /**
