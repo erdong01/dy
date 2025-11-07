@@ -10,33 +10,11 @@ import {
     NavigationMenuList,
     // NavigationMenuTrigger,
     navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
+} from "../../../components/ui/navigation-menu"
 import { useEffect } from 'react';
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-interface Category {
-    Id: number;
-    CreatedAt: string;
-    UpdatedAt: string;
-    DeletedAt: string | null;
-    Name: string;
-    ParentId:  number;
-    SonCategory:Category[];
-}
 
 export default function Menus() {
-    useEffect(() => {
-        const fetchMovies = async () => {
-            // const data = await fetch(`${API_URL}/api/v1/category/list`);
-            // if (!data.ok) {
-            //     console.log(data.status);
-            //     return;
-            // }
-            // const videoList: { Data: Category[] } = await data.json();
-            // console.log("list:", videoList.Data);
-        };
-        fetchMovies();
-    }, []);
+    useEffect(() => { /* placeholder for future menu data load */ }, []);
 
     return (<>
         <NavigationMenu>

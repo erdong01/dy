@@ -2,11 +2,11 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import Script from 'next/script';
-import DetailsClient from '@/components/DetailsClient';
-import type { Video } from '@/app/lib/types';
-import { parseM3u8URLs } from '@/app/lib/parseM3u8';
+import DetailsClient from '../../components/DetailsClient';
+import type { Video } from '../lib/types';
+import { parseM3u8URLs } from '../lib/parseM3u8';
 import { useSearchParams } from 'next/navigation';
-import Menus from '@/app/ui/menu/menus';
+import Menus from '../ui/menu/menus';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.7x.chat';
 

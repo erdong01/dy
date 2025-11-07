@@ -1,8 +1,8 @@
 'use client'
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import CategoryFilters from '@/components/CategoryMenu';
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import CategoryFilters from '../../../components/CategoryMenu';
 import {
     Pagination,
     PaginationContent,
@@ -11,7 +11,7 @@ import {
     PaginationLink,
     PaginationNext,
     PaginationPrevious,
-} from "@/components/ui/pagination";
+} from "../../../components/ui/pagination";
 import Link from 'next/link';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';

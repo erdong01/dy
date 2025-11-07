@@ -1,21 +1,20 @@
 'use client';
 
-import '@/app/globals.css';
 import '@vidstack/react/player/styles/base.css';
 import '@vidstack/react/player/styles/default/layouts/audio.css';
 import '@vidstack/react/player/styles/default/layouts/video.css';
 import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/plyr/theme.css';
-import styles from '@/app/details/details.module.css';
+import styles from '../app/details/details.module.css';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { isHLSProvider, MediaPlayer, MediaProvider, type MediaProviderAdapter } from "@vidstack/react";
 import { PlyrLayout, plyrLayoutIcons } from '@vidstack/react/player/layouts/plyr';
 import Hls from "hls.js";
 import { CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
-import { useIsClient } from '@/app/hooks/useIsClient';
+import { useIsClient } from '../app/hooks/useIsClient';
 import * as d3 from "d3";
-import type { Video } from '@/app/lib/types';
+import type { Video } from '../app/lib/types';
 import Link from 'next/link';
 
 // 与后端 PascalCase 字段对齐的分类类型
@@ -285,7 +284,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
                           <Link
                             key={son.Id}
                             href={`/?category=${son.Id}`}
-                            className="badge bg-transparent text-white border-0 cursor-pointer"
+                            className="badge bg-transparent border-0 text-base-content dark:text-white hover:text-primary transition-colors cursor-pointer"
                             prefetch={false}
                           >
                             {son.Name}
