@@ -17,3 +17,4 @@ Sitemap: https://www.7x.chat/sitemap10.xml
 Sitemap: https://www.7x.chat/sitemap11.xml
 Sitemap: https://www.7x.chat/sitemap12.xml
 Sitemap: https://www.7x.chat/sitemap13.xml
+Sitemap: https://www.7x.chat/sitemap14.xml
