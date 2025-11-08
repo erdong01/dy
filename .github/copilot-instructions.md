@@ -1,48 +1,57 @@
+
 # Copilot Instructions for this repo (dy)
-Purpose: arm coding agents with the minimum they need to ship changes fast while matching existing patterns. Always cite workspace-relative paths.
+A compact guide for AI coding agents to be productive quickly. Cite workspace paths (relative to repo root) when referencing files.
 
-## Backend Layout
-- Root Go module (`video`) exposes a Gin REST API on `:9191`; Next.js app sits in `dy_react/` and calls `/api/v1/...`.
-- `main.go` loads `etc/config.yaml` (Viper), initializes MySQL via `pkg/db.NewDBS().InitGorm`, stores handles on `core.New()`, applies CORS (`middlewares/cors.go`), then mounts routers from `router/router.go` at `/api`.
-- Keep global state in the singleton (`core/core.go`); do not create ad‑hoc DB/config/redis clients inside handlers.
-- Kafka consumer entrypoint: `cmd/kafka/main.go` (same config load path) bootstraps `pkg/kafka.ConsumerInit` (Sarama consumer group).
+## 快速概览（大图）
+- 后端：Go + Gin，入口 `main.go`，路由在 `router/router.go`，依赖注入与全局句柄放在 `core/core.go`。
+- 前端：Next.js (App Router) 位于 `dy_react/`，通过 `NEXT_PUBLIC_API_BASE_URL` 调用后端 `/api/v1/...`。
+- 异步：Kafka consumer 在 `cmd/kafka/main.go`（使用 pkg/kafka 和 Sarama），示例消息保存在 `cmd/kafka/message_*.json`。
 
-## Request Lifecycle
-- `/api/v1/video` → `controller/videoController.go`
-	- GET `/list` expects PascalCase query keys: `Page`, `PageSize`, `Id`, `KeyWord`, `CategoryId`. Response shape: `{ Data, LastId, Total }`.
-		- Keyword: Chinese/short ASCII uses `LIKE`; longer ASCII uses `MATCH(title) AGAINST ... IN BOOLEAN MODE` with `LIKE` fallback; sorts by computed relevance, then `browse DESC, id DESC`.
-		- Category filter: intersection via `video_category` subquery with `GROUP BY video_id` + `HAVING COUNT(DISTINCT category_id)=N`.
-	- GET `/get` returns `{ Data, Category }`; also increments `browse` asynchronously via `gorm.Expr("browse + 1")`.
-	- POST `/create`: `c.BindJSON(&model.Video)` (PascalCase JSON). Ensures categories via `model.Category.Create`, upserts `VideoGroup`, `Video.Create()` (dedupe by `title` + `type_id` → update-in-place or insert), creates `VideoUrl`, then diffs and syncs `video_category` inside a transaction.
-	- POST `/update`: placeholder.
-- `/api/v1/category/list` → `controller/category/categoryController.go`: wraps `Category.HomeList()` to serve curated sections “类型/年代/地区” with `SonCategory` preloaded and ordered.
+## 关键约定（必须遵守）
+- 不要在 handler/控制器中创建新的 DB/Redis 客户端：始终使用 `core.New().DB`（见 `pkg/db/dbs.go` 与 `core/core.go`）。
+- JSON/Query 字段使用 PascalCase（例如 `Page`, `PageSize`, `KeyWord`）。控制器使用 `c.BindJSON`/`c.BindQuery` 直接映射到模型。
+- 列表查询先 `Count` 再 `Select/Order/Offset/Limit/Find` 以保证 Total 与结果一致（参见 `model.Video.List`）。
+- 去重/上次行为：`model.Video.Create` 以 `title + type_id` 做唯一判定，命中时 update-in-place 并设置 `video.Id`。
 
-## Persistence Patterns
-- Use GORM only via `core.New().DB` (singleton seeded by `pkg/db/dbs.go`); optional dbresolver/sharding helpers are scaffolded.
-- `model.Video.Create` dedupes on exact `title` + `type_id`; on hit performs update-in-place and sets `video.Id`.
-- `model.Video.List` composes all filters on one builder; call `Count` first, then apply `Select/Order/Offset/Limit/Find` so totals and results stay in sync.
-- `model.Category.Create` ensures parent categories exist by name/type and expands comma-delimited children; returns IDs used to sync the `video_category` join.
+## 常见控制器行为示例
+- `/api/v1/video/list` (see `controller/videoController.go`):
+	- Keyword：短中文/短 ASCII 用 `LIKE`，长 ASCII 优先 `MATCH ... IN BOOLEAN MODE` 并回退到 `LIKE`。
+	- 类目过滤：通过 `video_category` 子查询，`GROUP BY video_id HAVING COUNT(DISTINCT category_id)=N` 做交集过滤。
+- `/api/v1/video/get`：返回 `{ Data, Category }`，并异步用 `gorm.Expr("browse + 1")` 增加 `browse`。
 
-## Background Work & Integrations
-- Kafka: `cmd/kafka/main.go` creates a Sarama consumer group (SASL creds from `config.Kafka`), runs `Consume` loop, persists message payloads to `message_<unix>.json`, then `MarkMessage`.
-- Add consumers by implementing `sarama.ConsumerGroupHandler` and passing to `pkg/kafka.ConsumerInit`.
-- Config contains live credentials (`etc/config.yaml`); prefer a local copy/overrides to avoid hitting production systems.
+## 运行 / 调试 / 测试（最常用命令）
+- 后端快速运行（本地开发）：
+	- 构建并运行：
+		go build -o ./release main.go && ./release
+	- 或直接运行：
+		go run main.go
+- Kafka worker：
+		go run cmd/kafka/main.go
+- 运行测试（注意部分测试会依赖外部服务）：
+		go test ./...  # 或选择性运行 test 下子目录
+- 前端（在 `dy_react/`）：
+		cd dy_react && npm install && npm run dev
 
-## Frontend Notes
-- Next.js App Router under `dy_react/app/` calls the backend with PascalCase payloads.
-- Base URL via `NEXT_PUBLIC_API_BASE_URL` (e.g. `http://localhost:9191`); see `dy_react/app/ui/list/list.tsx` and `dy_react/app/details/page.tsx` for request/shape expectations.
-- Coordinate any API shape changes with UI—list page reads `{ Data, Total }`; details page reads `{ Data, Category }` and expects `VideoUrlArr`.
+## 集成点与外部依赖
+- 配置：`etc/config.yaml`（Viper）；生产/本地凭据会通过该文件，开发时请使用本地 overrides 避免触发生产服务。
+- MySQL（GORM）、Redis、Kafka、OSS 等，相关初始化在 `pkg/` 和 `config/` 下（例：`config/mysql.go`, `config/kafka.go`, `pkg/redis`）。
 
-## Local Development
-- Backend: `go build -o ./release main.go && ./release` (listens on `:9191`, exposes `/ping`). Docker: `docker build -t app .` then `docker run -dp 9090:9191 --name dy -v ./etc:/app/etc -v ./release:/app --restart unless-stopped app`.
-- Kafka worker: `go run cmd/kafka/main.go` (ensure `config.Kafka` brokers/creds are reachable).
-- Tests: under `test/` some cases hit external services; run selectively to avoid network flakiness.
-- Frontend: `cd dy_react && npm install && npm run dev` (serves on `:3000`). API contract is `/api/v1/...` with PascalCase fields.
+## 小贴士（常见坑/约束）
+- 修改 DB 模型/迁移时请检查 `model/*.go` 的 Create/List 约定（去重、事务、video_category 同步）。
+- 前后端字段名严格依赖 PascalCase；改动 API 字段必须同时调整 `dy_react/` 的调用文件（示例：`dy_react/app/ui/list/list.tsx`）。
+- 新增后台消费者：实现 `sarama.ConsumerGroupHandler` 并在 `pkg/kafka.ConsumerInit` 中注册。
 
-## Conventions & References
-- PascalCase JSON keys on models drive request/response schemas; controllers use `c.BindJSON` with those tags.
-- Controllers keep `defer` recover blocks; e.g., `List` standardizes `{ Data: [], LastId: 0, Total: 0 }` on panic.
-- Use shared helpers: routing (`router/router.go`), DB bootstrap (`pkg/db/*.go`), config (`config/*.go`), logging (`core/zap.go`, `pkg/zapService/zap.go`).
-- Examples to mirror: list flow (`controller/videoController.go` + `model/video.go`), curated categories (`controller/category/categoryController.go`).
+## 重要文件速查
+- `main.go` — 应用入口
+- `router/router.go` — 路由装载
+- `core/core.go` — 全局单例（DB、Logger）
+- `controller/` — HTTP 控制器
+- `model/` — 数据层（Video/Category/VideoUrl/VideoGroup 等）
+- `pkg/db/dbs.go` — GORM 初始化
+- `cmd/kafka/main.go` — Kafka consumer entry
+- `dy_react/` — Next.js 前端
 
-Flag anything unclear or outdated so we can tighten this guide.
+如果需要把某个控制器或模型的实现细节展开为示例（例如 `video` 创建流程或 `video_category` 同步事务），告诉我目标文件，我会把关键代码片段与注意点补进来。
+
+---
+请审阅这个精简版并告诉我是否要合并原来更详细的段落（我们目前保留了主要约定与运行步骤）。

@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	defaultTargetID = 70000
+	defaultTargetID = 72797
 	chunkSize       = 5000
 )
 
