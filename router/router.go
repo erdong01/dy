@@ -31,4 +31,9 @@ func (that *ApiRouter) InitApiRouter(Router *gin.RouterGroup) {
 	{
 		categoryRouter.GET("/list", category.List) //
 	}
+
+	categoryRouter := that.Router.Group("/v1").Group("/video_class")
+	{
+		categoryRouter.GET("/list", category.List) //
+	}
 }

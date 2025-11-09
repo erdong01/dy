@@ -9,13 +9,14 @@ import (
 
 // VideoClass  。
 type VideoClass struct {
-	Id        int64           `gorm:"column:id;primaryKey" json:"Id"`     //type:int64             comment:            version:2025-9-27 19:12
-	CreatedAt *time.Time      `gorm:"column:created_at" json:"CreatedAt"` //type:*time.Time        comment:创建时间    version:2025-9-27 19:12
-	UpdatedAt *time.Time      `gorm:"column:updated_at" json:"UpdatedAt"` //type:*time.Time        comment:更新时间    version:2025-9-27 19:12
-	DeletedAt *gorm.DeletedAt `gorm:"column:deleted_at" json:"DeletedAt"` //type:*gorm.DeletedAt   comment:删除时间    version:2025-9-27 19:12
-	TypeId    int64           `gorm:"column:type_id" json:"TypeId"`       //type:int64             comment:            version:2025-9-27 19:12
-	TypeName  string          `gorm:"column:type_name" json:"TypeName"`   //type:string            comment:            version:2025-9-27 19:12
-	TypePid   int64           `gorm:"column:type_pid" json:"TypePid"`     //type:int64             comment:            version:2025-9-27 19:12
+	Id            int64           `gorm:"column:id;primaryKey" json:"Id"`     //
+	CreatedAt     *time.Time      `gorm:"column:created_at" json:"CreatedAt"` // 创建时间
+	UpdatedAt     *time.Time      `gorm:"column:updated_at" json:"UpdatedAt"` // 更新时间
+	DeletedAt     *gorm.DeletedAt `gorm:"column:deleted_at" json:"DeletedAt"` // 删除时间
+	TypeId        int64           `gorm:"column:type_id" json:"TypeId"`       //
+	TypeName      string          `gorm:"column:type_name" json:"TypeName"`   //
+	TypePid       int64           `gorm:"column:type_pid" json:"TypePid"`     //
+	VideoClassSon []VideoClass    `gorm:"foreignKey:TypePid;references:Id" json:"VideoClassSon,omitempty"`
 }
 
 // TableName 表名:video_class，。
@@ -38,4 +39,12 @@ func (that *VideoClass) Create() (err error) {
 		err = core.New().DB.Create(that).Error
 	}
 	return
+}
+func (that *VideoClass) List() (categorySonArr []VideoClass) {
+	var categoryData Category
+	core.New().DB.Model(that).
+		Preload("VideoClassSon").
+		Find(&categoryData)
+	return
+
 }
