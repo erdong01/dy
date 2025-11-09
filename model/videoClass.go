@@ -16,7 +16,7 @@ type VideoClass struct {
 	TypeId        int64           `gorm:"column:type_id" json:"TypeId"`       //
 	TypeName      string          `gorm:"column:type_name" json:"TypeName"`   //
 	TypePid       int64           `gorm:"column:type_pid" json:"TypePid"`     //
-	VideoClassSon []VideoClass    `gorm:"foreignKey:TypePid;references:Id" json:"VideoClassSon,omitempty"`
+	VideoClassSon []VideoClass    `gorm:"foreignKey:TypePid;references:TypeId" json:"VideoClassSon,omitempty"`
 }
 
 // TableName 表名:video_class，。
@@ -40,11 +40,11 @@ func (that *VideoClass) Create() (err error) {
 	}
 	return
 }
-func (that *VideoClass) List() (categorySonArr []VideoClass) {
-	var categoryData Category
+func (that *VideoClass) List() (videoClassData []VideoClass) {
 	core.New().DB.Model(that).
-		Preload("VideoClassSon").
-		Find(&categoryData)
+		Where("type_pid = 0").
+		// Preload("VideoClassSon").
+		Find(&videoClassData)
 	return
 
 }

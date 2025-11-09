@@ -7,6 +7,7 @@ import type { Video } from '../lib/types';
 import { parseM3u8URLs } from '../lib/parseM3u8';
 import { useSearchParams } from 'next/navigation';
 import Menus from '../ui/menu/menus';
+import { Suspense as ReactSuspense } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.7x.chat';
 
@@ -121,7 +122,9 @@ function DetailsPageInner() {
           })
         }}
       />
-      <Menus />
+      <ReactSuspense fallback={<div className="navbar bg-base-100 border-b px-4 h-16" />}> 
+        <Menus />
+      </ReactSuspense>
       <DetailsClient initialVideo={video} initialStreamUrl={initialStreamUrl} initialVideoIdx={String(initialIdx)} categories={categories} />
     </>
   );

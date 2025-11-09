@@ -46,7 +46,9 @@ function ListSkeleton() {
 export default function Home() {
   return (
     <>
-      <Menu />
+      <Suspense fallback={<div className="navbar bg-base-100 border-b px-4 h-16" />}> 
+        <Menu />
+      </Suspense>
       <div className="grid justify-items-center">
         {/* 2. 将 List 组件用 Suspense 包裹 */}
         <Suspense fallback={<ListSkeleton />}>

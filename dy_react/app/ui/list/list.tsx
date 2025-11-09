@@ -58,8 +58,9 @@ export default function List() {
     const searchParams = useSearchParams();
 
     const page = Number(searchParams.get('page')) || 1;
-    // --- FINAL FIX STEP 1: 从 URL 中获取 CategoryId，用于传递给子组件 ---
+    // 分类（旧的 CategoryId）保留，新增 TypeId 支持
     const CategoryId = searchParams.get('category') || '';
+    const TypeId = searchParams.get('TypeId') || '';
 
     const [searchInput, setSearchInput] = useState(searchParams.get('keyword') || '');
     const [list, setList] = useState<Video[]>([]);
@@ -77,6 +78,7 @@ export default function List() {
             apiParams.set('Id', '0');
             if (searchParams.get('keyword')) apiParams.set('KeyWord', searchParams.get('keyword')!);
             if (searchParams.get('category')) apiParams.set('CategoryId', searchParams.get('category')!);
+            if (TypeId) apiParams.set('TypeId', TypeId); // 前端需求：传递 TypeId
             const requestUrl = `${API_URL}/api/v1/video/list?${apiParams.toString()}`;
             console.log('Fetching data from URL:', requestUrl);
             try {
@@ -92,7 +94,7 @@ export default function List() {
         };
         window.scrollTo(0, 0);
         fetchMovies();
-    }, [searchParams, pageSize]);
+    }, [searchParams, pageSize, TypeId]);
 
     // 操作函数的防御性检查逻辑也是正确的，无需改动
     const handleSearch = () => {
@@ -134,6 +136,7 @@ export default function List() {
             onChange={handleCategoryChange} 
             value={CategoryId} 
         />
+        {/* daisyUI navbar 已在 menus.tsx 中负责 TypeId 选择，这里只保留原有 Category 过滤组件 */}
         <br />
         <div className="flex w-full max-w-sm items-center space-x-2 min-h-12">
             <Input 

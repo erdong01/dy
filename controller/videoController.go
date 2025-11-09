@@ -56,11 +56,15 @@ func List(c *gin.Context) {
 	if categoryIdStr := c.Query("CategoryId"); categoryIdStr != "" {
 		categoryId = categoryIdStr
 	}
+	var typeId int64
+	if typeIdStr := c.Query("TypeId"); typeIdStr != "" {
+		typeId, _ = strconv.ParseInt(typeIdStr, 10, 64)
+	}
 
 	keyWord := c.Query("KeyWord")
 
 	var video model.Video
-	data, total, err := video.List(page, pageSize, id, keyWord, categoryId)
+	data, total, err := video.List(page, pageSize, id, keyWord, categoryId, typeId)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"Data":   []model.Video{},

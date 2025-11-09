@@ -1,4 +1,4 @@
-package videoclass
+package videoClass
 
 import (
 	"fmt"
@@ -14,9 +14,7 @@ func List(c *gin.Context) {
 			fmt.Println(r)
 		}
 	}()
-	var categoryModel model.Category
-	res := categoryModel.HomeList()
-	c.JSON(http.StatusOK, gin.H{
-		"Data": res,
-	})
+	var videoClass model.VideoClass
+	res := videoClass.List()
+	c.JSON(http.StatusOK, res)
 }

@@ -1,64 +1,138 @@
 'use client'
 
-import * as React from "react"
-import Link from "next/link"
-import {
-    NavigationMenu,
-    // NavigationMenuContent,
-    NavigationMenuItem,
-    NavigationMenuLink,
-    NavigationMenuList,
-    // NavigationMenuTrigger,
-    navigationMenuTriggerStyle,
-} from "../../../components/ui/navigation-menu"
-import { useEffect } from 'react';
+import * as React from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import type { VideoClassItem } from '../../lib/types'
+
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 export default function Menus() {
-    useEffect(() => { /* placeholder for future menu data load */ }, []);
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const activeTypeId = searchParams.get('TypeId') || ''
 
-    return (<>
-        <NavigationMenu>
-            <NavigationMenuList>
-                <NavigationMenuItem>
-                    <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                        <Link href="/">Home</Link>
-                    </NavigationMenuLink>
-                </NavigationMenuItem>
-                {/* <NavigationMenuItem>
-                    <NavigationMenuTrigger>List</NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                        <ul className="grid w-[300px] gap-4">
-                            <li>
-                                <NavigationMenuLink asChild>
-                                    <Link href="#">
-                                        <div className="font-medium">Components</div>
-                                        <div className="text-muted-foreground">
-                                            Browse all components in the library.
-                                        </div>
-                                    </Link>
-                                </NavigationMenuLink>
-                                <NavigationMenuLink asChild>
-                                    <Link href="#">
-                                        <div className="font-medium">Documentation</div>
-                                        <div className="text-muted-foreground">
-                                            Learn how to use the library.
-                                        </div>
-                                    </Link>
-                                </NavigationMenuLink>
-                                <NavigationMenuLink asChild>
-                                    <Link href="#">
-                                        <div className="font-medium">Blog</div>
-                                        <div className="text-muted-foreground">
-                                            Read our latest blog posts.
-                                        </div>
-                                    </Link>
-                                </NavigationMenuLink>
+    const [items, setItems] = useState<VideoClassItem[]>([])
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        let mounted = true
+        const fetchData = async () => {
+            if (!API_URL) return
+            setLoading(true)
+            setError(null)
+            try {
+                const res = await fetch(`${API_URL}/api/v1/video_class/list`)
+                if (!res.ok) throw new Error('加载视频分类失败')
+                const data: VideoClassItem[] = await res.json()
+                if (mounted) setItems(Array.isArray(data) ? data : [])
+                    } catch (e: unknown) {
+                        const msg = e instanceof Error ? e.message : '网络异常'
+                        if (mounted) setError(msg)
+            } finally {
+                if (mounted) setLoading(false)
+            }
+        }
+        fetchData()
+        return () => {
+            mounted = false
+        }
+    }, [])
+
+    const topWithChildren = useMemo(
+        () => items.filter((it) => Array.isArray(it.VideoClassSon) && it.VideoClassSon.length > 0),
+        [items]
+    )
+
+    const singleItems = useMemo(
+        () => items.filter((it) => !it.VideoClassSon || it.VideoClassSon.length === 0),
+        [items]
+    )
+
+    const goHome = useCallback(() => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.delete('TypeId')
+        params.set('page', '1')
+        router.push(`/?${params.toString()}`)
+    }, [router, searchParams])
+
+    const onPickType = useCallback(
+        (typeId: number) => {
+            const params = new URLSearchParams(searchParams.toString())
+            params.set('TypeId', String(typeId))
+            params.set('page', '1')
+            router.push(`/?${params.toString()}`)
+        },
+        [router, searchParams]
+    )
+
+    return (
+        <div className="navbar bg-base-100 border-b">
+            <div className="navbar-start">
+                <div className="dropdown">
+                    <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    </div>
+                      <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-64 p-2 shadow">
+                        <li>
+                            <button onClick={goHome} className={!activeTypeId ? 'active' : ''}>Home</button>
+                        </li>
+                        {loading && <li className="opacity-60"><span>加载中…</span></li>}
+                        {error && <li className="text-error"><span>{error}</span></li>}
+                        {topWithChildren.map((group) => (
+                            <li key={`m-${group.Id}`}>
+                                <details>
+                                    <summary>{group.TypeName}</summary>
+                                    <ul className="p-2">
+                                        {group.VideoClassSon?.map((s) => (
+                                            <li key={`s-${s.Id}`}>
+                                                <button onClick={() => onPickType(s.TypeId)} className={activeTypeId === String(s.TypeId) ? 'active' : ''}>{s.TypeName}</button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </details>
                             </li>
-                        </ul>
-                    </NavigationMenuContent>
-                </NavigationMenuItem> */}
-            </NavigationMenuList>
-        </NavigationMenu>
-    </>);
+                        ))}
+                        {singleItems.map((it) => (
+                            <li key={`single-${it.Id}`}>
+                                <button onClick={() => onPickType(it.TypeId)} className={activeTypeId === String(it.TypeId) ? 'active' : ''}>{it.TypeName}</button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                <button onClick={goHome} className={`btn btn-ghost text-xl ${!activeTypeId ? 'text-primary' : ''}`}>Home</button>
+            </div>
+            <div className="navbar-center hidden lg:flex">
+                <ul className="menu menu-horizontal px-1">
+                    <li>
+                        <button onClick={goHome} className={!activeTypeId ? 'active' : ''}>Home</button>
+                    </li>
+                    {topWithChildren.map((group) => (
+                        <li key={`lg-m-${group.Id}`}>
+                            <details>
+                                <summary>{group.TypeName}</summary>
+                                <ul className="p-2">
+                                    {group.VideoClassSon?.map((s) => (
+                                        <li key={`lg-s-${s.Id}`}>
+                                            <button onClick={() => onPickType(s.TypeId)} className={activeTypeId === String(s.TypeId) ? 'active' : ''}>{s.TypeName}</button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </details>
+                        </li>
+                    ))}
+                    {singleItems.map((it) => (
+                        <li key={`lg-single-${it.Id}`}>
+                            <button onClick={() => onPickType(it.TypeId)} className={activeTypeId === String(it.TypeId) ? 'active' : ''}>{it.TypeName}</button>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            <div className="navbar-end">
+                {/* 预留右侧区域，如登录/主题切换等 */}
+            </div>
+        </div>
+    )
 }
 

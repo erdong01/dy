@@ -85,3 +85,15 @@ export interface Category {
 
   SonCategory: Category[];
 }
+
+// 前端导航使用的视频分类（对应后端 VideoClass）
+export interface VideoClassItem {
+  Id: number;
+  CreatedAt: string;
+  UpdatedAt: string;
+  DeletedAt: string | null;
+  TypeId: number;
+  TypeName: string;
+  TypePid: number;
+  VideoClassSon?: VideoClassItem[]; // 子分类
+}

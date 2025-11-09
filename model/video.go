@@ -59,7 +59,7 @@ func (that *Video) Create() (err error) {
 	return
 }
 
-func (that *Video) List(page int, pageSize int, id int64, keyWord string, categoryId string) (data []Video, total int64, err error) {
+func (that *Video) List(page int, pageSize int, id int64, keyWord string, categoryId string, typeId int64) (data []Video, total int64, err error) {
 	// 1. 构建基础查询条件
 	queryBuilder := core.New().DB.Model(&Video{})
 
@@ -107,8 +107,11 @@ func (that *Video) List(page int, pageSize int, id int64, keyWord string, catego
 
 			queryBuilder = queryBuilder.Where("id IN (?)", subQuery)
 		}
-	}
 
+	}
+	if typeId > 0 {
+		queryBuilder = queryBuilder.Where("type_pid IN (?)", typeId)
+	}
 	// 2. 使用构建好的查询条件执行 Count
 	err = queryBuilder.Count(&total).Error
 	if err != nil {
