@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-  <html>
+  <html data-theme="dark">
       <head>
         <meta name="description" content="" />
         <meta name="google-adsense-account" content="ca-pub-3171747573136206" />
