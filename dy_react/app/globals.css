@@ -6,10 +6,10 @@
 
 /* 自定义主题变量覆盖：为 customdark 设置 base-100 为 #0f0f0f */
 [data-theme="dark"] {
-  --color-base-100: #060606;
+  --color-base-100: #090909;
 }
 
 /* 全局背景色设置为 #0f0f0f */
 html, body {
-  background-color: #060606;
+  background-color: #090909;
 }
