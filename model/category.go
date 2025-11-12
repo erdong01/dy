@@ -89,6 +89,9 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 		if len(category.Category) > 0 {
 			names := strings.Split(category.Category[0].Name, ",")
 			if len(names) > 1 {
+				names = strings.Split(category.Category[0].Name, "/")
+			}
+			if len(names) > 1 {
 				for index := range names {
 					var sonCategory Category
 					core.New().DB.Where("name = ?", names[index]).
