@@ -30,7 +30,7 @@ func (that *VideoClass) Create() (err error) {
 	}
 	var oldVideoClass VideoClass
 	core.New().DB.
-		Where("type_id = ?", that.TypeId).
+		Where("type_name = ?", that.TypeName).
 		First(&oldVideoClass)
 
 	if oldVideoClass.Id > 0 {

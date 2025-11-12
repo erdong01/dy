@@ -14,7 +14,7 @@ import { CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
 import { useIsClient } from '../app/hooks/useIsClient';
 import * as d3 from "d3";
-import type { Video } from '../app/lib/types';
+import type { Video, VideoUrl, PlaybackURL } from '../app/lib/types';
 import Link from 'next/link';
 
 // 与后端 PascalCase 字段对齐的分类类型
@@ -41,6 +41,9 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
   const isClient = useIsClient();
   const [streamUrl, setStreamUrl] = useState<string>(initialStreamUrl);
   const [videoIdx, setVideoIdx] = useState<string>(initialVideoIdx);
+  // 新增：分组索引与刷新持久化支持
+  const [groupIdx, setGroupIdx] = useState<number>(0);
+  const [hydrated, setHydrated] = useState<boolean>(false);
   const [peers, setPeers] = useState<string[]>([]);
   const video = initialVideo;
 
@@ -218,14 +221,61 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
     }
   }, [streamUrl, onPeerConnect, onPeerClose, onChunkDownloaded, onChunkUploaded]);
 
-  const changeVideoIdx = (name: string) => {
-    if (!video.VideoUrlArr?.length) return;
-    for (const i in video.VideoUrlArr[0].PlaybackURL) {
-      if (name === video.VideoUrlArr[0].PlaybackURL[i].Name) {
-        setStreamUrl(video.VideoUrlArr[0].PlaybackURL[i].Url);
-        setVideoIdx(i);
+  // 新增：分组索引与切换逻辑
+  const changeVideoIdxByIndex = (gIdx: number, idx: number) => {
+    const g = video.VideoUrlArr?.[gIdx];
+    if (!g?.PlaybackURL?.[idx]) return;
+    setGroupIdx(gIdx);
+    setStreamUrl(g.PlaybackURL[idx].Url);
+    setVideoIdx(String(idx));
+  };
+
+  // 刷新恢复：尝试从 localStorage 恢复最近一次的分组与清晰度
+  useEffect(() => {
+    try {
+      const key = `video:play:${video.Id}`;
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(key) : null;
+      if (raw) {
+        const saved = JSON.parse(raw) as { groupIdx: number; videoIdx: number; streamUrl: string };
+        const g = video.VideoUrlArr?.[saved.groupIdx];
+        const item = g?.PlaybackURL?.[Number(saved.videoIdx)];
+        if (g && item && (item.Url === saved.streamUrl)) {
+          setGroupIdx(saved.groupIdx);
+          setVideoIdx(String(saved.videoIdx));
+          setStreamUrl(saved.streamUrl);
+        }
       }
+    } catch {}
+    setHydrated(true);
+  }, [video.Id, video.VideoUrlArr]);
+
+  // 状态变更时持久化到 localStorage
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      const key = `video:play:${video.Id}`;
+      const payload = JSON.stringify({ groupIdx, videoIdx: Number(videoIdx), streamUrl });
+      if (typeof window !== 'undefined') window.localStorage.setItem(key, payload);
+    } catch {}
+  }, [groupIdx, videoIdx, streamUrl, hydrated, video.Id]);
+
+  // 当切换分组时，如果当前播放源不属于该分组，自动选择该分组第一个播放源
+  useEffect(() => {
+    // 初次渲染时若尚未完成恢复，避免误触发回退
+    if (!hydrated) return;
+    if (!video.VideoUrlArr?.length) return;
+    const g = video.VideoUrlArr[groupIdx];
+    const list = g?.PlaybackURL ?? [];
+    if (!list.length) return;
+    const valid = list.find((p, idx) => p.Url === streamUrl && String(idx) === videoIdx);
+    if (!valid) {
+      setStreamUrl(list[0].Url);
+      setVideoIdx('0');
     }
+  }, [groupIdx, video.VideoUrlArr, streamUrl, videoIdx, hydrated]);
+
+  const getGroupLabel = (group: VideoUrl, idx: number) => {
+    return group?.ProxyName || group?.Proxy || `源${idx + 1}`;
   };
 
   return (
@@ -249,16 +299,34 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
           </MediaPlayer>
 
           {video.VideoUrlArr && video.VideoUrlArr.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {video.VideoUrlArr[0].PlaybackURL.length > 0 && video.VideoUrlArr[0].PlaybackURL.map((item, idx) => (
-                <button
-                  key={item.Name}
-                  onClick={() => changeVideoIdx(item.Name)}
-                  className={`btn btn-sm ${String(idx) === videoIdx ? 'btn-primary' : 'btn-outline'}`}
-                >
-                  {item.Name || `Video ${item.Name}`}
-                </button>
-              ))}
+            <div className="mt-4 space-y-4">
+              {/* Tabs 分组选择 */}
+              <div role="tablist" className="tabs tabs-bordered">
+                {video.VideoUrlArr.map((group: VideoUrl, gIdx: number) => (
+                  <button
+                    key={gIdx}
+                    role="tab"
+                    className={`tab ${gIdx === groupIdx ? 'tab-active' : ''}`}
+                    onClick={() => setGroupIdx(gIdx)}
+                  >
+                    {getGroupLabel(group, gIdx)}
+                  </button>
+                ))}
+              </div>
+              {/* 当前分组的播放源按钮 */}
+              {video.VideoUrlArr[groupIdx]?.PlaybackURL?.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {video.VideoUrlArr[groupIdx].PlaybackURL.map((item: PlaybackURL, idx: number) => (
+                    <button
+                      key={item.Name || idx}
+                      onClick={() => changeVideoIdxByIndex(groupIdx, idx)}
+                      className={`btn btn-sm ${String(idx) === videoIdx ? 'btn-primary' : 'btn-outline'}`}
+                    >
+                      {item.Name || `清晰度 ${idx + 1}`}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           <div className='relative inset-y-3'>
@@ -280,9 +348,10 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
                         <span className="badge badge-neutral badge-lg">{cat.Name}</span>
                       </div>
                       <div className="flex-1 flex flex-wrap gap-2">
-                        {cat.SonCategory?.map((son) => (
+                        {/* 去重以避免重复 key 警告，并使用复合 key 确保稳定唯一 */}
+                        {[...new Map((cat.SonCategory ?? []).map((s) => [s.Id, s])).values()].map((son) => (
                           <Link
-                            key={son.Id}
+                            key={`${cat.Id}-${son.Id}`}
                             href={`/?category=${son.Id}`}
                             className="badge bg-transparent border-0 text-base-content dark:text-white hover:text-primary transition-colors cursor-pointer"
                             prefetch={false}

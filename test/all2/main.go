@@ -92,10 +92,10 @@ type VideoInfo struct {
 // --- 2. 主程序逻辑 ---
 
 func main() {
-	baseURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/"
-	submitURL := "https://api.7x.chat/api/v1/video/create"
-	VodProxyName := "电影天堂"
-	VodProxyUrl := "https://vip.dyttzyplay.com/?url="
+	baseURL := "https://caiji.dbzy5.com/api.php/provide/vod/from/dbm3u8/at/josn/"
+	submitURL := "http://127.0.0.1:9191/api/v1/video/create"
+	VodProxyName := "豆瓣资源"
+	VodProxyUrl := "https://www.dbjiexi.com:966/jx/?url="
 	fmt.Println("程序启动，开始采集数据...")
 
 	fmt.Println("正在获取总页数...")
