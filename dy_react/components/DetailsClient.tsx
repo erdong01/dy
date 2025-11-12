@@ -275,7 +275,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
   }, [groupIdx, video.VideoUrlArr, streamUrl, videoIdx, hydrated]);
 
   const getGroupLabel = (group: VideoUrl, idx: number) => {
-    return group?.ProxyName || group?.Proxy || `源${idx + 1}`;
+    return `源${idx + 1}`;
   };
 
   return (
