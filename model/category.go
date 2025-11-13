@@ -97,6 +97,14 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 				if len(names) == 1 {
 					names = strings.Split(category.Category[index].Name, "、")
 				}
+				if len(names) == 1 {
+					names = strings.Split(category.Category[index].Name, "，")
+				}
+				if category.Name == "地区" {
+					if len(names) == 1 {
+						names = strings.Split(category.Category[index].Name, " ")
+					}
+				}
 				for i := range names {
 					name := strings.TrimSpace(names[i])
 					if name == "" {
