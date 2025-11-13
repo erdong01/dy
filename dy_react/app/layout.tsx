@@ -1,4 +1,5 @@
 import "./globals.css";
+import Script from "next/script";
 
 // 全局类型声明
 declare global {
@@ -14,11 +15,26 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const bd =`
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?2c002fed0f6fcbbac0c12438af3e5895";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+`
   return (
   <html data-theme="dark">
       <head>
         <meta name="description" content="" />
         <meta name="google-adsense-account" content="ca-pub-3171747573136206" />
+        <Script
+          id="baidu-hmt"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{__html:bd}}
+        />
+
       </head>
       <body>
         {children}
