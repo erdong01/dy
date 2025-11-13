@@ -93,8 +93,8 @@ type VideoInfo struct {
 
 func main() {
 	baseURL := "http://caiji.dyttzyapi.com/api.php/provide/vod/"
-	// submitURL := "https://api.7x.chat/api/v1/video/create"
-	submitURL := "http://127.0.0.1:9191/api/v1/video/create"
+	submitURL := "https://api.7x.chat/api/v1/video/create"
+	// submitURL := "http://127.0.0.1:9191/api/v1/video/create"
 	VodProxyName := "电影天堂"
 	VodProxyUrl := "https://vip.dyttzyplay.com/?url="
 	fmt.Println("程序启动，开始采集数据...")
