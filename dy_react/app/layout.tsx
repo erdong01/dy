@@ -1,5 +1,6 @@
-import "./globals.css";
 import Script from "next/script";
+
+import "./globals.css";
 
 // 全局类型声明
 declare global {
@@ -15,7 +16,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const bd =`
+  return (
+    <html data-theme="dark">
+      <head>
+        <meta name="description" content="" />
+        <meta name="google-adsense-account" content="ca-pub-3171747573136206" />
+        <Script id="baidu-analytics" strategy="beforeInteractive" type="text/javascript">
+          {`
 var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
@@ -23,22 +30,10 @@ var _hmt = _hmt || [];
   var s = document.getElementsByTagName("script")[0]; 
   s.parentNode.insertBefore(hm, s);
 })();
-`
-  return (
-  <html data-theme="dark">
-      <head>
-        <meta name="description" content="" />
-        <meta name="google-adsense-account" content="ca-pub-3171747573136206" />
-        <Script
-          id="baidu-hmt"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{__html:bd}}
-        />
-
+`}
+        </Script>
       </head>
-      <body>
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

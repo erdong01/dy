@@ -101,7 +101,7 @@ export default function Menus() {
                         ))}
                     </ul>
                 </div>
-                <button onClick={goHome} className={`btn btn-ghost text-xl ${!activeTypeId ? 'text-primary' : ''}`}>Home</button>
+                <button onClick={goHome} className={`btn btn-ghost text-xl ${!activeTypeId ? 'text-primary' : ''}`}>7x影院</button>
             </div>
             <div className="navbar-center hidden lg:flex">
                 <ul className="menu menu-horizontal px-1">
