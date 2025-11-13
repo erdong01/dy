@@ -87,12 +87,10 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 		}
 		if len(category.Category) > 0 {
 			for index := range category.Category {
-				fmt.Println("category.Category[index].Name:", category.Category[index].Name)
 				names := strings.Split(category.Category[index].Name, ",")
 				if len(names) == 1 {
 					names = strings.Split(category.Category[index].Name, "/")
 				}
-				fmt.Println("names:", names)
 				for i := range names {
 					name := strings.TrimSpace(names[i])
 					if name == "" {
