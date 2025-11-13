@@ -85,44 +85,32 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 			parentCategory.Type = &cType
 			core.New().DB.Create(&parentCategory)
 		}
-
 		if len(category.Category) > 0 {
-			names := strings.Split(category.Category[0].Name, ",")
-			if len(names) > 1 {
-				names = strings.Split(category.Category[0].Name, "/")
-			}
-			if len(names) > 1 {
-				for index := range names {
+			for index := range category.Category {
+				fmt.Println("category.Category[index].Name:", category.Category[index].Name)
+				names := strings.Split(category.Category[index].Name, ",")
+				if len(names) == 1 {
+					names = strings.Split(category.Category[index].Name, "/")
+				}
+				fmt.Println("names:", names)
+				for i := range names {
+					name := strings.TrimSpace(names[i])
+					if name == "" {
+						continue
+					}
 					var sonCategory Category
-					core.New().DB.Where("name = ?", names[index]).
+					core.New().DB.Where("name = ?", name).
 						Where("type = ?", cType).First(&sonCategory)
 
 					if sonCategory.Id <= 0 {
 						sonCategory.ParentId = parentCategory.Id
-						sonCategory.Name = names[index]
+						sonCategory.Name = name
 						sonCategory.Type = &cType
 						core.New().DB.Create(&sonCategory)
 					}
-
-					categoryIds = append(categoryIds, sonCategory.Id)
-				}
-			} else {
-				for index := range category.Category {
-					var sonCategory Category
-					core.New().DB.Where("name = ?", category.Category[index].Name).
-						Where("type = ?", cType).First(&sonCategory)
-
-					if sonCategory.Id <= 0 {
-						sonCategory.ParentId = parentCategory.Id
-						sonCategory.Name = category.Category[index].Name
-						sonCategory.Type = &cType
-						core.New().DB.Create(&sonCategory)
-					}
-
 					categoryIds = append(categoryIds, sonCategory.Id)
 				}
 			}
-
 		} else {
 			categoryIds = append(categoryIds, parentCategory.Id)
 		}
