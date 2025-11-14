@@ -17,16 +17,17 @@ const (
 
 // Category  分类表。
 type Category struct {
-	Id        int64           `gorm:"column:id;primaryKey" json:"Id"`     //
-	CreatedAt *time.Time      `gorm:"column:created_at" json:"CreatedAt"` //        创建时间
-	UpdatedAt *time.Time      `gorm:"column:updated_at" json:"UpdatedAt"` //        更新时间
-	DeletedAt *gorm.DeletedAt `gorm:"column:deleted_at" json:"DeletedAt"` //   删除时间
-	Name      string          `gorm:"column:name" json:"Name"`            //
-	ParentId  int64           `gorm:"column:parent_id" json:"ParentId"`   //
-	Type      *int            `gorm:"column:type" json:"Type"`            //
-	IsHide    *int            `gorm:"column:is_hide" json:"IsHide"`       // type:*int              comment:            version:2025-05-06 06:48
-	TypeId    int64           `gorm:"column:type_id" json:"TypeId"`       //type:int64             comment:            version:2025-9-28 17:18
-	TypePid   int64           `gorm:"column:type_pid" json:"TypePid"`     //type:int64             comment:            version:2025-9-28 17:18
+	Id         int64           `gorm:"column:id;primaryKey" json:"Id"`       //
+	CreatedAt  *time.Time      `gorm:"column:created_at" json:"CreatedAt"`   //        创建时间
+	UpdatedAt  *time.Time      `gorm:"column:updated_at" json:"UpdatedAt"`   //        更新时间
+	DeletedAt  *gorm.DeletedAt `gorm:"column:deleted_at" json:"DeletedAt"`   //   删除时间
+	Name       string          `gorm:"column:name" json:"Name"`              //
+	ParentId   int64           `gorm:"column:parent_id" json:"ParentId"`     //
+	Type       *int            `gorm:"column:type" json:"Type"`              //
+	IsHide     *int            `gorm:"column:is_hide" json:"IsHide"`         // type:*int              comment:            version:2025-05-06 06:48
+	TypeId     int64           `gorm:"column:type_id" json:"TypeId"`         //type:int64             comment:            version:2025-9-28 17:18
+	TypePid    int64           `gorm:"column:type_pid" json:"TypePid"`       //type:int64             comment:            version:2025-9-28 17:18
+	VideoCount int             `gorm:"column:video_count" json:"VideoCount"` //type:*int              comment:            version:2025-10-14 10:29
 
 	SonCategory []Category `gorm:"foreignKey:ParentId;references:Id" json:"SonCategory"`
 	Category    []Category `gorm:"foreignKey:ParentId;references:Id" json:"Category,omitempty"`
@@ -91,25 +92,46 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 				if len(names) == 1 {
 					names = strings.Split(category.Category[index].Name, "/")
 				}
-				if len(names) == 1 {
-					names = strings.Split(category.Category[index].Name, ".")
-				}
+
 				if len(names) == 1 {
 					names = strings.Split(category.Category[index].Name, "、")
 				}
 				if len(names) == 1 {
 					names = strings.Split(category.Category[index].Name, "，")
 				}
+				if len(names) == 1 {
+					names = strings.Split(category.Category[index].Name, ".")
+				}
 				if category.Name == "地区" {
+
+					if len(names) == 1 {
+						names = strings.Split(category.Category[index].Name, ":")
+					}
+					if len(names) == 1 {
+						names = strings.Split(category.Category[index].Name, "：")
+					}
+					if len(names) == 1 {
+						names = strings.Split(category.Category[index].Name, ";")
+					}
+					if len(names) == 1 {
+						names = strings.Split(category.Category[index].Name, "；")
+					}
 					if len(names) == 1 {
 						names = strings.Split(category.Category[index].Name, " ")
 					}
 				}
+
 				for i := range names {
 					name := strings.TrimSpace(names[i])
 					if name == "" {
 						continue
 					}
+					if category.Name == "年代" {
+						if len(name) != 4 {
+							continue
+						}
+					}
+
 					var sonCategory Category
 					core.New().DB.Unscoped().Where("name = ?", name).
 						Where("type = ?", cType).First(&sonCategory)
@@ -118,7 +140,10 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 						sonCategory.ParentId = parentCategory.Id
 						sonCategory.Name = name
 						sonCategory.Type = &cType
+						sonCategory.VideoCount = 1
 						core.New().DB.Create(&sonCategory)
+					} else {
+						core.New().DB.Model(&Category{}).Where("id = ?", sonCategory.Id).UpdateColumn("video_count", gorm.Expr("video_count + 1"))
 					}
 					categoryIds = append(categoryIds, sonCategory.Id)
 				}

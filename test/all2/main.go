@@ -93,8 +93,8 @@ type VideoInfo struct {
 
 func main() {
 	baseURL := "https://caiji.dbzy5.com/api.php/provide/vod/from/dbm3u8/at/josn/"
-	// submitURL := "http://127.0.0.1:9191/api/v1/video/create"
-	submitURL := "https://api.7x.chat/api/v1/video/create"
+	submitURL := "http://127.0.0.1:9191/api/v1/video/create"
+	// submitURL := "https://api.7x.chat/api/v1/video/create"
 	VodProxyName := "豆瓣资源"
 	VodProxyUrl := "https://www.dbjiexi.com:966/jx/?url="
 	fmt.Println("程序启动，开始采集数据...")
