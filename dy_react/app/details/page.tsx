@@ -101,7 +101,7 @@ function DetailsPageInner() {
       <Script
         id="movie-json-ld"
         type="application/ld+json"
-        strategy="afterInteractive"
+        strategy="beforeInteractive"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
@@ -121,7 +121,7 @@ function DetailsPageInner() {
             },
             "publisher": {
               "@type": "Organization",
-              "name": "YourSiteName",
+              "name": "7x影视",
               "logo": {
                 "@type": "ImageObject",
                 "url": "https://www.7x.chat/logo.png"

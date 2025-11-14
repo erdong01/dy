@@ -1,7 +1,7 @@
 # dy
 
 cd /var/go/src/dy
-git pul
+git pull
 go build -o ./release main.go
 
 docker restart dy
