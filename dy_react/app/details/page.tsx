@@ -52,7 +52,15 @@ function DetailsPageInner() {
         if (Array.isArray(result?.Category)) {
           setCategories(result.Category);
         }
+
+
         if (v.VideoUrlArr?.length) {
+          const prioritized = [
+            ...v.VideoUrlArr.filter(item => item?.ProxyName === '豆瓣资源'),
+            ...v.VideoUrlArr.filter(item => item?.ProxyName !== '豆瓣资源')
+          ];
+          v.VideoUrlArr = prioritized;
+
           for (const i in v.VideoUrlArr) {
             v.VideoUrlArr[i].PlaybackURL = parseM3u8URLs(v.VideoUrlArr[i].Url);
           }
