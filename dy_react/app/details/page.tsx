@@ -95,21 +95,21 @@ function DetailsPageInner() {
   if (loading || !video) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
-
+  const genres = categories.map(c => c.Name).filter(Boolean);
   return (
     <>
       <Script
         id="movie-json-ld"
         type="application/ld+json"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "VideoObject",
             "name": video.Title,
-            "description": video.Describe || video.Title,
+            "description": (video.Describe || video.Title)?.replace(/<[^>]+>/g, ''),
             "thumbnailUrl": video.Cover,
-            "uploadDate": video.CreatedAt,
+            "uploadDate": new Date(video.CreatedAt).toISOString(),
             "contentUrl": video.Url,
             "keywords": video.Alias,
             "embedUrl": `https://www.7x.chat/details?id=${video.Id}`,
@@ -126,11 +126,12 @@ function DetailsPageInner() {
                 "@type": "ImageObject",
                 "url": "https://www.7x.chat/logo.png"
               }
-            }
+            },
+            "genre": genres,
           })
         }}
       />
-      <ReactSuspense fallback={<div className="navbar bg-base-100 border-b px-4 h-16" />}> 
+      <ReactSuspense fallback={<div className="navbar bg-base-100 border-b px-4 h-16" />}>
         <Menus />
       </ReactSuspense>
       <DetailsClient initialVideo={video} initialStreamUrl={initialStreamUrl} initialVideoIdx={String(initialIdx)} categories={categories} />
