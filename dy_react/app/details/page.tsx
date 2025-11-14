@@ -95,7 +95,6 @@ function DetailsPageInner() {
   if (loading || !video) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
-  const genres = categories.map(c => c.Name).filter(Boolean);
   return (
     <>
       <Script
@@ -126,8 +125,7 @@ function DetailsPageInner() {
                 "@type": "ImageObject",
                 "url": "https://www.7x.chat/logo.png"
               }
-            },
-            "genre": genres,
+            } 
           })
         }}
       />
