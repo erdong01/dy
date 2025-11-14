@@ -93,8 +93,8 @@ type VideoInfo struct {
 
 func main() {
 	baseURL := "https://caiji.dbzy5.com/api.php/provide/vod/from/dbm3u8/at/josn/"
-	submitURL := "http://127.0.0.1:9191/api/v1/video/create"
-	// submitURL := "https://api.7x.chat/api/v1/video/create"
+	// submitURL := "http://127.0.0.1:9191/api/v1/video/create"
+	submitURL := "https://api.7x.chat/api/v1/video/create"
 	VodProxyName := "豆瓣资源"
 	VodProxyUrl := "https://www.dbjiexi.com:966/jx/?url="
 	fmt.Println("程序启动，开始采集数据...")
@@ -107,7 +107,7 @@ func main() {
 	}
 	totalPages := firstPageResp.PageCount
 	fmt.Printf("获取成功，总共有 %d 页数据。\n", totalPages)
-	worker := goWorker.New(10)
+	worker := goWorker.New(50)
 	for page := 1; page <= totalPages; page++ {
 		fmt.Printf("\n--- 开始处理第 %d 页 / 共 %d 页 ---\n", page, totalPages)
 
@@ -135,7 +135,7 @@ func main() {
 					fmt.Printf("    ✅ 成功提交: %s\n", postData.Title)
 				}
 
-				time.Sleep(500 * time.Millisecond)
+				time.Sleep(200 * time.Millisecond)
 			}
 		})
 	}

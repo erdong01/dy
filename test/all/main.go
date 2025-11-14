@@ -107,7 +107,7 @@ func main() {
 	}
 	totalPages := firstPageResp.PageCount
 	fmt.Printf("获取成功，总共有 %d 页数据。\n", totalPages)
-	worker := goWorker.New(10)
+	worker := goWorker.New(30)
 	for page := 1; page <= totalPages; page++ {
 		fmt.Printf("\n--- 开始处理第 %d 页 / 共 %d 页 ---\n", page, totalPages)
 
@@ -134,7 +134,6 @@ func main() {
 				} else {
 					fmt.Printf("    ✅ 成功提交: %s\n", postData.Title)
 				}
-
 				time.Sleep(100 * time.Millisecond)
 			}
 		})
