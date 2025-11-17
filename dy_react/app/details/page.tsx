@@ -97,6 +97,10 @@ function DetailsPageInner() {
   }
   return (
     <>
+      <ReactSuspense fallback={<div className="navbar bg-base-100 border-b px-4 h-16" />}>
+        <Menus />
+      </ReactSuspense>
+      <DetailsClient initialVideo={video} initialStreamUrl={initialStreamUrl} initialVideoIdx={String(initialIdx)} categories={categories} />
       <Script
         id="movie-json-ld"
         type="application/ld+json"
@@ -125,14 +129,10 @@ function DetailsPageInner() {
                 "@type": "ImageObject",
                 "url": "https://www.7x.chat/logo.png"
               }
-            } 
+            }
           })
         }}
       />
-      <ReactSuspense fallback={<div className="navbar bg-base-100 border-b px-4 h-16" />}>
-        <Menus />
-      </ReactSuspense>
-      <DetailsClient initialVideo={video} initialStreamUrl={initialStreamUrl} initialVideoIdx={String(initialIdx)} categories={categories} />
     </>
   );
 }

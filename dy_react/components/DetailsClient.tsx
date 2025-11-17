@@ -245,7 +245,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
           setStreamUrl(saved.streamUrl);
         }
       }
-    } catch {}
+    } catch { }
     setHydrated(true);
   }, [video.Id, video.VideoUrlArr]);
 
@@ -256,7 +256,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
       const key = `video:play:${video.Id}`;
       const payload = JSON.stringify({ groupIdx, videoIdx: Number(videoIdx), streamUrl });
       if (typeof window !== 'undefined') window.localStorage.setItem(key, payload);
-    } catch {}
+    } catch { }
   }, [groupIdx, videoIdx, streamUrl, hydrated, video.Id]);
 
   // 当切换分组时，如果当前播放源不属于该分组，自动选择该分组第一个播放源
@@ -297,7 +297,9 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
             <MediaProvider />
             {isClient && <PlyrLayout icons={plyrLayoutIcons} />}
           </MediaPlayer>
-
+          <div className='relative inset-y-3'>
+            <h1 className="text-3xl font-semibold">{initialVideo.Title}</h1>
+          </div>
           {video.VideoUrlArr && video.VideoUrlArr.length > 0 && (
             <div className="mt-4 space-y-4">
               {/* Tabs 分组选择 */}
@@ -329,14 +331,10 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
               )}
             </div>
           )}
-          <div className='relative inset-y-3'>
-            <h1 className="text-3xl font-semibold">{initialVideo.Title}</h1>
-          </div>
           <br />
           <div>
             <div dangerouslySetInnerHTML={{ __html: initialVideo.Describe }}></div>
           </div>
-
           {/* 使用 daisyUI 渲染分类信息（移植自 /app/details/page.tsx） */}
           {categories?.length > 0 && (
             <section className="container mx-auto py-6">
@@ -366,7 +364,6 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
               </div>
             </section>
           )}
-
           <div className={styles["node-container"]}>
             <NodeNetwork peers={peers} />
           </div>
