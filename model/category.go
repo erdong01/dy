@@ -59,7 +59,7 @@ func (that *Category) HomeList() (categorySonArr []Category) {
 	var categoryData3 Category
 	err = core.New().DB.Model(that.Category).
 		Preload("SonCategory", func(db *gorm.DB) *gorm.DB {
-			return db.Order("video_count desc").Limit(30)
+			return db.Order("video_count desc").Limit(40)
 		}).
 		Where("parent_id = 0 AND type = 1 AND name = ?", "地区").Find(&categoryData3).Error
 	if err != nil {
