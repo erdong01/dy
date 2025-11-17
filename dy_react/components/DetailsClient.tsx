@@ -35,9 +35,12 @@ export type DetailsClientProps = {
   initialStreamUrl: string;
   initialVideoIdx: string;
   categories?: VideoCategory[];
+  showPlayer?: boolean;
+  autoPlay?: boolean;
+  onRevealPlayer?: () => void;
 };
 
-export default function DetailsClient({ initialVideo, initialStreamUrl, initialVideoIdx, categories = [] }: DetailsClientProps) {
+export default function DetailsClient({ initialVideo, initialStreamUrl, initialVideoIdx, categories = [], showPlayer, autoPlay, onRevealPlayer }: DetailsClientProps) {
   const isClient = useIsClient();
   const [streamUrl, setStreamUrl] = useState<string>(initialStreamUrl);
   const [videoIdx, setVideoIdx] = useState<string>(initialVideoIdx);
@@ -46,6 +49,9 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
   const [hydrated, setHydrated] = useState<boolean>(false);
   const [peers, setPeers] = useState<string[]>([]);
   const video = initialVideo;
+  const shouldShowPlayer = showPlayer ?? true;
+  const shouldAutoPlay = autoPlay ?? false;
+  const handleRevealPlayer = onRevealPlayer ?? (() => {});
 
   const data = useRef<DownloadStats>({ httpDownloaded: 0, p2pDownloaded: 0, p2pUploaded: 0 });
 
@@ -282,21 +288,43 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
     <div>
       <div>
         <div className={styles["video-container"]}>
-          <MediaPlayer
-            storage="7x-chat-media-player"
-            src={streamUrl}
-            load="visible"
-            posterLoad="visible"
-            viewType='video'
-            streamType='on-demand'
-            logLevel='warn'
-            onProviderChange={onProviderChange}
-            playsInline
-            crossOrigin
-          >
-            <MediaProvider />
-            {isClient && <PlyrLayout icons={plyrLayoutIcons} />}
-          </MediaPlayer>
+          {shouldShowPlayer ? (
+            <MediaPlayer
+              storage="7x-chat-media-player"
+              src={streamUrl}
+              load="visible"
+              posterLoad="visible"
+              viewType='video'
+              streamType='on-demand'
+              logLevel='warn'
+              onProviderChange={onProviderChange}
+              autoPlay={shouldAutoPlay}
+              playsInline
+              crossOrigin
+            >
+              <MediaProvider />
+              {isClient && <PlyrLayout icons={plyrLayoutIcons} />}
+            </MediaPlayer>
+          ) : (
+            <div className="flex items-center justify-center py-20 bg-base-200 rounded">
+              <button
+                className="flex items-center justify-center rounded-full bg-primary text-primary-content w-20 h-20 shadow-lg hover:scale-105 transition-transform"
+                onClick={handleRevealPlayer}
+                aria-label="显示播放入口"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+            </div>
+          )}
           <div className='relative inset-y-3'>
             <h1 className="text-3xl font-semibold">{initialVideo.Title}</h1>
           </div>

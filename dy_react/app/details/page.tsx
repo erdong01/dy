@@ -26,6 +26,8 @@ function DetailsPageInner() {
   const [initialStreamUrl, setInitialStreamUrl] = useState<string>('');
   const [initialIdx, setInitialIdx] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showPlayer, setShowPlayer] = useState<boolean>(false);
+  const [shouldAutoplay, setShouldAutoplay] = useState<boolean>(false);
   // Category 数据（按父类分组，每个父类的 SonCategory 只包含与该视频相关的子类）
   type VideoCategory = {
     Id: number;
@@ -49,6 +51,8 @@ function DetailsPageInner() {
         const v = result?.Data;
         if (!v) return;
         setVideo(v);
+        setShowPlayer(false);
+        setShouldAutoplay(false);
         if (Array.isArray(result?.Category)) {
           setCategories(result.Category);
         }
@@ -74,14 +78,18 @@ function DetailsPageInner() {
           setInitialStreamUrl(v.Url);
         }
 
-        document.title = `${v.Title}-在线观看-下载`;
+        const sanitizedDescription = (v.Describe || v.Title)?.replace(/<[^>]+>/g, '') || '';
+        const introductionDescription = sanitizedDescription
+          ? `${sanitizedDescription}。本页面仅提供影片介绍信息，不提供资源存储或下载。`
+          : '本页面仅提供影片介绍信息，不提供资源存储或下载。';
+        document.title = `${v.Title} - 在线影片介绍`;
         let metaDesc = document.querySelector("meta[name='description']");
         if (!metaDesc) {
           metaDesc = document.createElement('meta');
           metaDesc.setAttribute('name', 'description');
           document.head.appendChild(metaDesc);
         }
-        metaDesc.setAttribute('content', v.Describe?.replace(/<[^>]+>/g, '') || '影片详情');
+        metaDesc.setAttribute('content', introductionDescription);
       } finally {
         setLoading(false);
       }
@@ -95,42 +103,93 @@ function DetailsPageInner() {
   if (loading || !video) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
+  const sanitizedDescription = (video.Describe || video.Title)?.replace(/<[^>]+>/g, '') ?? '';
+  const introductionDescription = sanitizedDescription
+    ? `${sanitizedDescription}。本页面仅提供影片介绍信息，不提供资源存储或下载。`
+    : '本页面仅提供影片介绍信息，不提供资源存储或下载。';
+  const pageUrl = `https://www.7x.chat/details?id=${video.Id}`;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "ItemPage",
+        "@id": pageUrl,
+        "name": `${video.Title} - 影片介绍`,
+        "description": introductionDescription,
+        "inLanguage": "zh-CN",
+        "datePublished": new Date(video.CreatedAt).toISOString(),
+        "isPartOf": {
+          "@type": "WebSite",
+          "@id": "https://www.7x.chat",
+          "name": "7x影视"
+        },
+        ...(video.Cover
+          ? {
+              "primaryImageOfPage": {
+                "@type": "ImageObject",
+                "url": video.Cover
+              }
+            }
+          : {}),
+        "mainEntity": {
+          "@id": `${pageUrl}#video`
+        }
+      },
+      {
+        "@type": "VideoObject",
+        "@id": `${pageUrl}#video`,
+        "name": video.Title,
+        "description": introductionDescription,
+        "inLanguage": "zh-CN",
+        "thumbnailUrl": video.Cover || undefined,
+        "uploadDate": new Date(video.CreatedAt).toISOString(),
+        "keywords": video.Alias || undefined,
+        "duration": video.Duration || undefined,
+        "interactionStatistic": {
+          "@type": "InteractionCounter",
+          "interactionType": { "@type": "WatchAction" },
+          "userInteractionCount": video.ViewCount || 0
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "7x影视",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://www.7x.chat/logo.png"
+          }
+        },
+        "isAccessibleForFree": false,
+        "potentialAction": {
+          "@type": "ViewAction",
+          "target": pageUrl,
+          "name": "查看影片介绍"
+        }
+      }
+    ]
+  };
   return (
     <>
       <ReactSuspense fallback={<div className="navbar bg-base-100 border-b px-4 h-16" />}>
         <Menus />
       </ReactSuspense>
-      <DetailsClient initialVideo={video} initialStreamUrl={initialStreamUrl} initialVideoIdx={String(initialIdx)} categories={categories} />
+      <DetailsClient
+        initialVideo={video}
+        initialStreamUrl={initialStreamUrl}
+        initialVideoIdx={String(initialIdx)}
+        categories={categories}
+        showPlayer={showPlayer}
+        autoPlay={shouldAutoplay}
+        onRevealPlayer={() => {
+          setShowPlayer(true);
+          setShouldAutoplay(true);
+        }}
+      />
       <Script
         id="movie-json-ld"
         type="application/ld+json"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "VideoObject",
-            "name": video.Title,
-            "description": (video.Describe || video.Title)?.replace(/<[^>]+>/g, ''),
-            "thumbnailUrl": video.Cover,
-            "uploadDate": new Date(video.CreatedAt).toISOString(),
-            "contentUrl": video.Url,
-            "keywords": video.Alias,
-            "embedUrl": `https://www.7x.chat/details?id=${video.Id}`,
-            "duration": video.Duration || undefined,
-            "interactionStatistic": {
-              "@type": "InteractionCounter",
-              "interactionType": { "@type": "WatchAction" },
-              "userInteractionCount": video.ViewCount || 0
-            },
-            "publisher": {
-              "@type": "Organization",
-              "name": "7x影视",
-              "logo": {
-                "@type": "ImageObject",
-                "url": "https://www.7x.chat/logo.png"
-              }
-            }
-          })
+          __html: JSON.stringify(structuredData)
         }}
       />
     </>
