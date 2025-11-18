@@ -78,10 +78,14 @@ function DetailsPageInner() {
         }
 
         const sanitizedDescription = (v.Describe || v.Title)?.replace(/<[^>]+>/g, '') || '';
+
+        const aliasText = v.Alias ? ` 关键词：${v.Alias}。` : '';
         const introductionDescription = sanitizedDescription
-          ? `${sanitizedDescription}。本页面仅提供影片介绍信息，不提供资源存储或下载。`
-          : '本页面仅提供影片介绍信息，不提供资源存储或下载。';
+          ? `${sanitizedDescription}。本页面仅提供影片介绍信息，不提供资源存储或下载,请支持正版平台观看完整内容。${aliasText}`
+          : `本页面仅提供影片介绍信息，不提供资源存储或下载,请支持正版平台观看完整内容。${aliasText}`;
         document.title = `${v.Title}-在线观看介绍影片`;
+
+        // description
         let metaDesc = document.querySelector("meta[name='description']");
         if (!metaDesc) {
           metaDesc = document.createElement('meta');
@@ -90,14 +94,19 @@ function DetailsPageInner() {
         }
         metaDesc.setAttribute('content', introductionDescription);
 
+        // keywords
+        let keywordsMeta = document.querySelector("meta[name='keywords']");
+        if (!keywordsMeta) {
+          keywordsMeta = document.createElement('meta');
+          keywordsMeta.setAttribute('name', 'keywords');
+          document.head.appendChild(keywordsMeta);
+        }
+        keywordsMeta.setAttribute('content', v.Alias || v.Title);
+
         const canonicalLink: HTMLLinkElement = document.createElement('link');
 
-        // 2. 设置 rel 和 href 属性
         canonicalLink.rel = 'canonical';
         canonicalLink.href = `https://www.7x.chat/details?id=${v.Id}`;
-
-        // 3. 将它添加到文档的 <head> 部分
-        // document.head 是 <head> 元素的直接引用
         document.head.appendChild(canonicalLink);
       } finally {
         setLoading(false);
@@ -113,16 +122,18 @@ function DetailsPageInner() {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
   const sanitizedDescription = (video.Describe || video.Title)?.replace(/<[^>]+>/g, '') ?? '';
-  const introductionDescription = sanitizedDescription
-    ? `${sanitizedDescription}。本页面仅提供影片介绍信息，不提供资源存储或下载。`
-    : '本页面仅提供影片介绍信息，不提供资源存储或下载。';
+  const aliasTextStatic = video.Alias ? ` 关键词：${video.Alias}。` : '';
+  const introductionDescriptionStatic = sanitizedDescription
+    ? `${sanitizedDescription}。本页面仅提供影片介绍信息，不提供资源存储或下载，请支持正版平台观看完整内容。${aliasTextStatic}`
+    : `本页面仅提供影片介绍信息，不提供资源存储或下载，请支持正版平台观看完整内容。${aliasTextStatic}`;
+
   const pageUrl = `https://www.7x.chat/details?id=${video.Id}`;
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "@id": pageUrl,
     "name": `${video.Title}-在线观看介绍影片`,
-    "description": introductionDescription,
+    "description": introductionDescriptionStatic,
     "inLanguage": "zh-CN",
     "datePublished": new Date(video.CreatedAt).toISOString(),
     "isPartOf": {
@@ -141,7 +152,7 @@ function DetailsPageInner() {
     "about": {
       "@type": "Movie",
       "name": video.Title,
-      "description": introductionDescription,
+      "description": introductionDescriptionStatic,
       "image": video.Cover || undefined,
       "dateCreated": new Date(video.CreatedAt).toISOString(),
       "keywords": video.Alias || undefined,
@@ -177,6 +188,9 @@ function DetailsPageInner() {
           setShouldAutoplay(true);
         }}
       />
+      <p className="text-xs text-gray-500 mt-4 text-center">
+        本页面仅提供影片信息展示及在线播放体验和宣传作用，不存储或提供下载链接，请支持正版平台观看完整内容。
+      </p>
       <Script
         id="movie-json-ld"
         type="application/ld+json"

@@ -51,7 +51,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
   const video = initialVideo;
   const shouldShowPlayer = showPlayer ?? true;
   const shouldAutoPlay = autoPlay ?? false;
-  const handleRevealPlayer = onRevealPlayer ?? (() => {});
+  const handleRevealPlayer = onRevealPlayer ?? (() => { });
 
   const data = useRef<DownloadStats>({ httpDownloaded: 0, p2pDownloaded: 0, p2pUploaded: 0 });
 
@@ -370,21 +370,22 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
                 <div className="space-y-4">
                   {categories.map((cat) => (
                     <div key={cat.Id} className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="shrink-0">
-                        <span className="badge badge-neutral badge-lg">{cat.Name}</span>
-                      </div>
-                      <div className="flex-1 flex flex-wrap gap-2">
-                        {/* 去重以避免重复 key 警告，并使用复合 key 确保稳定唯一 */}
-                        {[...new Map((cat.SonCategory ?? []).map((s) => [s.Id, s])).values()].map((son) => (
-                          <Link
-                            key={`${cat.Id}-${son.Id}`}
-                            href={`/?category=${son.Id}`}
-                            className="badge bg-transparent border-0 text-base-content dark:text-white hover:text-primary transition-colors cursor-pointer"
-                            prefetch={false}
-                          >
-                            {son.Name}
-                          </Link>
-                        ))}
+                      <div className="flex flex-wrap gap-3 items-start">
+                        <div className="shrink-0">
+                          <span className="badge badge-neutral badge-lg">{cat.Name}：</span>
+                        </div>
+                        <div className="flex-1 flex flex-wrap gap-2">
+                          {[...new Map((cat.SonCategory ?? []).map((s) => [s.Id, s])).values()].map((son) => (
+                            <Link
+                              key={`${cat.Id}-${son.Id}`}
+                              href={`/?category=${son.Id}`}
+                              className="badge bg-transparent border-0 text-base-content dark:text-white hover:text-primary transition-colors cursor-pointer"
+                              prefetch={false}
+                            >
+                              {son.Name}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ))}
