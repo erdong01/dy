@@ -135,7 +135,7 @@ func main() {
 					fmt.Printf("    ✅ 成功提交: %s\n", postData.Title)
 				}
 
-				time.Sleep(200 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 			}
 		})
 	}

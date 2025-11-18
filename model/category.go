@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode"
 
 	"video/core"
 
@@ -33,9 +34,19 @@ type Category struct {
 	Category    []Category `gorm:"foreignKey:ParentId;references:Id" json:"Category,omitempty"`
 }
 
-// TableName 表名:category，分类表。
+// TableName 表名:category,分类表。
 func (*Category) TableName() string {
 	return "category"
+}
+
+// isChinese 判断字符串是否包含中文
+func isChinese(str string) bool {
+	for _, r := range str {
+		if unicode.Is(unicode.Scripts["Han"], r) {
+			return true
+		}
+	}
+	return false
 }
 
 func (that *Category) HomeList() (categorySonArr []Category) {
@@ -103,25 +114,32 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 				if len(names) == 1 {
 					names = strings.Split(category.Category[index].Name, ".")
 				}
-				if category.Name == "地区" {
+				if len(names) == 1 {
+					names = strings.Split(category.Category[index].Name, ":")
+				}
+				if len(names) == 1 {
+					names = strings.Split(category.Category[index].Name, "：")
+				}
+				if len(names) == 1 {
+					names = strings.Split(category.Category[index].Name, ";")
+				}
+				if len(names) == 1 {
+					names = strings.Split(category.Category[index].Name, "；")
+				}
 
-					if len(names) == 1 {
-						names = strings.Split(category.Category[index].Name, ":")
-					}
-					if len(names) == 1 {
-						names = strings.Split(category.Category[index].Name, "：")
-					}
-					if len(names) == 1 {
-						names = strings.Split(category.Category[index].Name, ";")
-					}
-					if len(names) == 1 {
-						names = strings.Split(category.Category[index].Name, "；")
-					}
+				if len(names) == 1 {
+					names = strings.Split(category.Category[index].Name, "\\")
+				}
+				if category.Name == "地区" {
 					if len(names) == 1 {
 						names = strings.Split(category.Category[index].Name, " ")
 					}
 				}
-
+				if category.Name == "演员" {
+					if len(names) == 1 && isChinese(category.Category[index].Name) {
+						names = strings.Split(category.Category[index].Name, " ")
+					}
+				}
 				for i := range names {
 					name := strings.TrimSpace(names[i])
 					if name == "" {

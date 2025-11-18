@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	defaultTargetID = 166060
-	chunkSize       = 5000
+	defaultStartID = 1000000
+	defaultEndID   = 2000000
+	chunkSize      = 5000
 )
 
 var headerLines = []string{
@@ -23,14 +24,30 @@ var headerLines = []string{
 }
 
 func main() {
-	targetID := defaultTargetID
+	startID := defaultStartID
+	targetID := defaultEndID
+
+	// allow overriding start and end via command line: go run generate_sitemap.go [start] [end]
 	if len(os.Args) > 1 {
 		parsed, err := strconv.Atoi(os.Args[1])
 		if err != nil || parsed <= 0 {
-			fmt.Fprintf(os.Stderr, "invalid target id: %v\n", os.Args[1])
+			fmt.Fprintf(os.Stderr, "invalid start id: %v\n", os.Args[1])
+			os.Exit(1)
+		}
+		startID = parsed
+	}
+	if len(os.Args) > 2 {
+		parsed, err := strconv.Atoi(os.Args[2])
+		if err != nil || parsed <= 0 {
+			fmt.Fprintf(os.Stderr, "invalid end id: %v\n", os.Args[2])
 			os.Exit(1)
 		}
 		targetID = parsed
+	}
+
+	if startID > targetID {
+		fmt.Fprintf(os.Stderr, "start id %d cannot be greater than end id %d\n", startID, targetID)
+		os.Exit(1)
 	}
 
 	repoRoot := "."
@@ -54,17 +71,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	if existingMaxID >= targetID {
-		fmt.Printf("nothing to do: existing max id %d >= target %d\n", existingMaxID, targetID)
+	// if we already have sitemaps, continue from where we left off
+	// otherwise use the provided startID
+	actualStartID := startID
+	if existingMaxID > 0 && existingMaxID >= startID {
+		actualStartID = existingMaxID + 1
+	}
+
+	if actualStartID > targetID {
+		fmt.Printf("nothing to do: start id %d > target %d\n", actualStartID, targetID)
 		return
 	}
 
-	startID := existingMaxID + 1
 	lastmod := time.Now().UTC().Format(time.RFC3339)
 
 	// generate files starting at nextIndex
 	curIndex := nextIndex
-	curStart := startID
+	curStart := actualStartID
 	for curStart <= targetID {
 		curEnd := curStart + chunkSize - 1
 		if curEnd > targetID {
