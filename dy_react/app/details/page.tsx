@@ -57,7 +57,6 @@ function DetailsPageInner() {
           setCategories(result.Category);
         }
 
-
         if (v.VideoUrlArr?.length) {
           const prioritized = [
             ...v.VideoUrlArr.filter(item => item?.ProxyName === '豆瓣资源'),
@@ -82,7 +81,7 @@ function DetailsPageInner() {
         const introductionDescription = sanitizedDescription
           ? `${sanitizedDescription}。本页面仅提供影片介绍信息，不提供资源存储或下载。`
           : '本页面仅提供影片介绍信息，不提供资源存储或下载。';
-        document.title = `${v.Title}-在线介绍影片`;
+        document.title = `${v.Title}-在线观看介绍影片`;
         let metaDesc = document.querySelector("meta[name='description']");
         if (!metaDesc) {
           metaDesc = document.createElement('meta');
@@ -122,7 +121,7 @@ function DetailsPageInner() {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "@id": pageUrl,
-    "name": `${video.Title}-视频介绍页面`,
+    "name": `${video.Title}-在线观看介绍影片`,
     "description": introductionDescription,
     "inLanguage": "zh-CN",
     "datePublished": new Date(video.CreatedAt).toISOString(),
