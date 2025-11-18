@@ -1,8 +1,11 @@
 User-agent: *
-User-agent: GPTBot
-Disallow: /*?category=
+
 Allow: /
 Allow: /details
+
+Disallow: /*?category=
+Disallow: /*?page=
+Disallow: /*?TypeId=
 
 Sitemap: https://www.7x.chat/sitemap.xml
 Sitemap: https://www.7x.chat/sitemap1.xml
