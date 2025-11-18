@@ -23,8 +23,7 @@ export interface Video {
   Url: string;
   Cover: string;
   VideoGroupId: number;
-  Duration?: string;
-  ViewCount?: number;
+  Browse?: number;
   VideoUrlArr: VideoUrl[];
 }
 

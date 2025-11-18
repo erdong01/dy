@@ -120,62 +120,46 @@ function DetailsPageInner() {
   const pageUrl = `https://www.7x.chat/details?id=${video.Id}`;
   const structuredData = {
     "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "ItemPage",
-        "@id": pageUrl,
-        "name": `${video.Title}-在线介绍影片`,
-        "description": introductionDescription,
-        "inLanguage": "zh-CN",
-        "datePublished": new Date(video.CreatedAt).toISOString(),
-        "isPartOf": {
-          "@type": "WebSite",
-          "@id": "https://www.7x.chat",
-          "name": "7x影视"
-        },
-        ...(video.Cover
-          ? {
-            "primaryImageOfPage": {
-              "@type": "ImageObject",
-              "url": video.Cover
-            }
-          }
-          : {}),
-        "mainEntity": {
-          "@id": `${pageUrl}#video`
-        }
-      },
-      {
-        "@type": "VideoObject",
-        "@id": `${pageUrl}#video`,
-        "name": video.Title,
-        "description": introductionDescription,
-        "inLanguage": "zh-CN",
-        "thumbnailUrl": video.Cover || undefined,
-        "uploadDate": new Date(video.CreatedAt).toISOString(),
-        "keywords": video.Alias || undefined,
-        "duration": video.Duration || undefined,
-        "interactionStatistic": {
-          "@type": "InteractionCounter",
-          "interactionType": { "@type": "WatchAction" },
-          "userInteractionCount": video.ViewCount || 0
-        },
-        "publisher": {
-          "@type": "Organization",
-          "name": "7x影视",
-          "logo": {
-            "@type": "ImageObject",
-            "url": "https://www.7x.chat/logo.png"
-          }
-        },
-        "isAccessibleForFree": false,
-        "potentialAction": {
-          "@type": "ViewAction",
-          "target": pageUrl,
-          "name": "查看影片介绍"
+    "@type": "WebPage",
+    "@id": pageUrl,
+    "name": `${video.Title}-视频介绍页面`,
+    "description": introductionDescription,
+    "inLanguage": "zh-CN",
+    "datePublished": new Date(video.CreatedAt).toISOString(),
+    "isPartOf": {
+      "@type": "WebSite",
+      "@id": "https://www.7x.chat",
+      "name": "7x影视"
+    },
+    ...(video.Cover
+      ? {
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "url": video.Cover
         }
       }
-    ]
+      : {}),
+    "about": {
+      "@type": "Movie",
+      "name": video.Title,
+      "description": introductionDescription,
+      "image": video.Cover || undefined,
+      "dateCreated": new Date(video.CreatedAt).toISOString(),
+      "keywords": video.Alias || undefined,
+      "interactionStatistic": {
+        "@type": "InteractionCounter",
+        "interactionType": { "@type": "WatchAction" },
+        "userInteractionCount": video.Browse || 0
+      }
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "7x影视",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.7x.chat/logo.png"
+      }
+    }
   };
   return (
     <>
