@@ -82,7 +82,7 @@ function DetailsPageInner() {
         const introductionDescription = sanitizedDescription
           ? `${sanitizedDescription}。本页面仅提供影片介绍信息，不提供资源存储或下载。`
           : '本页面仅提供影片介绍信息，不提供资源存储或下载。';
-        document.title = `${v.Title} - 在线影片介绍`;
+        document.title = `${v.Title}-在线介绍影片`;
         let metaDesc = document.querySelector("meta[name='description']");
         if (!metaDesc) {
           metaDesc = document.createElement('meta');
@@ -90,6 +90,16 @@ function DetailsPageInner() {
           document.head.appendChild(metaDesc);
         }
         metaDesc.setAttribute('content', introductionDescription);
+
+        const canonicalLink: HTMLLinkElement = document.createElement('link');
+
+        // 2. 设置 rel 和 href 属性
+        canonicalLink.rel = 'canonical';
+        canonicalLink.href = `https://www.7x.chat/details?id=${v.Id}`;
+
+        // 3. 将它添加到文档的 <head> 部分
+        // document.head 是 <head> 元素的直接引用
+        document.head.appendChild(canonicalLink);
       } finally {
         setLoading(false);
       }
@@ -114,7 +124,7 @@ function DetailsPageInner() {
       {
         "@type": "ItemPage",
         "@id": pageUrl,
-        "name": `${video.Title} - 影片介绍`,
+        "name": `${video.Title}-在线介绍影片`,
         "description": introductionDescription,
         "inLanguage": "zh-CN",
         "datePublished": new Date(video.CreatedAt).toISOString(),
@@ -125,11 +135,11 @@ function DetailsPageInner() {
         },
         ...(video.Cover
           ? {
-              "primaryImageOfPage": {
-                "@type": "ImageObject",
-                "url": video.Cover
-              }
+            "primaryImageOfPage": {
+              "@type": "ImageObject",
+              "url": video.Cover
             }
+          }
           : {}),
         "mainEntity": {
           "@id": `${pageUrl}#video`
