@@ -5,7 +5,7 @@ import Script from 'next/script';
 import DetailsClient from '../../components/DetailsClient';
 import type { Video } from '../lib/types';
 import { parseM3u8URLs } from '../lib/parseM3u8';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Menus from '../ui/menu/menus';
 import { Suspense as ReactSuspense } from 'react';
 
@@ -21,6 +21,7 @@ export default function Page() {
 
 function DetailsPageInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const id = searchParams.get('id');
   const [video, setVideo] = useState<Video | null>(null);
   const [initialStreamUrl, setInitialStreamUrl] = useState<string>('');
@@ -47,6 +48,10 @@ function DetailsPageInner() {
       try {
         const res = await fetch(`${API_URL}/api/v1/video/get?Id=${id}`);
         if (!res.ok) return;
+        if (res == null || res == undefined) {
+          router.push('/');
+          return
+        }
         const result: { Data: Video; Category: VideoCategory[] } = await res.json();
         const v = result?.Data;
         if (!v) return;
@@ -113,7 +118,7 @@ function DetailsPageInner() {
       }
     };
     fetchVideo();
-  }, [id]);
+  }, [id, router]);
 
   if (!id) {
     return <div className="flex justify-center items-center min-h-screen">缺少影片 ID</div>;
