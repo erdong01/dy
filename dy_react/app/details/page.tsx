@@ -47,14 +47,34 @@ function DetailsPageInner() {
     const fetchVideo = async () => {
       try {
         const res = await fetch(`${API_URL}/api/v1/video/get?Id=${id}`);
-        if (!res.ok) return;
-        if (res == null || res == undefined) {
+
+        // HTTP 状态错误，直接回首页
+        if (!res.ok) {
           router.push('/');
-          return
+          return;
         }
-        const result: { Data: Video; Category: VideoCategory[] } = await res.json();
+
+        // 安全解析 JSON，避免空响应导致报错
+        let result: { Data: Video | null; Category: VideoCategory[] } | null = null;
+        try {
+          const text = await res.text();
+          if (!text) {
+            router.push('/');
+            return;
+          }
+          result = JSON.parse(text);
+        } catch {
+          router.push('/');
+          return;
+        }
+
         const v = result?.Data;
-        if (!v) return;
+
+        // 接口没有返回 Data，也回首页
+        if (!v) {
+          router.push('/');
+          return;
+        }
         setVideo(v);
         setShowPlayer(false);
         setShouldAutoplay(false);
