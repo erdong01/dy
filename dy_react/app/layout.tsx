@@ -34,11 +34,11 @@ var _hmt = _hmt || [];
         </Script>
 
 
-        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-JRQEPBZ35T"></Script>
-        <Script id="google-analytics" strategy="beforeInteractive" type="text/javascript">
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-JRQEPBZ35T" strategy="afterInteractive" />
+        <Script id="google-analytics" strategy="afterInteractive">
           {`
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
+  function gtag(){window.dataLayer.push(arguments);}
   gtag('js', new Date());
 
   gtag('config', 'G-JRQEPBZ35T');
