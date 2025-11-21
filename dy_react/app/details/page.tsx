@@ -47,13 +47,11 @@ function DetailsPageInner() {
     const fetchVideo = async () => {
       try {
         const res = await fetch(`${API_URL}/api/v1/video/get?Id=${id}`);
-
         // HTTP 状态错误，直接回首页
         if (!res.ok) {
-          router.push('/');
+          router.push('/404');
           return;
         }
-
         // 安全解析 JSON，避免空响应导致报错
         let result: { Data: Video | null; Category: VideoCategory[] } | null = null;
         try {
