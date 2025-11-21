@@ -92,11 +92,13 @@ func Get(c *gin.Context) {
 	}()
 	id, err := strconv.ParseInt(c.Query("Id"), 10, 64)
 	if err != nil {
+		c.JSON(http.StatusNotFound, nil)
 		return
 	}
 	var video model.Video
 	data, err := video.Get(id)
 	if err != nil {
+		c.JSON(http.StatusNotFound, nil)
 		return
 	}
 	go func(id int64) {
