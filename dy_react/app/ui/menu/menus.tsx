@@ -41,7 +41,7 @@ export default function Menus() {
         return () => {
             mounted = false
         }
-    }, [])
+    }, [t])
 
     const topWithChildren = useMemo(
         () => items.filter((it) => Array.isArray(it.VideoClassSon) && it.VideoClassSon.length > 0),

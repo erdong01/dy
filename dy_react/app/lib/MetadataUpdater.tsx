@@ -8,7 +8,7 @@ export default function MetadataUpdater() {
 
     useEffect(() => {
         if (typeof document !== 'undefined') {
-            const suffix = t('video_title_suffix');
+            // const suffix = t('video_title_suffix');
             // Only update if the title doesn't already end with the suffix (to avoid duplication)
             // or if we want to enforce the suffix.
             // A simple strategy is to replace the suffix if it exists, or append it.

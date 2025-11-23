@@ -3,6 +3,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLanguage } from '../app/lib/LanguageContext';
+import { TranslationKey } from '../app/lib/i18n';
 // --- (类型定义保持不变) ---
 export interface SonCategory { Id: number; CreatedAt: string; UpdatedAt: string; DeletedAt: null | string; Name: string; ParentId: number; Type: number; IsHide: null | boolean; SonCategory: null; }
 export interface Category { Id: number; CreatedAt: string; UpdatedAt: string; DeletedAt: null | string; Name: string; ParentId: number; Type: number; IsHide: null | boolean; SonCategory: SonCategory[] | null; }
@@ -123,7 +124,7 @@ type CategoryRowProps = {
   // onClick: 传入点击回调；sonId 为 'all' 或具体数字 ID
   onClick: (sonId: number | 'all') => void;
   getFilterClasses: (isActive: boolean) => string;
-  t: (key: any) => string;
+  t: (key: TranslationKey) => string;
 };
 
 const CategoryRow: React.FC<CategoryRowProps> = ({ category, isActive, onClick, getFilterClasses, t }) => {
