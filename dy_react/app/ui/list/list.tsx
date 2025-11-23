@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useLanguage } from '../../lib/LanguageContext';
 
 const DOTS = '...';
 const generatePagination = ({ total, pageSize, siblingCount = 1, currentPage }: { total: number; pageSize: number; siblingCount?: number; currentPage: number; }): (string | number)[] => {
@@ -54,6 +55,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 
 export default function List() {
+    const { t } = useLanguage();
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -102,7 +104,7 @@ export default function List() {
         if (searchInput !== currentKeyword) {
             const params = new URLSearchParams(searchParams.toString());
             params.set('page', '1');
-            if (searchInput) { params.set('keyword', searchInput); } 
+            if (searchInput) { params.set('keyword', searchInput); }
             else { params.delete('keyword'); }
             router.push(`/?${params.toString()}`);
         }
@@ -113,7 +115,7 @@ export default function List() {
         if (ids !== currentCategory) {
             const params = new URLSearchParams(searchParams.toString());
             params.set('page', '1');
-            if (ids) { params.set('category', ids); } 
+            if (ids) { params.set('category', ids); }
             else { params.delete('category'); }
             router.push(`/?${params.toString()}`);
         }
@@ -124,96 +126,96 @@ export default function List() {
         return generatePagination({ currentPage: page, total: total, siblingCount: 1, pageSize: pageSize });
     }, [page, total, pageSize]);
 
-     const createPageURL = (pageNumber: number | string) => {
+    const createPageURL = (pageNumber: number | string) => {
         const params = new URLSearchParams(searchParams.toString());
         params.set('page', String(pageNumber));
         return `/?${params.toString()}`;
     };
 
     return (
-    <>
-        <CategoryFilters 
-            onChange={handleCategoryChange} 
-            value={CategoryId} 
-        />
-        {/* daisyUI navbar 已在 menus.tsx 中负责 TypeId 选择，这里只保留原有 Category 过滤组件 */}
-        <br />
-        <div className="flex w-full max-w-sm items-center space-x-2 min-h-12">
-            <Input 
-                type="text" 
-                placeholder="Search" 
-                value={searchInput} 
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+        <>
+            <CategoryFilters
+                onChange={handleCategoryChange}
+                value={CategoryId}
             />
-            <Button type="button" onClick={handleSearch}>Search</Button>
-        </div>
-        <br />
-        
-        {/* --- (剩余的 JSX 保持不变) --- */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mx-auto">
-            {list.map((item, index) => (
-                <div className="card bg-base-200 w-full shadow-xl" key={item.Id}>
-                    <Link href={`/details?id=${item.Id}`} target="_blank" rel="noopener noreferrer">
-                        <div className="card-body">
-                            <h1 className="card-title text-base-content">{item.Title}</h1>
-                            <p className="bg-base-200 text-base-content" dangerouslySetInnerHTML={{ __html: item.Describe }} style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}></p>
-                        </div>
-                        {item.Cover && (
-                            <figure className="relative w-full pt-[125%]">
-                                <Image src={item.Cover} alt={item.Title} fill sizes="(max-width: 768px) 100vw, 20vw" className="object-contain" priority={index === 0} />
-                            </figure>
-                        )}
-                        <br />
-                    </Link>
-                </div>
-            ))}
-        </div>
-        <br />
-
-        {total > pageSize && (
-            <div>
-                <Pagination>
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious
-                                href={createPageURL(page - 1)}
-                                className={page <= 1 ? "pointer-events-none opacity-50" : ""}
-                            />
-                        </PaginationItem>
-
-                        {paginationRange.map((pageNumber, index) => {
-                            if (pageNumber === DOTS) {
-                                return <PaginationItem key={`dots-${index}`} className="hidden sm:list-item"><PaginationEllipsis /></PaginationItem>;
-                            }
-                            return (
-                                <PaginationItem key={pageNumber} className="hidden sm:list-item">
-                                    <PaginationLink
-                                        href={createPageURL(pageNumber)}
-                                        isActive={page === pageNumber}
-                                    >
-                                        {pageNumber}
-                                    </PaginationLink>
-                                </PaginationItem>
-                            );
-                        })}
-
-                        <PaginationItem className="sm:hidden">
-                            <span className="px-4 text-sm font-medium">Page {page} of {Math.ceil(total / pageSize)}</span>
-                        </PaginationItem>
-
-                        <PaginationItem>
-                            <PaginationNext
-                                href={createPageURL(page + 1)}
-                                className={page >= Math.ceil(total / pageSize) ? "pointer-events-none opacity-50" : ""}
-                            />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
+            {/* daisyUI navbar 已在 menus.tsx 中负责 TypeId 选择，这里只保留原有 Category 过滤组件 */}
+            <br />
+            <div className="flex w-full max-w-sm items-center space-x-2 min-h-12">
+                <Input
+                    type="text"
+                    placeholder={t('search_placeholder')}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                />
+                <Button type="button" onClick={handleSearch}>{t('search')}</Button>
             </div>
-        )}
-        <br />
-        <br />
-    </>
+            <br />
+
+            {/* --- (剩余的 JSX 保持不变) --- */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mx-auto">
+                {list.map((item, index) => (
+                    <div className="card bg-base-200 w-full shadow-xl" key={item.Id}>
+                        <Link href={`/details?id=${item.Id}`} target="_blank" rel="noopener noreferrer">
+                            <div className="card-body">
+                                <h1 className="card-title text-base-content">{item.Title}</h1>
+                                <p className="bg-base-200 text-base-content" dangerouslySetInnerHTML={{ __html: item.Describe }} style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}></p>
+                            </div>
+                            {item.Cover && (
+                                <figure className="relative w-full pt-[125%]">
+                                    <Image src={item.Cover} alt={item.Title} fill sizes="(max-width: 768px) 100vw, 20vw" className="object-contain" priority={index === 0} />
+                                </figure>
+                            )}
+                            <br />
+                        </Link>
+                    </div>
+                ))}
+            </div>
+            <br />
+
+            {total > pageSize && (
+                <div>
+                    <Pagination>
+                        <PaginationContent>
+                            <PaginationItem>
+                                <PaginationPrevious
+                                    href={createPageURL(page - 1)}
+                                    className={page <= 1 ? "pointer-events-none opacity-50" : ""}
+                                />
+                            </PaginationItem>
+
+                            {paginationRange.map((pageNumber, index) => {
+                                if (pageNumber === DOTS) {
+                                    return <PaginationItem key={`dots-${index}`} className="hidden sm:list-item"><PaginationEllipsis /></PaginationItem>;
+                                }
+                                return (
+                                    <PaginationItem key={pageNumber} className="hidden sm:list-item">
+                                        <PaginationLink
+                                            href={createPageURL(pageNumber)}
+                                            isActive={page === pageNumber}
+                                        >
+                                            {pageNumber}
+                                        </PaginationLink>
+                                    </PaginationItem>
+                                );
+                            })}
+
+                            <PaginationItem className="sm:hidden">
+                                <span className="px-4 text-sm font-medium">Page {page} of {Math.ceil(total / pageSize)}</span>
+                            </PaginationItem>
+
+                            <PaginationItem>
+                                <PaginationNext
+                                    href={createPageURL(page + 1)}
+                                    className={page >= Math.ceil(total / pageSize) ? "pointer-events-none opacity-50" : ""}
+                                />
+                            </PaginationItem>
+                        </PaginationContent>
+                    </Pagination>
+                </div>
+            )}
+            <br />
+            <br />
+        </>
     );
 }

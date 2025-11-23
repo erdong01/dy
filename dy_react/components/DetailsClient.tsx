@@ -13,6 +13,7 @@ import Hls from "hls.js";
 import { CoreEventMap, PeerDetails } from "p2p-media-loader-core";
 import { HlsJsP2PEngine, HlsWithP2PConfig } from "p2p-media-loader-hlsjs";
 import { useIsClient } from '../app/hooks/useIsClient';
+import { useLanguage } from '../app/lib/LanguageContext';
 import * as d3 from "d3";
 import type { Video, VideoUrl, PlaybackURL } from '../app/lib/types';
 import Link from 'next/link';
@@ -41,6 +42,7 @@ export type DetailsClientProps = {
 };
 
 export default function DetailsClient({ initialVideo, initialStreamUrl, initialVideoIdx, categories = [], showPlayer, autoPlay, onRevealPlayer }: DetailsClientProps) {
+  const { t } = useLanguage();
   const isClient = useIsClient();
   const [streamUrl, setStreamUrl] = useState<string>(initialStreamUrl);
   const [videoIdx, setVideoIdx] = useState<string>(initialVideoIdx);
@@ -281,7 +283,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
   }, [groupIdx, video.VideoUrlArr, streamUrl, videoIdx, hydrated]);
 
   const getGroupLabel = (group: VideoUrl, idx: number) => {
-    return `源${idx + 1}`;
+    return `${t('source')}${idx + 1}`;
   };
 
   return (
@@ -310,7 +312,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
               <button
                 className="flex items-center justify-center rounded-full bg-primary text-primary-content w-20 h-20 shadow-lg hover:scale-105 transition-transform"
                 onClick={handleRevealPlayer}
-                aria-label="显示播放入口"
+                aria-label={t('show_player')}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -352,7 +354,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
                       onClick={() => changeVideoIdxByIndex(groupIdx, idx)}
                       className={`btn btn-sm ${String(idx) === videoIdx ? 'btn-primary' : 'btn-outline'}`}
                     >
-                      {item.Name || `清晰度 ${idx + 1}`}
+                      {item.Name || `${t('quality')} ${idx + 1}`}
                     </button>
                   ))}
                 </div>

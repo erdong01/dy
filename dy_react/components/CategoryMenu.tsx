@@ -2,6 +2,7 @@
 
 'use client';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useLanguage } from '../app/lib/LanguageContext';
 // --- (类型定义保持不变) ---
 export interface SonCategory { Id: number; CreatedAt: string; UpdatedAt: string; DeletedAt: null | string; Name: string; ParentId: number; Type: number; IsHide: null | boolean; SonCategory: null; }
 export interface Category { Id: number; CreatedAt: string; UpdatedAt: string; DeletedAt: null | string; Name: string; ParentId: number; Type: number; IsHide: null | boolean; SonCategory: SonCategory[] | null; }
@@ -11,11 +12,12 @@ export interface ApiResponse { Data: Category[]; }
 // --- MODIFICATION 1: Props 中增加 `value` ---
 type CategoryMenuProps = {
   // `value` 是从父组件传入的当前选中的 category IDs (e.g., "123,456")
-  value?: string; 
+  value?: string;
   onChange?: (ids: string) => void;
 };
 
 const CategoryFilters = ({ value = '', onChange }: CategoryMenuProps) => {
+  const { t } = useLanguage();
   const [categories, setCategories] = useState<Category[]>([]);
 
   // --- MODIFICATION 2: 移除组件自己的状态管理 ---
@@ -27,7 +29,7 @@ const CategoryFilters = ({ value = '', onChange }: CategoryMenuProps) => {
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
         if (!API_URL) return;
-        
+
         const response = await fetch(`${API_URL}/api/v1/category/list`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -84,14 +86,13 @@ const CategoryFilters = ({ value = '', onChange }: CategoryMenuProps) => {
     const newIds = Object.values(newFilters)
       .filter((id): id is number => typeof id === 'number') // 只保留数字 ID
       .join(',');
-      
+
     // 调用父组件的 onChange，将控制权交还给父组件
     onChange?.(newIds);
   };
 
-  const getFilterClasses = (isActive: boolean) => 
-    `cursor-pointer transition-colors whitespace-nowrap ${
-      isActive ? 'text-white font-semibold' : 'text-gray-400 hover:text-white'
+  const getFilterClasses = (isActive: boolean) =>
+    `cursor-pointer transition-colors whitespace-nowrap ${isActive ? 'text-white font-semibold' : 'text-gray-400 hover:text-white'
     }`;
 
   return (
@@ -104,6 +105,7 @@ const CategoryFilters = ({ value = '', onChange }: CategoryMenuProps) => {
             isActive={(id) => activeFilters[category.Id] === id || (!id && (activeFilters[category.Id] === 'all' || !activeFilters[category.Id]))}
             onClick={(sonId) => handleFilterClick(category.Id, sonId)}
             getFilterClasses={getFilterClasses}
+            t={t}
           />
         ))}
       </div>
@@ -121,9 +123,10 @@ type CategoryRowProps = {
   // onClick: 传入点击回调；sonId 为 'all' 或具体数字 ID
   onClick: (sonId: number | 'all') => void;
   getFilterClasses: (isActive: boolean) => string;
+  t: (key: any) => string;
 };
 
-const CategoryRow: React.FC<CategoryRowProps> = ({ category, isActive, onClick, getFilterClasses }) => {
+const CategoryRow: React.FC<CategoryRowProps> = ({ category, isActive, onClick, getFilterClasses, t }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -213,7 +216,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ category, isActive, onClick, 
             onClick={() => onClick('all')}
             className={getFilterClasses(isActive())}
           >
-            全部
+            {t('all')}
           </button>
           {/* 子分类 */}
           {category.SonCategory?.map((son, idx) => {
@@ -239,7 +242,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ category, isActive, onClick, 
             onClick={toggle}
             className="mt-3 text-sm text-gray-400 hover:text-white underline"
           >
-            {expanded ? '收起' : '显示更多'}
+            {expanded ? t('collapse') : t('show_more')}
           </button>
         )}
       </div>

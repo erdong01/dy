@@ -3,11 +3,14 @@
 import * as React from 'react'
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useLanguage } from '../../lib/LanguageContext'
 import type { VideoClassItem } from '../../lib/types'
+import LanguageSwitcher from '../../../components/ui/LanguageSwitcher'
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 export default function Menus() {
+    const { t } = useLanguage()
     const router = useRouter()
     const searchParams = useSearchParams()
     const activeTypeId = searchParams.get('TypeId') || ''
@@ -24,12 +27,12 @@ export default function Menus() {
             setError(null)
             try {
                 const res = await fetch(`${API_URL}/api/v1/video_class/list`)
-                if (!res.ok) throw new Error('加载视频分类失败')
+                if (!res.ok) throw new Error(t('category_loading'))
                 const data: VideoClassItem[] = await res.json()
                 if (mounted) setItems(Array.isArray(data) ? data : [])
-                    } catch (e: unknown) {
-                        const msg = e instanceof Error ? e.message : '网络异常'
-                        if (mounted) setError(msg)
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : '网络异常'
+                if (mounted) setError(msg)
             } finally {
                 if (mounted) setLoading(false)
             }
@@ -74,11 +77,11 @@ export default function Menus() {
                     <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     </div>
-                      <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-64 p-2 shadow">
+                    <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-64 p-2 shadow">
                         <li>
-                            <button onClick={goHome} className={!activeTypeId ? 'active' : ''}>Home</button>
+                            <button onClick={goHome} className={!activeTypeId ? 'active' : ''}>{t('home')}</button>
                         </li>
-                        {loading && <li className="opacity-60"><span>加载中…</span></li>}
+                        {loading && <li className="opacity-60"><span>{t('loading')}</span></li>}
                         {error && <li className="text-error"><span>{error}</span></li>}
                         {topWithChildren.map((group) => (
                             <li key={`m-${group.Id}`}>
@@ -106,7 +109,7 @@ export default function Menus() {
             <div className="navbar-center hidden lg:flex">
                 <ul className="menu menu-horizontal px-1">
                     <li>
-                        <button onClick={goHome} className={!activeTypeId ? 'active' : ''}>Home</button>
+                        <button onClick={goHome} className={!activeTypeId ? 'active' : ''}>{t('home')}</button>
                     </li>
                     {topWithChildren.map((group) => (
                         <li key={`lg-m-${group.Id}`}>
@@ -130,7 +133,7 @@ export default function Menus() {
                 </ul>
             </div>
             <div className="navbar-end">
-                {/* 预留右侧区域，如登录/主题切换等 */}
+                <LanguageSwitcher />
             </div>
         </div>
     )

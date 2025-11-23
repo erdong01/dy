@@ -1,6 +1,8 @@
 import Script from "next/script";
 
 import "./globals.css";
+import { LanguageProvider } from "./lib/LanguageContext";
+import MetadataUpdater from "./lib/MetadataUpdater";
 
 // 全局类型声明
 declare global {
@@ -45,7 +47,12 @@ var _hmt = _hmt || [];
 `}
         </Script>
       </head>
-      <body>{children}</body>
+      <body>
+        <LanguageProvider>
+          <MetadataUpdater />
+          {children}
+        </LanguageProvider>
+      </body>
     </html>
   );
 }
