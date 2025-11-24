@@ -3,10 +3,6 @@ User-agent: *
 Allow: /
 Allow: /details
 
-Disallow: /*?category=
-Disallow: /*?page=
-Disallow: /*?TypeId=
-
 Sitemap: https://www.7x.chat/sitemap2.xml
 Sitemap: https://www.7x.chat/sitemap3.xml
 Sitemap: https://www.7x.chat/sitemap4.xml
@@ -40,3 +36,7 @@ Sitemap: https://www.7x.chat/sitemap31.xml
 Sitemap: https://www.7x.chat/sitemap32.xml
 Sitemap: https://www.7x.chat/sitemap33.xml
 Sitemap: https://www.7x.chat/sitemap34.xml
+
+Disallow: /*?category=
+Disallow: /*?page=
+Disallow: /*?TypeId=
