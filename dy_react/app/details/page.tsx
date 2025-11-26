@@ -104,9 +104,9 @@ function DetailsPageInner() {
 
         const aliasText = v.Alias ? ` 关键词：${v.Alias}。` : '';
         const introductionDescription = sanitizedDescription
-          ? `${sanitizedDescription}。本页面仅提供影片介绍信息，不提供资源存储或下载,请支持正版平台观看完整内容。${aliasText}`
-          : `本页面仅提供影片介绍信息，不提供资源存储或下载,请支持正版平台观看完整内容。${aliasText}`;
-        document.title = `${v.Title}-在线观看介绍影片`;
+          ? `${sanitizedDescription}${aliasText}`
+          : `${aliasText}`;
+        document.title = `${v.Title}-在线观看`;
 
         // description
         let metaDesc = document.querySelector("meta[name='description']");
@@ -147,15 +147,15 @@ function DetailsPageInner() {
   const sanitizedDescription = (video.Describe || video.Title)?.replace(/<[^>]+>/g, '') ?? '';
   const aliasTextStatic = video.Alias ? ` 关键词：${video.Alias}。` : '';
   const introductionDescriptionStatic = sanitizedDescription
-    ? `${sanitizedDescription}。本页面仅提供影片介绍信息，不提供资源存储或下载，请支持正版平台观看完整内容。${aliasTextStatic}`
-    : `本页面仅提供影片介绍信息，不提供资源存储或下载，请支持正版平台观看完整内容。${aliasTextStatic}`;
+    ? `${sanitizedDescription}${aliasTextStatic}`
+    : `${aliasTextStatic}`;
 
   const pageUrl = `https://www.7x.chat/details?id=${video.Id}`;
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "@id": pageUrl,
-    "name": `${video.Title}-在线观看介绍影片`,
+    "name": `${video.Title}-在线观看`,
     "description": introductionDescriptionStatic,
     "inLanguage": "zh-CN",
     "datePublished": new Date(video.CreatedAt).toISOString(),
