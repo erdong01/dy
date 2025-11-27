@@ -1,9 +1,8 @@
-
 # Copilot Instructions for this repo (dy)
 Compact, task-first hints for agents. Cite paths relative to repo root.
 
 ## Architecture Snapshot
-- **Backend**: Go + Gin (`main.go`). Router in `router/router.go`. Shared state via `core/core.go` singleton (`core.New()`).
+- **Backend**: Go 1.25 + Gin (`main.go`). Router in `router/router.go`. Shared state via `core/core.go` singleton (`core.New()`).
 - **Frontend**: Next.js App Router in `dy_react/`. API calls via `NEXT_PUBLIC_API_BASE_URL` to `/api/v1/...`.
 - **Async/Data**: Kafka consumer (`cmd/kafka/main.go`) uses Sarama. Configs for Redis, MySQL, Elastic, Gorse, RabbitMQ, OSS in `config/`.
 - **Config**: `etc/config.yaml` loaded by Viper into `config.ConfigGlobal`.
@@ -38,3 +37,9 @@ Compact, task-first hints for agents. Cite paths relative to repo root.
 - **Data Layer**: `model/video.go` (Search/CRUD), `pkg/db/dbs.go` (GORM setup).
 - **Config**: `etc/config.yaml`, `config/global.go`.
 - **Frontend UI**: `dy_react/app/ui/list/list.tsx` (Video Grid), `dy_react/components/CategoryMenu.tsx`.
+
+## Requirements
+- **Go**: 1.25+ (参见 [go.mod](http://_vscodecontentref_/1))
+- **Node.js**: 20+ (Next.js 15 要求)
+- **Next.js**: 15.x, React 19.x, TypeScript 5.x
+- **Docker Runtime**: `ubuntu:24.04` 基础镜像
