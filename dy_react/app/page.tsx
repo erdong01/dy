@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "7x影视-在线观看",
-  description: "分享好看的4k影视,在线观看,超清视频,高清视频",
+  description: "分享好看的4k影视,在线观看,超清视频,高清视频,电影,电视剧,電影,電視劇,连续剧,連續劇,1080P",
   alternates: {
     canonical: "https://www.7x.chat",
   },
@@ -27,7 +27,7 @@ function ListSkeleton() {
         <div className="h-10 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
         <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
       </div>
-      
+
       {/* 模拟视频卡片网格的骨架 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
         {skeletonItems.map((_, index) => (
@@ -49,7 +49,7 @@ function ListSkeleton() {
 export default function Home() {
   return (
     <>
-      <Suspense fallback={<div className="navbar bg-base-100 border-b px-4 h-16" />}> 
+      <Suspense fallback={<div className="navbar bg-base-100 border-b px-4 h-16" />}>
         <Menu />
       </Suspense>
       <div className="grid justify-items-center">
