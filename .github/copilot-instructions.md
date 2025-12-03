@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 
 # Copilot Instructions for dy (影视管理系统)
 
@@ -9,16 +8,6 @@ Compact, task-first hints for agents. Cite paths relative to repo root.
 - **Frontend**: Next.js 14 App Router in `dy_react/`. API via `NEXT_PUBLIC_API_BASE_URL` to `/api/v1/...`.
 - **Async Worker**: Kafka consumer (`cmd/kafka/main.go`) using IBM Sarama. Config in `cmd/kafka/etc/config.yaml`.
 - **Config**: `etc/config.yaml` loaded by Viper → `config.ConfigGlobal`. Contains MySQL, Redis, Elastic, Kafka, RabbitMQ, Gorse, OSS configs.
-=======
-# Copilot Instructions for this repo (dy)
-Compact, task-first hints for agents. Cite paths relative to repo root.
-
-## Architecture Snapshot
-- **Backend**: Go 1.25 + Gin (`main.go`). Router in `router/router.go`. Shared state via `core/core.go` singleton (`core.New()`).
-- **Frontend**: Next.js App Router in `dy_react/`. API calls via `NEXT_PUBLIC_API_BASE_URL` to `/api/v1/...`.
-- **Async/Data**: Kafka consumer (`cmd/kafka/main.go`) uses Sarama. Configs for Redis, MySQL, Elastic, Gorse, RabbitMQ, OSS in `config/`.
-- **Config**: `etc/config.yaml` loaded by Viper into `config.ConfigGlobal`.
->>>>>>> 3ecf609bc18fc91db6f0269bfaee5d5ca313352a
 
 ## Backend Patterns
 
@@ -33,7 +22,6 @@ db, _ := gorm.Open(...)  // ❌ Don't do this
 - **Controllers** (`controller/`): Parse requests with `c.BindJSON()` / `c.Query()`, call model methods, return JSON.
 - **Models** (`model/`): Business logic + DB operations. All models use GORM soft-delete (`gorm.DeletedAt`).
 
-<<<<<<< HEAD
 ### Idempotency / Upsert Patterns
 - `Video.Create`: Upsert by `(title, type_id)` – updates existing, creates if new.
 - `VideoUrl.Create`: Upsert by `(video_id, proxy_name)`.
@@ -122,16 +110,3 @@ cd dy_react && npm run lint  # Frontend lint
 - Timestamps: GORM auto-managed `CreatedAt`, `UpdatedAt`, `DeletedAt`
 - Error handling: Controllers use `defer recover()` to catch panics, return empty arrays on error
 - Category types: `1 = Movie`, `2 = TVSeries` (see `model/category.go` constants)
-=======
-## Key Paths
-- **Handlers**: `controller/videoController.go` (List/Get/Create logic).
-- **Data Layer**: `model/video.go` (Search/CRUD), `pkg/db/dbs.go` (GORM setup).
-- **Config**: `etc/config.yaml`, `config/global.go`.
-- **Frontend UI**: `dy_react/app/ui/list/list.tsx` (Video Grid), `dy_react/components/CategoryMenu.tsx`.
-
-## Requirements
-- **Go**: 1.25+ (参见 [go.mod](http://_vscodecontentref_/1))
-- **Node.js**: 20+ (Next.js 15 要求)
-- **Next.js**: 15.x, React 19.x, TypeScript 5.x
-- **Docker Runtime**: `ubuntu:24.04` 基础镜像
->>>>>>> 3ecf609bc18fc91db6f0269bfaee5d5ca313352a
