@@ -230,13 +230,38 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
   }, [streamUrl, onPeerConnect, onPeerClose, onChunkDownloaded, onChunkUploaded]);
 
   // 新增：分组索引与切换逻辑
-  const changeVideoIdxByIndex = (gIdx: number, idx: number) => {
+  const changeVideoIdxByIndex = useCallback((gIdx: number, idx: number) => {
     const g = video.VideoUrlArr?.[gIdx];
     if (!g?.PlaybackURL?.[idx]) return;
     setGroupIdx(gIdx);
     setStreamUrl(g.PlaybackURL[idx].Url);
     setVideoIdx(String(idx));
-  };
+  }, [video.VideoUrlArr]);
+
+  // 播放结束后自动播放下一集
+  const handleEnded = useCallback(() => {
+    const currentGroup = video.VideoUrlArr?.[groupIdx];
+    if (!currentGroup?.PlaybackURL?.length) return;
+    
+    const currentIdx = Number(videoIdx);
+    const nextIdx = currentIdx + 1;
+    
+    // 检查当前分组是否还有下一集
+    if (nextIdx < currentGroup.PlaybackURL.length) {
+      changeVideoIdxByIndex(groupIdx, nextIdx);
+      return;
+    }
+    
+    // 当前分组播放完毕，尝试切换到下一个分组的第一集
+    const nextGroupIdx = groupIdx + 1;
+    if (nextGroupIdx < (video.VideoUrlArr?.length ?? 0)) {
+      const nextGroup = video.VideoUrlArr?.[nextGroupIdx];
+      if (nextGroup?.PlaybackURL?.length) {
+        changeVideoIdxByIndex(nextGroupIdx, 0);
+      }
+    }
+    // 如果所有分组都播放完毕，不做任何操作
+  }, [groupIdx, videoIdx, video.VideoUrlArr, changeVideoIdxByIndex]);
 
   // 刷新恢复：尝试从 localStorage 恢复最近一次的分组与清晰度
   useEffect(() => {
@@ -300,6 +325,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
               streamType='on-demand'
               logLevel='warn'
               onProviderChange={onProviderChange}
+              onEnded={handleEnded}
               autoPlay={shouldAutoPlay}
               playsInline
               crossOrigin
