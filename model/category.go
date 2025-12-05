@@ -159,10 +159,18 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 						sonCategory.ParentId = parentCategory.Id
 						sonCategory.Name = name
 						sonCategory.Type = &cType
+						sonCategory.TypeId = category.Category[index].TypeId
+						sonCategory.TypePid = category.Category[index].TypePid
 						sonCategory.VideoCount = 1
 						core.New().DB.Create(&sonCategory)
 					} else {
-						core.New().DB.Model(&Category{}).Where("id = ?", sonCategory.Id).UpdateColumn("video_count", gorm.Expr("video_count + 1"))
+						updates := map[string]any{
+							"video_count": gorm.Expr("video_count + 1"),
+							"type_id":     category.Category[index].TypeId,
+							"type_pid":    category.Category[index].TypePid,
+						}
+						core.New().DB.Model(&Category{}).Where("id = ?", sonCategory.Id).
+							UpdateColumns(&updates)
 					}
 					categoryIds = append(categoryIds, sonCategory.Id)
 				}

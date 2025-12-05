@@ -53,7 +53,9 @@ type Category struct {
 
 // SubCategory 是 Category 的内嵌结构体
 type SubCategory struct {
-	Name string `json:"Name"`
+	Name    string `json:"Name"`
+	TypeId  int64  `json:"TypeId"`
+	TypePId int64  `json:"TypePId"`
 }
 
 // VideoListResponse 对应影视资源站列表API的响应
@@ -168,7 +170,11 @@ func transformData(videoDetail VideoInfo) VideoData {
 		Cover:    videoDetail.VodPic,
 		Describe: videoDetail.VodContent,
 		Category: []Category{
-			{Type: 1, Name: "类型", Category: []SubCategory{{Name: videoDetail.TypeName}}},
+			{Type: 1, Name: "类型", Category: []SubCategory{{
+				Name:    videoDetail.TypeName,
+				TypeId:  int64(videoDetail.TypeID),
+				TypePId: int64(videoDetail.TypeID1),
+			}}},
 			{Type: 1, Name: "导演", Category: []SubCategory{{Name: videoDetail.VodDirector}}},
 			{Type: 1, Name: "演员", Category: []SubCategory{{Name: videoDetail.VodActor}}},
 			{Type: 1, Name: "年代", Category: []SubCategory{{Name: videoDetail.VodYear}}},

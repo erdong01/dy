@@ -126,8 +126,12 @@ function DetailsPageInner() {
         }
         keywordsMeta.setAttribute('content', v.Alias || v.Title);
 
+        // 移除旧的 canonical link（如果存在）
+        const existingCanonical = document.querySelector("link[rel='canonical']");
+        if (existingCanonical) {
+          existingCanonical.remove();
+        }
         const canonicalLink: HTMLLinkElement = document.createElement('link');
-
         canonicalLink.rel = 'canonical';
         canonicalLink.href = `https://www.7x.chat/details?id=${v.Id}`;
         document.head.appendChild(canonicalLink);
@@ -151,6 +155,52 @@ function DetailsPageInner() {
     : `${aliasTextStatic}`;
 
   const pageUrl = `https://www.7x.chat/details?id=${video.Id}`;
+  
+  // VideoObject 结构化数据 - Google 对视频内容更友好
+  const videoStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "name": video.Title,
+    "description": introductionDescriptionStatic || `${video.Title} - 在线观看`,
+    "thumbnailUrl": video.Cover || "https://www.7x.chat/logo.png",
+    "uploadDate": new Date(video.CreatedAt).toISOString(),
+    "contentUrl": pageUrl,
+    "embedUrl": pageUrl,
+    "interactionStatistic": {
+      "@type": "InteractionCounter",
+      "interactionType": { "@type": "WatchAction" },
+      "userInteractionCount": video.Browse || 0
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "7x影视",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.7x.chat/logo.png"
+      }
+    }
+  };
+
+  // BreadcrumbList 结构化数据 - 帮助 Google 理解网站结构
+  const breadcrumbData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "首页",
+        "item": "https://www.7x.chat"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": video.Title,
+        "item": pageUrl
+      }
+    ]
+  };
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -211,17 +261,45 @@ function DetailsPageInner() {
           setShouldAutoplay(true);
         }}
       />
-      <p className="text-xs text-gray-500 mt-4 text-center">
-        本页面仅提供影片信息展示及在线播放体验和宣传作用，不存储或提供下载链接，请支持正版平台观看完整内容。
-      </p>
+
       <Script
         id="movie-json-ld"
         type="application/ld+json"
-        strategy="afterInteractive"
+        strategy="beforeInteractive"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(structuredData)
         }}
       />
+      <Script
+        id="video-json-ld"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(videoStructuredData)
+        }}
+      />
+      <Script
+        id="breadcrumb-json-ld"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbData)
+        }}
+      />
+      {/* 为不执行 JS 的爬虫提供基础内容 */}
+      <noscript>
+        <div className="p-4">
+          <h1>{video.Title} - 在线观看</h1>
+          <p>{introductionDescriptionStatic}</p>
+          {video.Cover && <img src={video.Cover} alt={video.Title} />}
+          <p>关键词: {video.Alias || video.Title}</p>
+          <p>浏览次数: {video.Browse || 0}</p>
+          <a href="https://www.7x.chat">返回首页</a>
+        </div>
+      </noscript>
+      <p className="text-xs text-gray-500 mt-4 text-center">
+        本页面仅提供影片信息展示及在线播放体验和宣传作用，不存储或提供下载链接，请支持正版平台观看完整内容。如有侵权请邮箱联系:xiuming142857@outlook.com删除内容
+      </p>
     </>
   );
 }
