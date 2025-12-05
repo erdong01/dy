@@ -159,6 +159,8 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 						sonCategory.ParentId = parentCategory.Id
 						sonCategory.Name = name
 						sonCategory.Type = &cType
+						sonCategory.TypeId = category.Category[index].TypeId
+						sonCategory.TypePid = category.Category[index].TypePid
 						sonCategory.VideoCount = 1
 						core.New().DB.Create(&sonCategory)
 					} else {
