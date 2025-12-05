@@ -78,28 +78,31 @@ export default function Menus() {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     </div>
                     <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-64 p-2 shadow">
-                        <li>
-                            <button onClick={goHome} className={!activeTypeId ? 'active' : ''}>{t('home')}</button>
+                        <li className={!activeTypeId ? 'menu-active' : ''}>
+                            <button onClick={goHome}>{t('home')}</button>
                         </li>
                         {loading && <li className="opacity-60"><span>{t('loading')}</span></li>}
                         {error && <li className="text-error"><span>{error}</span></li>}
-                        {topWithChildren.map((group) => (
-                            <li key={`m-${group.Id}`}>
-                                <details>
-                                    <summary>{group.TypeName}</summary>
-                                    <ul className="p-2">
-                                        {group.VideoClassSon?.map((s) => (
-                                            <li key={`s-${s.Id}`}>
-                                                <button onClick={() => onPickType(s.TypeId)} className={activeTypeId === String(s.TypeId) ? 'active' : ''}>{s.TypeName}</button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </details>
-                            </li>
-                        ))}
+                        {topWithChildren.map((group) => {
+                            const isGroupActive = group.VideoClassSon?.some((s) => activeTypeId === String(s.TypeId))
+                            return (
+                                <li key={`m-${group.Id}`} className={isGroupActive ? 'menu-active' : ''}>
+                                    <details>
+                                        <summary>{group.TypeName}</summary>
+                                        <ul className="p-2">
+                                            {group.VideoClassSon?.map((s) => (
+                                                <li key={`s-${s.Id}`} className={activeTypeId === String(s.TypeId) ? 'menu-active' : ''}>
+                                                    <button onClick={() => onPickType(s.TypeId)}>{s.TypeName}</button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </details>
+                                </li>
+                            )
+                        })}
                         {singleItems.map((it) => (
-                            <li key={`single-${it.Id}`}>
-                                <button onClick={() => onPickType(it.TypeId)} className={activeTypeId === String(it.TypeId) ? 'active' : ''}>{it.TypeName}</button>
+                            <li key={`single-${it.Id}`} className={activeTypeId === String(it.TypeId) ? 'menu-active' : ''}>
+                                <button onClick={() => onPickType(it.TypeId)}>{it.TypeName}</button>
                             </li>
                         ))}
                     </ul>
@@ -109,25 +112,28 @@ export default function Menus() {
             <div className="navbar-center hidden lg:flex">
                 <ul className="menu menu-horizontal px-1">
                     <li>
-                        <button onClick={goHome} className={!activeTypeId ? 'active' : ''}>{t('home')}</button>
+                        <button onClick={goHome}>{t('home')}</button>
                     </li>
-                    {topWithChildren.map((group) => (
-                        <li key={`lg-m-${group.Id}`}>
-                            <details>
-                                <summary>{group.TypeName}</summary>
-                                <ul className="p-2">
-                                    {group.VideoClassSon?.map((s) => (
-                                        <li key={`lg-s-${s.Id}`}>
-                                            <button onClick={() => onPickType(s.TypeId)} className={activeTypeId === String(s.TypeId) ? 'active' : ''}>{s.TypeName}</button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </details>
-                        </li>
-                    ))}
+                    {topWithChildren.map((group) => {
+                        const isGroupActive = group.VideoClassSon?.some((s) => activeTypeId === String(s.TypeId))
+                        return (
+                            <li key={`lg-m-${group.Id}`} className={isGroupActive ? 'menu-active' : ''}>
+                                <details>
+                                    <summary>{group.TypeName}</summary>
+                                    <ul className="p-2">
+                                        {group.VideoClassSon?.map((s) => (
+                                            <li key={`lg-s-${s.Id}`} className={activeTypeId === String(s.TypeId) ? 'menu-active' : ''}>
+                                                <button onClick={() => onPickType(s.TypeId)}>{s.TypeName}</button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </details>
+                            </li>
+                        )
+                    })}
                     {singleItems.map((it) => (
-                        <li key={`lg-single-${it.Id}`}>
-                            <button onClick={() => onPickType(it.TypeId)} className={activeTypeId === String(it.TypeId) ? 'active' : ''}>{it.TypeName}</button>
+                        <li key={`lg-single-${it.Id}`} className={activeTypeId === String(it.TypeId) ? 'menu-active' : ''}>
+                            <button onClick={() => onPickType(it.TypeId)}>{it.TypeName}</button>
                         </li>
                     ))}
                 </ul>

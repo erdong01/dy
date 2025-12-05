@@ -13,3 +13,18 @@
 html, body {
   background-color: #0e0e0e;
 }
+
+/* 菜单选中状态样式增强 */
+.menu li.menu-active > a,
+.menu li.menu-active > button,
+.menu li.menu-active > summary {
+  background-color: oklch(58% .233 277.117); /* primary color */
+  color: oklch(96% .018 272.314); /* primary-content */
+  font-weight: 600;
+}
+
+.menu li.menu-active > a:hover,
+.menu li.menu-active > button:hover,
+.menu li.menu-active > summary:hover {
+  background-color: oklch(53% .233 277.117); /* slightly darker primary */
+}
