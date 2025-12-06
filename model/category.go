@@ -51,14 +51,14 @@ func isChinese(str string) bool {
 
 func (that *Category) HomeList(typeId int64) (categorySonArr []Category) {
 	var categoryData Category
-	db := core.New().DB.Model(that.Category).
-		Preload("SonCategory").
-		Where("parent_id = 0 AND type = 1 AND name = ?", "类型")
-	if typeId > 0 {
-		db = db.Where("type_pid = ?", typeId)
-	}
-
-	err := db.Find(&categoryData).Error
+	err := core.New().DB.Model(that.Category).
+		Preload("SonCategory", func(db2 *gorm.DB) *gorm.DB {
+			if typeId > 0 {
+				db2 = db2.Where("type_pid = ?", typeId)
+			}
+			return db2.Order("video_count desc")
+		}).
+		Where("parent_id = 0 AND type = 1 AND name = ?", "类型").Find(&categoryData).Error
 	if err != nil {
 		fmt.Println("err:", err)
 	}
