@@ -14,8 +14,9 @@ func List(c *gin.Context) {
 			fmt.Println(r)
 		}
 	}()
+	typeId := c.GetInt64("TypeId")
 	var categoryModel model.Category
-	res := categoryModel.HomeList()
+	res := categoryModel.HomeList(typeId)
 	c.JSON(http.StatusOK, gin.H{
 		"Data": res,
 	})
