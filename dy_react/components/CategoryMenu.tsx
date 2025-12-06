@@ -10,14 +10,16 @@ export interface Category { Id: number; CreatedAt: string; UpdatedAt: string; De
 export interface ApiResponse { Data: Category[]; }
 
 
-// --- MODIFICATION 1: Props 中增加 `value` ---
+// --- MODIFICATION 1: Props 中增加 `value` 和 `typeId` ---
 type CategoryMenuProps = {
   // `value` 是从父组件传入的当前选中的 category IDs (e.g., "123,456")
   value?: string;
+  // `typeId` 用于按类型筛选分类
+  typeId?: string;
   onChange?: (ids: string) => void;
 };
 
-const CategoryFilters = ({ value = '', onChange }: CategoryMenuProps) => {
+const CategoryFilters = ({ value = '', typeId = '', onChange }: CategoryMenuProps) => {
   const { t } = useLanguage();
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -31,7 +33,12 @@ const CategoryFilters = ({ value = '', onChange }: CategoryMenuProps) => {
         const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
         if (!API_URL) return;
 
-        const response = await fetch(`${API_URL}/api/v1/category/list`);
+        const params = new URLSearchParams();
+        if (typeId) params.set('TypeId', typeId);
+        const queryString = params.toString();
+        const url = `${API_URL}/api/v1/category/list${queryString ? `?${queryString}` : ''}`;
+
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const result: ApiResponse = await response.json();
@@ -41,7 +48,7 @@ const CategoryFilters = ({ value = '', onChange }: CategoryMenuProps) => {
       }
     };
     fetchData();
-  }, []);
+  }, [typeId]);
 
   // --- MODIFICATION 3: 使用 `useMemo` 从 props 派生出用于显示的状态 ---
   // 这确保了组件的显示状态总是与父组件的 `value` prop 同步

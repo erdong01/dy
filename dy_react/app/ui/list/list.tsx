@@ -137,6 +137,7 @@ export default function List() {
             <CategoryFilters
                 onChange={handleCategoryChange}
                 value={CategoryId}
+                typeId={TypeId}
             />
             {/* daisyUI navbar 已在 menus.tsx 中负责 TypeId 选择，这里只保留原有 Category 过滤组件 */}
             <br />
