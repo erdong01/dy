@@ -11,7 +11,7 @@ import (
 
 const (
 	defaultStartID = 1000000
-	defaultEndID   = 1165856
+	defaultEndID   = 1168180
 	chunkSize      = 5000
 )
 
