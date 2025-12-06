@@ -124,6 +124,78 @@ function DetailsPageInner() {
         }
         keywordsMeta.setAttribute('content', v.Alias || v.Title);
 
+        // og:image
+        let ogImage = document.querySelector("meta[property='og:image']");
+        if (!ogImage) {
+          ogImage = document.createElement('meta');
+          ogImage.setAttribute('property', 'og:image');
+          document.head.appendChild(ogImage);
+        }
+        ogImage.setAttribute('content', v.Cover || '');
+
+        // og:keywords
+        let ogKeywords = document.querySelector("meta[property='og:keywords']");
+        if (!ogKeywords) {
+          ogKeywords = document.createElement('meta');
+          ogKeywords.setAttribute('property', 'og:keywords');
+          document.head.appendChild(ogKeywords);
+        }
+        ogKeywords.setAttribute('content', v.Alias || v.Title);
+
+        // og:title
+        let ogTitle = document.querySelector("meta[property='og:title']");
+        if (!ogTitle) {
+          ogTitle = document.createElement('meta');
+          ogTitle.setAttribute('property', 'og:title');
+          document.head.appendChild(ogTitle);
+        }
+        ogTitle.setAttribute('content', `${v.Title}-在线观看`);
+
+        // og:url
+        let ogUrl = document.querySelector("meta[property='og:url']");
+        if (!ogUrl) {
+          ogUrl = document.createElement('meta');
+          ogUrl.setAttribute('property', 'og:url');
+          document.head.appendChild(ogUrl);
+        }
+        ogUrl.setAttribute('content', window.location.href);
+
+        // og:description
+        let ogDesc = document.querySelector("meta[property='og:description']");
+        if (!ogDesc) {
+          ogDesc = document.createElement('meta');
+          ogDesc.setAttribute('property', 'og:description');
+          document.head.appendChild(ogDesc);
+        }
+        ogDesc.setAttribute('content', introductionDescription);
+
+        // og:locale
+        let ogLocale = document.querySelector("meta[property='og:locale']");
+        if (!ogLocale) {
+          ogLocale = document.createElement('meta');
+          ogLocale.setAttribute('property', 'og:locale');
+          document.head.appendChild(ogLocale);
+        }
+        ogLocale.setAttribute('content', 'zh_CN');
+
+        // og:locale:alternate (English)
+        let ogLocaleAlt = document.querySelector("meta[property='og:locale:alternate']");
+        if (!ogLocaleAlt) {
+          ogLocaleAlt = document.createElement('meta');
+          ogLocaleAlt.setAttribute('property', 'og:locale:alternate');
+          document.head.appendChild(ogLocaleAlt);
+        }
+        ogLocaleAlt.setAttribute('content', 'en_US');
+
+        // og:type
+        let ogType = document.querySelector("meta[property='og:type']");
+        if (!ogType) {
+          ogType = document.createElement('meta');
+          ogType.setAttribute('property', 'og:type');
+          document.head.appendChild(ogType);
+        }
+        ogType.setAttribute('content', 'video.movie');
+        
       } finally {
         setLoading(false);
       }
