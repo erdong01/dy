@@ -23,11 +23,10 @@ export default function RootLayout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="7x影视 - 免费在线观看高清电影、电视剧、综艺节目。提供最新最全的影视资源，无需下载即可流畅播放。" />
-        <meta name="keywords" content="免费电影,在线观看,高清电影,电视剧,综艺节目,7x影视" />
-        <meta name="robots" content="index, follow" />
-        <meta name="googlebot" content="index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1" />
-        <meta name="google-adsense-account" content="ca-pub-3171747573136206" />
+        {/* 声明支持的语言版本 */}
+        <link rel="alternate" hrefLang="zh-CN" href="https://www.7x.chat" />
+        <link rel="alternate" hrefLang="en-US" href="https://www.7x.chat" />
+        <link rel="alternate" hrefLang="x-default" href="https://www.7x.chat" />
         <Script id="baidu-analytics" strategy="beforeInteractive" type="text/javascript">
           {`
 var _hmt = _hmt || [];
