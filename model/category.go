@@ -55,7 +55,7 @@ func (that *Category) HomeList(typeId int64) (categorySonArr []Category) {
 		Preload("SonCategory").
 		Where("parent_id = 0 AND type = 1 AND name = ?", "类型")
 	if typeId > 0 {
-		db = db.Where("type_id = ?", typeId)
+		db = db.Where("type_pid = ?", typeId)
 	}
 
 	err := db.Find(&categoryData).Error
