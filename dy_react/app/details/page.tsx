@@ -195,6 +195,17 @@ function DetailsPageInner() {
           document.head.appendChild(ogType);
         }
         ogType.setAttribute('content', 'video.movie');
+
+
+        // 移除旧的 canonical link（如果存在）
+        const existingCanonical = document.querySelector("link[rel='canonical']");
+        if (existingCanonical) {
+          existingCanonical.remove();
+        }
+        const canonicalLink: HTMLLinkElement = document.createElement('link');
+        canonicalLink.rel = 'canonical';
+        canonicalLink.href = `https://www.7x.chat/details?id=${v.Id}`;
+        document.head.appendChild(canonicalLink);
         
       } finally {
         setLoading(false);
