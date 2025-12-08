@@ -49,10 +49,15 @@ func isChinese(str string) bool {
 	return false
 }
 
-func (that *Category) HomeList() (categorySonArr []Category) {
+func (that *Category) HomeList(typeId int64) (categorySonArr []Category) {
 	var categoryData Category
 	err := core.New().DB.Model(that.Category).
-		Preload("SonCategory").
+		Preload("SonCategory", func(db2 *gorm.DB) *gorm.DB {
+			if typeId > 0 {
+				db2 = db2.Where("type_pid = ?", typeId)
+			}
+			return db2.Order("video_count desc")
+		}).
 		Where("parent_id = 0 AND type = 1 AND name = ?", "类型").Find(&categoryData).Error
 	if err != nil {
 		fmt.Println("err:", err)
@@ -180,15 +185,19 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 						sonCategory.ParentId = parentCategory.Id
 						sonCategory.Name = name
 						sonCategory.Type = &cType
-						sonCategory.TypeId = category.Category[index].TypeId
-						sonCategory.TypePid = category.Category[index].TypePid
+						if category.Name == "类型" {
+							sonCategory.TypeId = videoClass.TypeId
+							sonCategory.TypePid = videoClass.TypePid
+						}
 						sonCategory.VideoCount = 1
 						core.New().DB.Create(&sonCategory)
 					} else {
 						updates := map[string]any{
 							"video_count": gorm.Expr("video_count + 1"),
-							"type_id":     category.Category[index].TypeId,
-							"type_pid":    category.Category[index].TypePid,
+						}
+						if category.Name == "类型" {
+							updates["type_id"] = videoClass.TypeId
+							updates["type_pid"] = videoClass.TypePid
 						}
 						core.New().DB.Model(&Category{}).Where("id = ?", sonCategory.Id).
 							UpdateColumns(&updates)
