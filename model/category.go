@@ -39,6 +39,24 @@ func (*Category) TableName() string {
 	return "category"
 }
 
+// regionNameMapping 地区名称标准化映射表
+var regionNameMapping = map[string]string{
+	"中国香港":     "香港",
+	"国香港":      "香港",
+	"中国大陆中国香港": "香港",
+	"香港地区":     "香港",
+	"中国台湾":     "台湾",
+	"中国大陆中国台湾": "台湾",
+}
+
+// normalizeRegionName 标准化地区名称
+func normalizeRegionName(name string) string {
+	if normalized, ok := regionNameMapping[name]; ok {
+		return normalized
+	}
+	return name
+}
+
 // isChinese 判断字符串是否包含中文
 func isChinese(str string) bool {
 	for _, r := range str {
@@ -156,27 +174,8 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 						}
 					}
 					if category.Name == "地区" {
-						if name == "中国香港" {
-							name = "香港"
-						}
-						if name == "国香港" {
-							name = "香港"
-						}
-						if name == "中国大陆中国香港" {
-							name = "香港"
-						}
-						if name == "香港地区" {
-							name = "香港"
-						}
-
-						if name == "中国台湾" {
-							name = "台湾"
-						}
-						if name == "中国大陆中国台湾" {
-							name = "台湾"
-						}
+						name = normalizeRegionName(name)
 					}
-
 					var sonCategory Category
 					core.New().DB.Unscoped().Where("name = ?", name).
 						Where("type = ?", cType).First(&sonCategory)
