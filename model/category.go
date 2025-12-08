@@ -150,6 +150,27 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 							continue
 						}
 					}
+					if category.Name == "地区" {
+						if name == "中国香港" {
+							name = "香港"
+						}
+						if name == "国香港" {
+							name = "香港"
+						}
+						if name == "中国大陆中国香港" {
+							name = "香港"
+						}
+						if name == "香港地区" {
+							name = "香港"
+						}
+
+						if name == "中国台湾" {
+							name = "台湾"
+						}
+						if name == "中国大陆中国台湾" {
+							name = "台湾"
+						}
+					}
 
 					var sonCategory Category
 					core.New().DB.Unscoped().Where("name = ?", name).
