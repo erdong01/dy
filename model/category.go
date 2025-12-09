@@ -47,6 +47,7 @@ var regionNameMapping = map[string]string{
 	"香港地区":     "香港",
 	"中国台湾":     "台湾",
 	"中国大陆中国台湾": "台湾",
+	"大陆":       "中国大陆",
 }
 
 // normalizeRegionName 标准化地区名称
