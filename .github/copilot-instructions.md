@@ -1,112 +1,93 @@
-
 # Copilot Instructions for dy (影视管理系统)
 
 Compact, task-first hints for agents. Cite paths relative to repo root.
 
 ## Architecture Overview
-- **Backend**: Go 1.21+ / Gin (`main.go` → `:9191`). Router: `router/router.go`. Shared state via `core/core.go` singleton (`core.New()`).
-- **Frontend**: Next.js 14 App Router in `dy_react/`. API via `NEXT_PUBLIC_API_BASE_URL` to `/api/v1/...`.
-- **Async Worker**: Kafka consumer (`cmd/kafka/main.go`) using IBM Sarama. Config in `cmd/kafka/etc/config.yaml`.
-- **Config**: `etc/config.yaml` loaded by Viper → `config.ConfigGlobal`. Contains MySQL, Redis, Elastic, Kafka, RabbitMQ, Gorse, OSS configs.
+- **Backend**: Go (Gin framework). Entry: `main.go` → `:9191`.
+- **Frontend**: Next.js 15 App Router in `dy_react/`. API via `NEXT_PUBLIC_API_BASE_URL` to `/api/v1/...`.
+- **Async Worker**: Kafka consumer (`cmd/kafka/main.go`) using IBM Sarama.
+- **Data Stores**: MySQL (GORM), Redis, ElasticSearch. Configured in `etc/config.yaml`.
 
-## Backend Patterns
+## Backend Patterns (Go)
 
 ### Core Singleton
-Access DB, Redis, Config via `core.New()`. **Never** create new clients in handlers.
+Access global state (DB, Redis, Config) via `core.New()`. **Never** create new clients in handlers.
 ```go
-core.New().DB.Model(&Video{}).Where(...)  // ✅
-db, _ := gorm.Open(...)  // ❌ Don't do this
+// ✅ Correct
+core.New().DB.Model(&Video{}).Where(...)
+// ❌ Incorrect
+db, _ := gorm.Open(...)
 ```
 
 ### Controller-Model Separation
-- **Controllers** (`controller/`): Parse requests with `c.BindJSON()` / `c.Query()`, call model methods, return JSON.
-- **Models** (`model/`): Business logic + DB operations. All models use GORM soft-delete (`gorm.DeletedAt`).
+- **Controllers** (`controller/`): Parse requests (`c.BindJSON`, `c.Query`), call model methods, return JSON.
+- **Models** (`model/`): Encapsulate business logic and DB operations. Use `gorm.DeletedAt` for soft deletes.
 
-### Idempotency / Upsert Patterns
-- `Video.Create`: Upsert by `(title, type_id)` – updates existing, creates if new.
-- `VideoUrl.Create`: Upsert by `(video_id, proxy_name)`.
-- `Category.Create`: Parses comma/slash-separated names, upserts each, returns `categoryIds`.
+### Search Logic (`model/video.go`)
+- **Hybrid Search**:
+  - Chinese/Short queries: `LIKE` on title, alias, keywords.
+  - English/Long queries: `MATCH...AGAINST` (Boolean Mode) + `LIKE` fallback.
+- **Scoring**: Exact match > Title LIKE > Alias LIKE > Keywords LIKE + Browse count.
 
-### Hybrid Search (`model/video.go`)
-```
-Chinese/short query → LIKE on title, alias, keywords
-English/long query  → MATCH...AGAINST (Boolean Mode) + LIKE fallback
-```
-Scoring: `exact_match (200) > title_like (80) > alias_like (60) > keywords_like (30) + browse_count`.
-Category filtering: Intersection via `VideoCategory` subquery with `GROUP BY + HAVING COUNT = len(ids)`.
-
-### API Endpoints (router/router.go)
-| Method | Path | Handler | Description |
-|--------|------|---------|-------------|
-| GET | `/api/v1/video/list` | `controller.List` | Paginated list with search/filter |
-| GET | `/api/v1/video/get?Id=` | `controller.Get` | Single video + VideoUrlArr + Categories |
-| POST | `/api/v1/video/create` | `controller.Create` | Upsert video with categories/urls |
-| GET | `/api/v1/category/list` | `category.List` | Category tree for filters |
+### API Structure (`router/router.go`)
+- Base path: `/api/v1`
+- `POST /video/create`: Upsert video (idempotent by title+type_id).
+- `GET /video/list`: Paginated search/filter.
+- `GET /video/get`: Single video details + URLs + Categories.
+- `GET /category/list`: Category tree.
 
 ## Frontend Patterns (`dy_react/`)
 
-### Routing & State
-- Home: `app/page.tsx` → `app/ui/list/list.tsx` (video grid)
-- Details: `app/details/page.tsx` → `components/DetailsClient.tsx` (player)
-- State in URL params: `?page=1&keyword=xxx&category=1,2&TypeId=3`. Use `useRouter().push()` to mutate.
+### Tech Stack
+- **Framework**: Next.js 15 (App Router).
+- **Styling**: Tailwind CSS.
+- **Player**: Vidstack + Hls.js + p2p-media-loader (WebRTC P2P).
 
-### Video Player (`components/DetailsClient.tsx`)
-- Stack: Vidstack + Hls.js + p2p-media-loader (WebRTC P2P acceleration)
-- Source prioritization: "豆瓣资源" sources first, then others
-- Playback state persisted to `localStorage` key: `video:play:{videoId}`
-- Auto-recovery: Downgrades quality on stall, recovers to max after 30s stable
+### State Management
+- **URL-Driven**: Search, pagination, and filters are stored in URL params (`?page=1&keyword=xxx`).
+- **Persistence**: Playback state saved in `localStorage` (`video:play:{videoId}`).
 
 ### Key Components
-| Component | Purpose |
-|-----------|---------|
-| `app/ui/list/list.tsx` | Video grid with search, category filter, pagination |
-| `components/CategoryMenu.tsx` | Multi-level category filter UI |
-| `app/ui/menu/menus.tsx` | Navbar with TypeId selector |
-| `app/lib/LanguageContext.tsx` | i18n context provider |
+- `app/ui/list/list.tsx`: Main video grid with search/filter logic.
+- `components/DetailsClient.tsx`: Video player with P2P and auto-recovery logic.
+- `app/lib/types.ts`: TypeScript definitions matching backend structs.
+
+## Conventions
+
+### Data & Naming
+- **JSON Fields**: **PascalCase** (e.g., `VideoUrlArr`, `CreatedAt`) to match Go struct tags.
+- **Timestamps**: GORM managed `CreatedAt`, `UpdatedAt`, `DeletedAt`.
+- **Category Types**: `1 = Movie`, `2 = TVSeries` (Constants in `model/category.go`).
+
+### Error Handling
+- Backend: Controllers use `defer recover()` to catch panics. Return empty arrays/objects on error instead of 500s where possible to keep UI resilient.
 
 ## Developer Workflows
 
 ### Run Locally
 ```bash
-# Backend (port 9191)
+# Backend (Port 9191)
 go run main.go
 
-# Frontend (port 3000)
+# Frontend (Port 3000)
 cd dy_react && npm install && npm run dev
 
-# Kafka consumer (optional)
+# Kafka Consumer (Optional)
 cd cmd/kafka && go run main.go
 ```
 
 ### Build & Deploy
 ```bash
-# Backend binary
+# Backend Binary
 go build -o ./release main.go
 
-# Docker (mounts etc/ and binary)
+# Docker
 docker build -t app .
 docker run -dp 9090:9191 --name dy -v ./etc:/app/etc -v ./release:/app --restart unless-stopped app
 ```
 
 ### Testing
 ```bash
-go test ./test/...           # Unit tests
-cd dy_react && npm run lint  # Frontend lint
+go test ./test/...           # Backend Unit Tests
+cd dy_react && npm run lint  # Frontend Linting
 ```
-
-## Key File Reference
-| Area | Files |
-|------|-------|
-| Entry | `main.go`, `dy_react/app/layout.tsx` |
-| Routing | `router/router.go`, `dy_react/app/**/page.tsx` |
-| Data Models | `model/video.go`, `model/category.go`, `model/videoUrl.go` |
-| DB Setup | `pkg/db/dbs.go`, `pkg/db/db.go` |
-| Config | `etc/config.yaml`, `config/global.go` |
-| Player | `dy_react/components/DetailsClient.tsx` |
-| Types | `dy_react/app/lib/types.ts` |
-
-## Conventions
-- JSON field names: PascalCase (e.g., `VideoUrlArr`, `CreatedAt`) to match Go struct tags
-- Timestamps: GORM auto-managed `CreatedAt`, `UpdatedAt`, `DeletedAt`
-- Error handling: Controllers use `defer recover()` to catch panics, return empty arrays on error
-- Category types: `1 = Movie`, `2 = TVSeries` (see `model/category.go` constants)
