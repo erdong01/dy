@@ -11,7 +11,7 @@ import (
 
 const (
 	defaultStartID = 1000000
-	defaultEndID   = 1168180
+	defaultEndID   = 1168853
 	chunkSize      = 5000
 )
 
@@ -219,7 +219,7 @@ func writeSitemapFile(path string, includeHomepage bool, startID, endID int, las
 	}
 
 	if includeHomepage {
-		if err := writeURLEntry(f, "https://www.7x.chat/", lastmod); err != nil {
+		if err := writeURLEntry(f, "https://7x.chat/", lastmod); err != nil {
 			return err
 		}
 		if _, err := fmt.Fprintln(f, ""); err != nil {
@@ -231,7 +231,7 @@ func writeSitemapFile(path string, includeHomepage bool, startID, endID int, las
 	}
 
 	for id := startID; id <= endID; id++ {
-		loc := fmt.Sprintf("https://www.7x.chat/details?id=%d", id)
+		loc := fmt.Sprintf("https://7x.chat/details?id=%d", id)
 		if err := writeURLEntry(f, loc, lastmod); err != nil {
 			return err
 		}
