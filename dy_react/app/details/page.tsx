@@ -204,7 +204,7 @@ function DetailsPageInner() {
         }
         const canonicalLink: HTMLLinkElement = document.createElement('link');
         canonicalLink.rel = 'canonical';
-        canonicalLink.href = `https://www.7x.chat/details?id=${v.Id}`;
+        canonicalLink.href = `https://7x.chat/details?id=${v.Id}`;
         document.head.appendChild(canonicalLink);
         
       } finally {
