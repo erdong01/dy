@@ -22,12 +22,15 @@ func (*VideoGroup) TableName() string {
 	return "video_group"
 }
 
-func (that *VideoGroup) Edit() {
+func (that *VideoGroup) Edit(tx *gorm.DB) {
+	if tx == nil {
+		tx = core.New().DB.DB.DB
+	}
 	if that.Title == "" {
 		return
 	}
 	var videoGroupData VideoGroup
-	core.New().DB.Model(that).Where("title = ?", that.Title).First(&videoGroupData)
+	tx.Model(that).Where("title = ?", that.Title).First(&videoGroupData)
 
 	if videoGroupData.Id > 0 {
 		that.Id = videoGroupData.Id
@@ -35,6 +38,6 @@ func (that *VideoGroup) Edit() {
 		if that.IsHide <= 0 {
 			that.IsHide = 2
 		}
-		core.New().DB.Model(that).Create(&that)
+		tx.Model(that).Create(&that)
 	}
 }

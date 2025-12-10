@@ -66,6 +66,7 @@ func List(c *gin.Context) {
 	var video model.Video
 	data, total, err := video.List(page, pageSize, id, keyWord, categoryId, typeId)
 	if err != nil {
+		fmt.Println("List error:", err)
 		c.JSON(http.StatusOK, gin.H{
 			"Data":   []model.Video{},
 			"LastId": 0,
@@ -117,39 +118,66 @@ func Create(c *gin.Context) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println(r)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		}
 	}()
 	var video model.Video
 	err := c.BindJSON(&video)
 	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 		return
 	}
-	video.VideoClass.Create()
+
+	tx := core.New().DB.Begin()
+	if tx.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
+		return
+	}
+
+	// Ensure rollback on panic
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+
+	if err := video.VideoClass.Create(tx); err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create video class"})
+		return
+	}
 
 	video.TypeId = video.VideoClass.TypeId
 	video.TypePid = video.VideoClass.TypePid
 	cc := model.Category{}
-	categoryIds := cc.Create(*video.Category[0].Type, video.Category, video.VideoClass)
-	video.VideoGroup.Edit()
+	var categoryIds []int64
+	if len(video.Category) > 0 && video.Category[0].Type != nil {
+		categoryIds = cc.Create(tx, *video.Category[0].Type, video.Category, video.VideoClass)
+	}
+
+	video.VideoGroup.Edit(tx)
 	if video.VideoGroup.Id > 0 {
 		video.VideoGroupId = video.VideoGroup.Id
 	}
-	err = video.Create()
+	err = video.Create(tx)
 	if err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create video"})
 		return
 	}
 	video.VideoUrl.VideoId = video.Id
-	video.VideoUrl.Create()
-	// 同步 Video-Category 关联：已存在不创建、缺失则新增、多余则删除
-	db := core.New().DB
-	tx := db.Begin()
-	if tx.Error != nil {
+	if err := video.VideoUrl.Create(tx); err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create video url"})
 		return
 	}
+	// 同步 Video-Category 关联：已存在不创建、缺失则新增、多余则删除
 	// 查询当前已存在的关联
 	var existing []model.VideoCategory
 	if err := tx.Where("video_id = ?", video.Id).Find(&existing).Error; err != nil {
 		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query existing categories"})
 		return
 	}
 	// 计算需要新增的条目
@@ -172,6 +200,7 @@ func Create(c *gin.Context) {
 	if len(toCreate) > 0 {
 		if err := tx.Create(&toCreate).Error; err != nil {
 			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create video categories"})
 			return
 		}
 	}
@@ -192,12 +221,14 @@ func Create(c *gin.Context) {
 	if len(toDeleteIds) > 0 {
 		if err := tx.Where("video_id = ? AND category_id IN ?", video.Id, toDeleteIds).Delete(&model.VideoCategory{}).Error; err != nil {
 			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete old categories"})
 			return
 		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Transaction Commit Failed"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{})

@@ -112,15 +112,18 @@ func (that *Category) HomeList(typeId int64) (categorySonArr []Category) {
 	return
 }
 
-func (that *Category) Create(cType int, categoryArr []*Category, videoClass VideoClass) (categoryIds []int64) {
+func (that *Category) Create(tx *gorm.DB, cType int, categoryArr []*Category, videoClass VideoClass) (categoryIds []int64) {
+	if tx == nil {
+		tx = core.New().DB.DB.DB
+	}
 	for index := range categoryArr {
 		category := categoryArr[index]
 		var parentCategory Category
-		core.New().DB.Unscoped().Where("name = ?", category.Name).First(&parentCategory)
+		tx.Unscoped().Where("name = ?", category.Name).First(&parentCategory)
 		if parentCategory.Id <= 0 {
 			parentCategory.Name = category.Name
 			parentCategory.Type = &cType
-			core.New().DB.Create(&parentCategory)
+			tx.Create(&parentCategory)
 		}
 		if len(category.Category) > 0 {
 			for index := range category.Category {
@@ -178,7 +181,7 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 						name = normalizeRegionName(name)
 					}
 					var sonCategory Category
-					core.New().DB.Unscoped().Where("name = ?", name).
+					tx.Unscoped().Where("name = ?", name).
 						Where("type = ?", cType).First(&sonCategory)
 
 					if sonCategory.Id <= 0 {
@@ -190,7 +193,7 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 							sonCategory.TypePid = videoClass.TypePid
 						}
 						sonCategory.VideoCount = 1
-						core.New().DB.Create(&sonCategory)
+						tx.Create(&sonCategory)
 					} else {
 						updates := map[string]any{
 							"video_count": gorm.Expr("video_count + 1"),
@@ -199,7 +202,7 @@ func (that *Category) Create(cType int, categoryArr []*Category, videoClass Vide
 							updates["type_id"] = videoClass.TypeId
 							updates["type_pid"] = videoClass.TypePid
 						}
-						core.New().DB.Model(&Category{}).Where("id = ?", sonCategory.Id).
+						tx.Model(&Category{}).Where("id = ?", sonCategory.Id).
 							UpdateColumns(&updates)
 					}
 					categoryIds = append(categoryIds, sonCategory.Id)

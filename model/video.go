@@ -41,20 +41,22 @@ func (*Video) TableName() string {
 	return "video"
 }
 
-func (that *Video) Create() (err error) {
+func (that *Video) Create(tx *gorm.DB) (err error) {
+	if tx == nil {
+		tx = core.New().DB.DB.DB
+	}
 	if that.Title == "" {
 		return
 	}
 	var oldVideo Video
-	core.New().DB.
-		Where("title = ?", that.Title).
+	tx.Where("title = ?", that.Title).
 		Where("type_id = ?", that.TypeId).
 		First(&oldVideo)
 	if oldVideo.Id > 0 {
-		core.New().DB.Where("id = ?", oldVideo.Id).Updates(that)
+		tx.Where("id = ?", oldVideo.Id).Updates(that)
 		that.Id = oldVideo.Id
 	} else {
-		err = core.New().DB.Create(that).Error
+		err = tx.Create(that).Error
 	}
 	return
 }

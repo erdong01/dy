@@ -26,21 +26,23 @@ func (that *VideoUrl) TableName() string {
 }
 
 // TableName 表名:video_url，视频地址。
-func (that *VideoUrl) Create() (err error) {
+func (that *VideoUrl) Create(tx *gorm.DB) (err error) {
+	if tx == nil {
+		tx = core.New().DB.DB.DB
+	}
 	if that.Proxy == "" || that.Url == "" {
 		fmt.Println("12312313123")
 		return
 	}
 	var videoUrl VideoUrl
-	core.New().DB.
-		Where("video_id = ?", that.VideoId).
+	tx.Where("video_id = ?", that.VideoId).
 		Where("proxy_name = ?", that.ProxyName).
 		First(&videoUrl)
 
 	if videoUrl.Id > 0 {
-		core.New().DB.Where("id = ?", videoUrl.Id).Updates(that)
+		tx.Where("id = ?", videoUrl.Id).Updates(that)
 	} else {
-		err = core.New().DB.Create(that).Error
+		err = tx.Create(that).Error
 	}
 
 	return

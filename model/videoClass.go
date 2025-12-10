@@ -24,19 +24,21 @@ func (*VideoClass) TableName() string {
 	return "video_class"
 }
 
-func (that *VideoClass) Create() (err error) {
+func (that *VideoClass) Create(tx *gorm.DB) (err error) {
+	if tx == nil {
+		tx = core.New().DB.DB.DB
+	}
 	if that.TypeId == 0 {
 		return
 	}
 	var oldVideoClass VideoClass
-	core.New().DB.
-		Where("type_name = ?", that.TypeName).
+	tx.Where("type_name = ?", that.TypeName).
 		First(&oldVideoClass)
 
 	if oldVideoClass.Id > 0 {
-		core.New().DB.Where("id = ?", oldVideoClass.Id).Updates(that)
+		tx.Where("id = ?", oldVideoClass.Id).Updates(that)
 	} else {
-		err = core.New().DB.Create(that).Error
+		err = tx.Create(that).Error
 	}
 	return
 }
