@@ -33,7 +33,7 @@ type Video struct {
 	TypePid      int64           `gorm:"column:type_pid" json:"TypePid"`  //type:int64             comment:                        version:2025-9-28 17:45
 	TypeId       int64           `gorm:"column:type_id" json:"TypeId"`    //type:int64             comment:                        version:2025-9-28 17:45
 	VideoUrlArr  []VideoUrl      `gorm:"foreignKey:VideoId;references:Id" json:"VideoUrlArr"`
-	Browse       int             `gorm:"column:browse" json:"Browse"` //type:*int              comment:                        version:2025-10-04 21:43
+	Browse       int             `gorm:"column:browse" json:"Browse"` // type:*int              comment:                        version:2025-10-04 21:43
 }
 
 // TableName 表名:video，。
@@ -50,7 +50,7 @@ func (that *Video) Create(tx *gorm.DB) (err error) {
 	}
 	var oldVideo Video
 	tx.Where("title = ?", that.Title).
-		Where("type_id = ?", that.TypeId).
+		Where("type_pid = ?", that.TypePid).
 		First(&oldVideo)
 	if oldVideo.Id > 0 {
 		tx.Where("id = ?", oldVideo.Id).Updates(that)
