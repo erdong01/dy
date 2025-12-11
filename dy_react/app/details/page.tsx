@@ -1,6 +1,6 @@
 'use client';
 import React, { Suspense, useEffect, useState } from 'react';
-import DetailsClient from '../../components/DetailsClient';
+import dynamic from 'next/dynamic';
 import type { Video } from '../lib/types';
 import { parseM3u8URLs } from '../lib/parseM3u8';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -8,6 +8,8 @@ import Menus from '../ui/menu/menus';
 import { Suspense as ReactSuspense } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.7x.chat';
+// Lazily load the heavy player bundle only on the client to avoid native module resolution during prerender.
+const DetailsClient = dynamic(() => import('../../components/DetailsClient'), { ssr: false });
 
 export default function Page() {
   return (
@@ -204,7 +206,7 @@ function DetailsPageInner() {
         }
         const canonicalLink: HTMLLinkElement = document.createElement('link');
         canonicalLink.rel = 'canonical';
-        canonicalLink.href = `https://7x.chat/details?id=${v.Id}`;
+        canonicalLink.href = `https://m.7x.chat/details?id=${v.Id}`;
         document.head.appendChild(canonicalLink);
         
       } finally {

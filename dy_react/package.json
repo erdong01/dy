@@ -15,7 +15,7 @@
     "@tailwindcss/cli": "^4.1.12",
     "@vidstack/react": "^1.12.13",
     "axios": "^1.12.2",
-    "bittorrent-tracker": "^11.2.1",
+    "bittorrent-tracker": "^11.2.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "d3": "^7.9.0",
