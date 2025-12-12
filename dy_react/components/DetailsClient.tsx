@@ -117,28 +117,74 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
 
             const h = hls as unknown as Hls;
 
+            // 清晰度策略：优选 4K(2160p)，其次 1080p，其余取最高可用
+            // 注意：有些源不会给出 height，此时退化为按 bitrate 选择。
+            let preferredCeilingLevel = -1;
+
+            const pickPreferredLevelIndex = (
+              levels: Array<{ height?: number; bitrate?: number }>,
+            ): number => {
+              if (!levels?.length) return -1;
+
+              const byBitrateDesc = (a: number, b: number) => {
+                const brA = levels[a]?.bitrate ?? 0;
+                const brB = levels[b]?.bitrate ?? 0;
+                return brB - brA;
+              };
+
+              const indices = levels.map((_, idx) => idx);
+              const hasHeight = levels.some((l) => (l?.height ?? 0) > 0);
+
+              const pickByHeightWindow = (target: number, min: number, max: number): number => {
+                const candidates = indices.filter((i) => {
+                  const h = levels[i]?.height ?? 0;
+                  return h >= min && h <= max;
+                });
+                if (!candidates.length) return -1;
+                // 距离 target 最近优先；同距离则 bitrate 高者优先
+                candidates.sort((ia, ib) => {
+                  const da = Math.abs((levels[ia]?.height ?? 0) - target);
+                  const db = Math.abs((levels[ib]?.height ?? 0) - target);
+                  if (da !== db) return da - db;
+                  return byBitrateDesc(ia, ib);
+                });
+                return candidates[0];
+              };
+
+              if (hasHeight) {
+                // 4K 常见为 2160p（容忍少量偏差）
+                const idx4k = pickByHeightWindow(2160, 1800, 2400);
+                if (idx4k >= 0) return idx4k;
+
+                // 1080p 常见为 1080（容忍少量偏差）
+                const idx1080 = pickByHeightWindow(1080, 900, 1200);
+                if (idx1080 >= 0) return idx1080;
+
+                // 其余取最高分辨率（同分辨率取更高码率）
+                return indices.sort((ia, ib) => {
+                  const ha = levels[ia]?.height ?? 0;
+                  const hb = levels[ib]?.height ?? 0;
+                  if (ha !== hb) return hb - ha;
+                  return byBitrateDesc(ia, ib);
+                })[0];
+              }
+
+              // 无 height：退化为取最高码率
+              return indices.sort(byBitrateDesc)[0];
+            };
+
             // 让 Hls.js 自己做 ABR，不强行锁最高清晰度
             h.on(Hls.Events.MANIFEST_PARSED, () => {
               try {
-                // 选择最高清晰度起播
                 const levels = (h.levels ?? []) as Array<{ height?: number; bitrate?: number }>;
                 if (!levels.length) return;
-                let bestIndex = 0;
-                for (let i = 1; i < levels.length; i++) {
-                  const prevH = levels[bestIndex]?.height ?? 0;
-                  const currH = levels[i]?.height ?? 0;
-                  if (currH > prevH) bestIndex = i;
-                }
-                if ((levels[bestIndex]?.height ?? 0) === 0) {
-                  bestIndex = levels.reduce((bi, lvl, idx) => {
-                    const prevBR = levels[bi]?.bitrate ?? 0;
-                    const currBR = lvl?.bitrate ?? 0;
-                    return currBR > prevBR ? idx : bi;
-                  }, 0);
-                }
-                // 关闭自动码率，强制最高清晰度起播
+
+                preferredCeilingLevel = pickPreferredLevelIndex(levels);
+                if (preferredCeilingLevel < 0) return;
+
+                // 关闭自动码率：优先固定在“4K → 1080p → 最高可用”，若卡顿再自动降级
                 (h as unknown as { autoLevelEnabled: boolean }).autoLevelEnabled = false;
-                h.currentLevel = bestIndex;
+                h.currentLevel = preferredCeilingLevel;
               } catch { }
             });
 
@@ -146,8 +192,8 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
             // 降级/恢复逻辑：
             let lastStallAt = 0;
             let downshiftCooldownUntil = 0;
-            const DOWNGRADE_COOLDOWN_MS = 8000; // 每次降级后至少等待 8s 再次降级
-            const RECOVER_TO_MAX_AFTER_MS = 30000; // 30s 无卡顿则恢复最高
+            const DOWNGRADE_COOLDOWN_MS = 20000; // 每次降级后至少等待 20s 再次降级
+            const RECOVER_TO_PREFERRED_AFTER_MS = 10000; // 一段时间无卡顿则恢复到优选清晰度
 
             const getMaxLevel = () => (h.levels?.length ?? 1) - 1;
             const tryDowngrade = () => {
@@ -159,11 +205,13 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
                 downshiftCooldownUntil = now + DOWNGRADE_COOLDOWN_MS;
               }
             };
-            const tryUpgradeToMax = () => {
+            const tryUpgradeToPreferred = () => {
               const maxL = getMaxLevel();
               if (maxL < 0) return;
-              if (h.currentLevel !== maxL) {
-                h.currentLevel = maxL;
+              const ceiling = preferredCeilingLevel >= 0 ? preferredCeilingLevel : maxL;
+              if (ceiling < 0) return;
+              if (h.currentLevel !== ceiling) {
+                h.currentLevel = ceiling;
               }
             };
 
@@ -208,8 +256,8 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
               const intervalId = window.setInterval(() => {
                 if (!media.ended && !media.paused) {
                   const elapsed = Date.now() - lastStallAt;
-                  if (elapsed > RECOVER_TO_MAX_AFTER_MS) {
-                    tryUpgradeToMax();
+                  if (elapsed > RECOVER_TO_PREFERRED_AFTER_MS) {
+                    tryUpgradeToPreferred();
                   }
                 }
               }, 5000);
