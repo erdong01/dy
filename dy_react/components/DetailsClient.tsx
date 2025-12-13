@@ -93,16 +93,16 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
         autoStartLoad: true,
         lowLatencyMode: false,
         capLevelToPlayerSize: false,
-        // 缓冲区大小（适度增加容错，减少 rebuffer）：
-        maxBufferLength: 25,
-        backBufferLength: 30,
-        maxBufferHole: 0.5,
+        // 缓冲区大小（大幅增加容错，减少 rebuffer）：
+        maxBufferLength: 900,      // 前向缓冲 600 秒
+        backBufferLength: 180,     // 后向缓冲 120 秒（快退时可用）
+        maxBufferHole: 0.8,
         // ABR 初始估计偏保守，弱网更快稳定：
-        abrEwmaDefaultEstimate: 1000_000, // ~1mbps
+        abrEwmaDefaultEstimate: 10000_000, // ~10mbps
         abrBandWidthFactor: 0.8,
         // 适度放宽超时，避免频繁中断：
-        manifestLoadingTimeOut: 20000,
-        fragLoadingTimeOut: 20000,
+        manifestLoadingTimeOut: 30000,
+        fragLoadingTimeOut: 30000,
         // P2P 设置
         p2p: {
           core: { swarmId: streamUrl ? streamUrl : undefined },
@@ -192,8 +192,8 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
             // 降级/恢复逻辑：
             let lastStallAt = 0;
             let downshiftCooldownUntil = 0;
-            const DOWNGRADE_COOLDOWN_MS = 20000; // 每次降级后至少等待 20s 再次降级
-            const RECOVER_TO_PREFERRED_AFTER_MS = 10000; // 一段时间无卡顿则恢复到优选清晰度
+            const DOWNGRADE_COOLDOWN_MS = 30000; // 每次降级后至少等待 20s 再次降级
+            const RECOVER_TO_PREFERRED_AFTER_MS = 5000; // 一段时间无卡顿则恢复到优选清晰度
 
             const getMaxLevel = () => (h.levels?.length ?? 1) - 1;
             const tryDowngrade = () => {
@@ -367,8 +367,8 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
             <MediaPlayer
               storage="7x-chat-media-player"
               src={streamUrl}
-              load="visible"
-              posterLoad="visible"
+              load="eager"
+              posterLoad="idle"
               viewType='video'
               streamType='on-demand'
               logLevel='warn'
@@ -377,6 +377,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
               autoPlay={shouldAutoPlay}
               playsInline
               crossOrigin
+              preferNativeHLS={false}
             >
               <MediaProvider />
               {isClient && <PlyrLayout icons={plyrLayoutIcons} />}
