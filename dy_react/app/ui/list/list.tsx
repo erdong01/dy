@@ -200,7 +200,7 @@ export default function List() {
                 typeId={TypeId}
             />
             <br />
-            <div className="flex w-full max-w-sm items-center space-x-2 min-h-12">
+            <div className="flex w-full max-w-sm items-center space-x-2 min-h-12 mx-auto">
                 <Input
                     type="text"
                     placeholder={t('search_placeholder')}
