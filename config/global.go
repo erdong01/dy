@@ -1,6 +1,7 @@
 package config
 
 type ConfigGlobal struct {
+	Zap         Zap
 	Mysql       Mysql
 	RedisConfig RedisConfig
 	Elastic     Elastic
