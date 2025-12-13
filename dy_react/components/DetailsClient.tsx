@@ -98,7 +98,7 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
         backBufferLength: 30,
         maxBufferHole: 0.5,
         // ABR 初始估计偏保守，弱网更快稳定：
-        abrEwmaDefaultEstimate: 500_000, // ~500kbps
+        abrEwmaDefaultEstimate: 1000_000, // ~1mbps
         abrBandWidthFactor: 0.8,
         // 适度放宽超时，避免频繁中断：
         manifestLoadingTimeOut: 20000,
@@ -290,16 +290,16 @@ export default function DetailsClient({ initialVideo, initialStreamUrl, initialV
   const handleEnded = useCallback(() => {
     const currentGroup = video.VideoUrlArr?.[groupIdx];
     if (!currentGroup?.PlaybackURL?.length) return;
-    
+
     const currentIdx = Number(videoIdx);
     const nextIdx = currentIdx + 1;
-    
+
     // 检查当前分组是否还有下一集
     if (nextIdx < currentGroup.PlaybackURL.length) {
       changeVideoIdxByIndex(groupIdx, nextIdx);
       return;
     }
-    
+
     // 当前分组播放完毕，尝试切换到下一个分组的第一集
     const nextGroupIdx = groupIdx + 1;
     if (nextGroupIdx < (video.VideoUrlArr?.length ?? 0)) {
